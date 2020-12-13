@@ -4,12 +4,10 @@ from datetime import datetime
 from datetime import timedelta
 
 import requests
-from psycopg2 import sql, connect
+from psycopg2 import sql
 from tqdm import tqdm
 
-from models import NEARQUAKE_HOST, NEARQUAKE_PASSWORD, NEARQUAKE_USERNAME, conn
-
-conn = connect(host=NEARQUAKE_HOST, user=NEARQUAKE_USERNAME, password=NEARQUAKE_PASSWORD)
+from models import connect_db
 
 
 def count_database_rows():
@@ -17,7 +15,7 @@ def count_database_rows():
 
     :return:
     """
-
+    conn = connect_db()
     with conn:
         cur = conn.cursor()
         sql = "select count(ids) from properties"
@@ -54,6 +52,7 @@ def save_to_database_properties(
         quake_title,
 ):
 
+    conn = connect_db()
     with conn:
         cur = conn.cursor()
         query = "select ids from properties"
@@ -101,6 +100,7 @@ def save_to_database_properties(
 
 def save_to_database_coordinate(ids, longitude, latitude, depth):
 
+    conn = connect_db()
     with conn:
         cur = conn.cursor()
         sql = "select ids from coordinate"
@@ -124,6 +124,7 @@ class Earthquake:
         self.ids = []
 
     def return_database_ids(self):
+        conn = connect_db()
         cur = conn.cursor()
         sql = "select ids from properties"
         cur.execute(sql)

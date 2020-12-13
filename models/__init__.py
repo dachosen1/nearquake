@@ -18,5 +18,7 @@ NEARQUAKE_HOST = os.getenv('NEARQUAKE_HOST')
 NEARQUAKE_USERNAME = os.getenv('NEARQUAKE_USERNAME')
 NEARQUAKE_PASSWORD = os.getenv('NEARQUAKE_PASSWORD')
 
-conn = connect(host=NEARQUAKE_HOST, user=NEARQUAKE_USERNAME, password=NEARQUAKE_PASSWORD)
-cur = conn.cursor()
+
+def connect_db():
+    conn = connect(host=NEARQUAKE_HOST, user=NEARQUAKE_USERNAME, password=NEARQUAKE_PASSWORD)
+    return conn
