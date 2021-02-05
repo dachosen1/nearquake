@@ -1,0 +1,16 @@
+venv/
+
+.circleci/
+.github/
+.pytest_cache/
+.idea/
+
+
+.gitignore
+
+.cache/
+.config/
+.git/
+
+.dockerignore
+.env
