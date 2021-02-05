@@ -1,6 +1,6 @@
 from psycopg2 import sql
 
-from models import connect_db
+from . import connect_db
 
 
 def get_last_updated_date():

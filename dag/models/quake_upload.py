@@ -7,7 +7,7 @@ import requests
 from psycopg2 import sql
 from tqdm import tqdm
 
-from models import connect_db
+from . import connect_db
 
 
 def count_database_rows():
@@ -51,7 +51,6 @@ def save_to_database_properties(
         quake_type,
         quake_title,
 ):
-
     conn = connect_db()
     with conn:
         cur = conn.cursor()
@@ -99,7 +98,6 @@ def save_to_database_properties(
 
 
 def save_to_database_coordinate(ids, longitude, latitude, depth):
-
     conn = connect_db()
     with conn:
         cur = conn.cursor()
@@ -266,4 +264,4 @@ def load_recent_date(time):
 
 
 if __name__ == "__main__":
-    load_recent_date(time='day')
+    load_recent_date(time='month')
