@@ -12,7 +12,7 @@ services:
   nearquake:
     image: puckel/docker-airflow:1.10.1
     build:
-      context: https://github.com/puckel/docker-airflow.git#1.10.1
+      context: .
       dockerfile: Dockerfile
       args:
         PYTHON_DEPS: psycopg2-binary==2.8.6; tqdm==4.56.0; tweepy==3.9.0
