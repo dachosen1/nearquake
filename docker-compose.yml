@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        PYTHON_DEPS: psycopg2-binary==2.8.6; tqdm==4.56.0; tweepy==3.9.0
+        PYTHON_DEPS: psycopg2-binary==2.8.6; tweepy==3.9.0
     restart: always
     depends_on:
       - postgres

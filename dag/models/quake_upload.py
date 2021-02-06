@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import requests
 from psycopg2 import sql
-from tqdm import tqdm
+
 
 from . import connect_db
 
@@ -212,7 +212,7 @@ def run_thread_pool(function, my_iter):
     :return:
     """
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        tqdm(executor.map(function, my_iter), total=len(my_iter))
+        executor.map(function, my_iter)
 
 
 def run_quake_url(url):
@@ -261,7 +261,3 @@ def load_recent_date(time):
     url = f'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time}.geojson'
     print(f"Database update started....")
     run_quake_url(url)
-
-
-if __name__ == "__main__":
-    load_recent_date(time='month')
