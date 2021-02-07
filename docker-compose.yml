@@ -6,6 +6,7 @@ services:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
+      - FERNET_KEY=jsDPRErfv8Z_eVTnGfF8ywd19j4pyqE3NpdUBA_oRTo
     logging:
         options:
             max-size: 10m
@@ -13,7 +14,8 @@ services:
     ports:
       - "5432:5432"
 
-  nearquake:
+  airflow:
+    image: nearquake
     build:
       context: .
       dockerfile: Dockerfile
