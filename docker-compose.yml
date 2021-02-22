@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 services:
   postgres:
     image: postgres:9.6
@@ -6,32 +6,26 @@ services:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
-      - FERNET_KEY=jsDPRErfv8Z_eVTnGfF8ywd19j4pyqE3NpdUBA_oRTo
-    logging:
-        options:
-            max-size: 10m
-            max-file: "3"
     ports:
       - "5432:5432"
 
-  airflow:
-    image: nearquake
+  nearquake:
+    image: puckel/docker-airflow:1.10.1
     build:
-      context: .
+      context: https://github.com/puckel/docker-airflow.git#1.10.1
       dockerfile: Dockerfile
+      args:
+        PYTHON_DEPS: psycopg2-binary==2.8.6; tqdm==4.56.0; tweepy==3.9.0
     restart: always
     depends_on:
       - postgres
     env_file: .env
-    logging:
-        options:
-            max-size: 10m
-            max-file: "3"
     environment:
       - LOAD_EX=n
       - EXECUTOR=Local
+      - FERNET_KEY=jsDPRErfv8Z_eVTnGfF8ywd19j4pyqE3NpdUBA_oRTo
     volumes:
-      - ./dag:/usr/local/airflow/dags
+      - ./dags:/usr/local/airflow/dags
     ports:
       - "8080:8080"
     command: webserver
