@@ -4,20 +4,17 @@ from datetime import datetime
 from datetime import timedelta
 
 import requests
-from psycopg2 import sql, connect
-from tqdm import tqdm
+from psycopg2 import sql
 
-from models import NEARQUAKE_HOST, NEARQUAKE_PASSWORD, NEARQUAKE_USERNAME, conn
 
-conn = connect(host=NEARQUAKE_HOST, user=NEARQUAKE_USERNAME, password=NEARQUAKE_PASSWORD)
+from . import connect_db
 
 
 def count_database_rows():
     """
-
     :return:
     """
-
+    conn = connect_db()
     with conn:
         cur = conn.cursor()
         sql = "select count(ids) from properties"
@@ -53,7 +50,7 @@ def save_to_database_properties(
         quake_type,
         quake_title,
 ):
-
+    conn = connect_db()
     with conn:
         cur = conn.cursor()
         query = "select ids from properties"
@@ -100,7 +97,7 @@ def save_to_database_properties(
 
 
 def save_to_database_coordinate(ids, longitude, latitude, depth):
-
+    conn = connect_db()
     with conn:
         cur = conn.cursor()
         sql = "select ids from coordinate"
@@ -124,6 +121,7 @@ class Earthquake:
         self.ids = []
 
     def return_database_ids(self):
+        conn = connect_db()
         cur = conn.cursor()
         sql = "select ids from properties"
         cur.execute(sql)
@@ -207,18 +205,16 @@ class Earthquake:
 
 def run_thread_pool(function, my_iter):
     """
-
     :param function:
     :param my_iter:
     :return:
     """
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        tqdm(executor.map(function, my_iter), total=len(my_iter))
+        executor.map(function, my_iter)
 
 
 def run_quake_url(url):
     """
-
     :param url:
     :return:
     """
@@ -241,7 +237,6 @@ def run_quake_url(url):
 
 def load_custom_date_range(year, month):
     """
-
     :param year:
     :param month:
     :return:
@@ -254,7 +249,6 @@ def load_custom_date_range(year, month):
 
 def load_recent_date(time):
     """
-
     :param time: ['day', 'week', 'month']
     :return:
     """
@@ -262,7 +256,3 @@ def load_recent_date(time):
     url = f'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time}.geojson'
     print(f"Database update started....")
     run_quake_url(url)
-
-
-if __name__ == "__main__":
-    load_recent_date(time='day')
