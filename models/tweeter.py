@@ -1,9 +1,13 @@
+import logging
 from datetime import datetime, timedelta
 
 import tweepy
+from tweepy import TweepError
 
 from models import CONSUMER_SECRET, CONSUMER_KEY, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
 from models.utils import largest_quake, count_quake
+
+_logger = logging.getLogger(__name__)
 
 # Authenticate to Twitter
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
@@ -14,7 +18,11 @@ api = tweepy.API(auth)
 
 
 def post_tweet(tweet):
-    api.update_status(tweet)
+    try:
+        api.update_status(tweet)
+        logging.info(f'Poster {tweet} to twitter at {datetime.now()}')
+    except TweepError:
+        logging.info(f'Did not post {tweet}. Duplicate Message ')
 
 
 def daily_tweet(mag, place, time):

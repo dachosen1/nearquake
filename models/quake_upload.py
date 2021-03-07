@@ -1,13 +1,15 @@
 import concurrent.futures
 import json
+import logging
 from datetime import datetime
 from datetime import timedelta
 
 import requests
 from psycopg2 import sql
 
+from models import connect_db
 
-from . import connect_db
+_logger = logging.getLogger(__name__)
 
 
 def count_database_rows():
@@ -227,11 +229,13 @@ def run_quake_url(url):
     duration = end - start
     new_count_ids = count_database_rows()
 
-    print(
-        f"Duration: {duration.total_seconds()} seconds\n"
-        f""
-        f"Added {new_count_ids[0] - count_ids[0]} earthquakes\n"
-        f"-----------------------------------------------------"
+    msg = f"Duration: {duration.total_seconds()} seconds\n"\
+          f""\
+          f"Added {new_count_ids[0] - count_ids[0]} earthquakes\n"\
+          f"-----------------------------------------------------"
+
+    _logger.info(
+        msg
     )
 
 
@@ -243,7 +247,7 @@ def load_custom_date_range(year, month):
     """
 
     all_url = f"https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={year}-{month}-01%2000:00:00&endtime={year}-{month}-31"
-    print(f"Database update complete for year {year} and month {month}")
+    _logger.info(f"Database update complete for year {year} and month {month}")
     run_quake_url(all_url)
 
 
@@ -254,5 +258,5 @@ def load_recent_date(time):
     """
 
     url = f'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time}.geojson'
-    print(f"Database update started....")
+    _logger.info(f"Database update started....")
     run_quake_url(url)

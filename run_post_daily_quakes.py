@@ -15,7 +15,7 @@ if __name__ == '__main__':
             quake_time = quake[2].strftime("%H:%m:%S")
 
             post_tweet(daily_tweet(quake_mag, quake_location, quake_time))
-            time.sleep(2)
+            time.sleep(20)
 
         update_last_updated_date()
 

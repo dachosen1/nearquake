@@ -1,6 +1,9 @@
 from psycopg2 import sql
 
 from models import connect_db
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 def get_last_updated_date():
@@ -11,6 +14,8 @@ def get_last_updated_date():
     query_results = cur.fetchall()
     last_update_date = query_results[0][1]
     last_update_time = query_results[0][2]
+
+    _logger.info(f'The last check for eligible earthquake was made on {last_update_date} at {last_update_time}')
 
     return last_update_date, last_update_time
 
@@ -36,6 +41,7 @@ def fetch_last_update():
     cur = conn.cursor()
     cur.execute(query)
     last_update = cur.fetchall()
+    _logger.info(f'Last Database update occured at {last_update.strftime("%Y-%m-%d %H:%M:%S")}')
     return last_update
 
 
@@ -47,7 +53,7 @@ def update_last_updated_date():
     last_time = last_update[0][0].strftime("%H:%M:%S")
 
     if last_updated_date == last_date and last_updated_time == last_time:
-        return 'Done Posting to Twitter'
+        _logger.info(f'No Date Change since last update')
 
     else:
         query = sql.SQL("INSERT INTO last_update VALUES (%s,%s)")
@@ -56,8 +62,7 @@ def update_last_updated_date():
         cur = conn.cursor()
         cur.execute(query, (last_date, last_time,))
         conn.commit()
-
-    return 'Done Posting to Twitter'
+        _logger.info(f'Update: Checked Eligible Earthquake as of {last_date} on {last_time}')
 
 
 def largest_quake(start, end):
