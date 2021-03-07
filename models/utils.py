@@ -46,8 +46,10 @@ def update_last_updated_date():
     last_date = last_update[0][0].strftime("%Y-%m-%d")
     last_time = last_update[0][0].strftime("%H:%M:%S")
 
-    if not last_updated_date == last_date and last_updated_time == last_time:
+    if last_updated_date == last_date and last_updated_time == last_time:
+        return 'Done Posting to Twitter'
 
+    else:
         query = sql.SQL("INSERT INTO last_update VALUES (%s,%s)")
 
         conn = connect_db()
@@ -55,8 +57,10 @@ def update_last_updated_date():
         cur.execute(query, (last_date, last_time,))
         conn.commit()
 
-def largest_quake(start, end):
+    return 'Done Posting to Twitter'
 
+
+def largest_quake(start, end):
     query = sql.SQL(f"SELECT mag, place, time FROM properties "
                     f"WHERE time::date BETWEEN '{start}' AND "
                     f"'{end}' AND mag > 1"
