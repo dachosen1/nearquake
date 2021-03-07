@@ -41,7 +41,7 @@ def fetch_last_update():
     cur = conn.cursor()
     cur.execute(query)
     last_update = cur.fetchall()
-    _logger.info(f'Last Database update occured at {last_update.strftime("%Y-%m-%d %H:%M:%S")}')
+    _logger.info(f'Last Database update occured at {last_update}')
     return last_update
 
 
