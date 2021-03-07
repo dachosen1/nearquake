@@ -18,3 +18,5 @@ if __name__ == '__main__':
             time.sleep(2)
 
         update_last_updated_date()
+
+        time.sleep(300)

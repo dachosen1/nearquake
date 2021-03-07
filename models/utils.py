@@ -40,16 +40,20 @@ def fetch_last_update():
 
 
 def update_last_updated_date():
+    last_updated_date, last_updated_time = get_last_updated_date()
+
     last_update = fetch_last_update()
     last_date = last_update[0][0].strftime("%Y-%m-%d")
     last_time = last_update[0][0].strftime("%H:%M:%S")
-    query = sql.SQL("INSERT INTO last_update VALUES (%s,%s)")
 
-    conn = connect_db()
-    cur = conn.cursor()
-    cur.execute(query, (last_date, last_time,))
-    conn.commit()
+    if not last_updated_date == last_date and last_updated_time == last_time:
 
+        query = sql.SQL("INSERT INTO last_update VALUES (%s,%s)")
+
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute(query, (last_date, last_time,))
+        conn.commit()
 
 def largest_quake(start, end):
 
