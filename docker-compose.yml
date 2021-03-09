@@ -7,3 +7,7 @@ services:
     image: anelso42/nearquake
     container_name: nearquake
     env_file: .env
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"

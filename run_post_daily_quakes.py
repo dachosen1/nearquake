@@ -1,9 +1,13 @@
 import time
+from datetime import datetime
+
 from models.quake_upload import load_recent_date
-from models.tweeter import daily_tweet, post_tweet
+from models.tweeter import daily_tweet, post_tweet, weekly_top_tweet, weekly_quake_count
 from models.utils import generate_recent_quakes, update_last_updated_date
 
 if __name__ == '__main__':
+
+    WEEK_RUN = False
 
     while True:
         load_recent_date(time='day')
@@ -20,3 +24,11 @@ if __name__ == '__main__':
         update_last_updated_date()
 
         time.sleep(300)
+
+        if datetime.today().day == 1 and WEEK_RUN:
+            post_tweet(weekly_top_tweet())
+            post_tweet(weekly_quake_count())
+            WEEK_RUN = False
+
+        elif datetime.today().day > 1:
+            WEEK_RUN = True

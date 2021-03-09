@@ -17,6 +17,10 @@ auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth)
 
 
+def _start_week():
+    return datetime.now().date() - timedelta(days=7)
+
+
 def post_tweet(tweet):
     try:
         api.update_status(tweet)
@@ -30,7 +34,7 @@ def daily_tweet(mag, place, time):
 
 
 def weekly_top_tweet():
-    start_week = datetime.now().date() - timedelta(days=7)
+    start_week = _start_week()
     mag_week, location_week, time_week = largest_quake(start=start_week, end=datetime.now().date())[0]
 
     start_month = datetime.today().replace(day=1).date().strftime('%Y/%m/%d')
@@ -46,7 +50,7 @@ def weekly_top_tweet():
 
 
 def weekly_quake_count():
-    start_week = datetime.now().date() - timedelta(days=7)
+    start_week = _start_week()
     count_week = count_quake(start=start_week, end=datetime.now().date())[0]
 
     start_month = datetime.today().replace(day=1).date().strftime('%Y/%m/%d')
