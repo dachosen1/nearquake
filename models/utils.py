@@ -23,7 +23,7 @@ def get_last_updated_date():
 def generate_recent_quakes():
     last_date, last_time = get_last_updated_date()
 
-    sql = f"SELECT mag, place, time FROM properties" \
+    sql = f"SELECT mag, quake_title, time FROM properties" \
           f" WHERE time::date >= '{last_date}' AND " \
           f"time::time >= '{last_time}' AND mag >= 5.0"
 

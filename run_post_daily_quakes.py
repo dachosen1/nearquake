@@ -13,17 +13,17 @@ if __name__ == '__main__':
         load_recent_date(time='day')
         data = generate_recent_quakes()
 
-        for quake in data:
-            quake_mag = float(quake[0])
-            quake_location = quake[1]
-            quake_time = quake[2].strftime("%H:%m:%S")
+        if len(data) > 0:
+            for quake in data:
+                quake_mag = float(quake[0])
+                quake_title = quake[1]
+                quake_time = quake[2].strftime("%H:%m:%S")
 
-            post_tweet(daily_tweet(quake_mag, quake_location, quake_time))
-            time.sleep(20)
+                post_tweet(daily_tweet(quake_title, quake_time))
+                time.sleep(20)
 
-        update_last_updated_date()
-
-        time.sleep(300)
+            update_last_updated_date()
+            time.sleep(300)
 
         if datetime.today().day == 1 and WEEK_RUN:
             post_tweet(weekly_top_tweet())

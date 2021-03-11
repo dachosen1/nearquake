@@ -29,8 +29,8 @@ def post_tweet(tweet):
         logging.info(f'Did not post {tweet}. Duplicate Message ')
 
 
-def daily_tweet(mag, place, time):
-    return f'{mag} Magnitude #earthquake reported {place} at {time} UTC'
+def daily_tweet(quake_title, time):
+    return f' Recent #EarthQuake: {quake_title} reported  at {time} UTC'
 
 
 def weekly_top_tweet():
