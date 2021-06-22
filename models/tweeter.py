@@ -31,7 +31,7 @@ def post_tweet(tweet):
 
 def daily_tweet(quake_title, time):
     duration = datetime.now() - time
-    return f'Recent #EarthQuake: {quake_title} reported {duration.seconds/60} minutes ago '
+    return f'Recent #EarthQuake: {quake_title} reported {duration.seconds/60:.2f} minutes ago '
 
 
 def weekly_top_tweet():
