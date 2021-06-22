@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  nearquake:
+    build:
+      context: .
+    image: anelso42/nearquake
+    container_name: nearquake
+    env_file: .env
+    restart: always
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
