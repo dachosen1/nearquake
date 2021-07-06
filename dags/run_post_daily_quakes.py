@@ -1,6 +1,6 @@
 import time
 from airflow import DAG
-
+from datetime import datetime
 
 from airflow.operators.bash import BashOperator
 from airflow.operators.python_operator import PythonOperator
@@ -19,6 +19,7 @@ default_args = {
     'email_on_failure': True,
     'email_on_retry': True,
     'retries': 1,
+    'start_date': datetime.now(),
     'retry_delay': timedelta(minutes=5)
 }
 
@@ -41,7 +42,6 @@ with DAG(
     default_args=default_args,
     description='A bot to push tweet to twitter',
     schedule_interval=timedelta(minutes=5),
-    start_date=days_ago(0),
     tags=['example'],
 ) as dag:
 
