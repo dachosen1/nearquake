@@ -2,6 +2,7 @@ from psycopg2 import sql
 
 from models import connect_db
 import logging
+from datetime import date, datetime
 
 _logger = logging.getLogger(__name__)
 
@@ -12,10 +13,19 @@ def get_last_updated_date():
     query = sql.SQL("SELECT  id, last_date, last_time FROM last_update ORDER BY  id DESC LIMIT 1;")
     cur.execute(query)
     query_results = cur.fetchall()
-    last_update_date = query_results[0][1]
-    last_update_time = query_results[0][2]
 
-    _logger.info(f'The last check for eligible earthquake was made on {last_update_date} at {last_update_time}')
+    try:
+        last_update_date = query_results[0][1]
+        last_update_time = query_results[0][2]
+
+        _logger.info(f'The last check for eligible earthquake was made on {last_update_date} at {last_update_time}')
+
+    except IndexError:
+        today = date.today()
+        time = datetime.now()
+
+        last_update_date = today.strftime("%m/%d/%y")
+        last_update_time = time.strftime("%H:%M:%S")
 
     return last_update_date, last_update_time
 
