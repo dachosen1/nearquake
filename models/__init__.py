@@ -38,7 +38,7 @@ def get_console_handler():
 
 
 def connect_db():
-    conn = connect(host=NEARQUAKE_HOST, user=NEARQUAKE_USERNAME, password=NEARQUAKE_PASSWORD, dbname=NEARQUAKE_DATABASE)
+    conn = connect(host=NEARQUAKE_HOST, user=NEARQUAKE_USERNAME, password=NEARQUAKE_PASSWORD, dbname=NEARQUAKE_DATABASE,port=5432)
     return conn
 
 

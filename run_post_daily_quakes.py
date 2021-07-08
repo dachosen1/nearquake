@@ -22,8 +22,8 @@ if __name__ == '__main__':
                 post_tweet(daily_tweet(quake_title, quake_time))
                 time.sleep(20)
 
-            update_last_updated_date()
-            time.sleep(300)
+        update_last_updated_date()
+        time.sleep(300)
 
         if datetime.today().day == 1 and WEEK_RUN:
             post_tweet(weekly_top_tweet())
