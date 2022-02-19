@@ -1,6 +1,6 @@
-from models.tweeter import post_tweet, weekly_top_tweet, weekly_quake_count
+from models import post_tweet, weekly_top_tweet, weekly_quake_count
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     post_tweet(weekly_top_tweet())
     post_tweet(weekly_quake_count())
