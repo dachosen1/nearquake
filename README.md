@@ -1,5 +1,7 @@
 # Quakebot
 
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/dachosen1/nearquake.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dachosen1/nearquake/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/dachosen1/nearquake.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/dachosen1/nearquake/context:python)
 [![Twitter Follow](https://img.shields.io/badge/%20-@__quakebot_-black?color=14171A&labelColor=00acee&logo=twitter&logoColor=ffffff)](https://twitter.com/quakebot_)
 
 Quakebot is designed to tweet earthquakes greater than 5.0 around the world, and provides a historical snapshot of earthquakes.  
