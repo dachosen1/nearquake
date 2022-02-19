@@ -1,18 +1,31 @@
 import concurrent.futures
 import json
 import logging
-from datetime import datetime
-from datetime import timedelta
+import os
+from datetime import datetime, timedelta
 
 import requests
 from psycopg2 import sql
+from psycopg2 import connect
 
-from models import connect_db
+# from models import connect_db
+
 
 _logger = logging.getLogger(__name__)
 
 
+def connect_db():
+    conn = connect(
+        host=os.getenv("NEARQUAKE_HOST"),
+        user=os.getenv("NEARQUAKE_USERNAME"),
+        password=os.getenv("NEARQUAKE_PASSWORD"),
+        dbname=os.getenv("NEARQUAKE_DATABASE"),
+    )
+    return conn
+
+
 def count_database_rows():
+
     """
     :return:
     """
@@ -27,31 +40,32 @@ def count_database_rows():
 
 
 def save_to_database_properties(
-        mag,
-        place,
-        time,
-        updated,
-        tz,
-        felt,
-        cdi,
-        mmi,
-        alert,
-        status,
-        tsunami,
-        sig,
-        net,
-        code,
-        ids,
-        source,
-        types,
-        nst,
-        dmin,
-        rms,
-        gap,
-        magType,
-        quake_type,
-        quake_title,
+    mag,
+    place,
+    time,
+    updated,
+    tz,
+    felt,
+    cdi,
+    mmi,
+    alert,
+    status,
+    tsunami,
+    sig,
+    net,
+    code,
+    ids,
+    source,
+    types,
+    nst,
+    dmin,
+    rms,
+    gap,
+    magType,
+    quake_type,
+    quake_title,
 ):
+
     conn = connect_db()
     with conn:
         cur = conn.cursor()
@@ -64,7 +78,8 @@ def save_to_database_properties(
             pass
         else:
             query = sql.SQL(
-                "insert into properties values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                "insert into properties values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,"
+                "%s) "
             )
 
             cur.execute(
@@ -99,6 +114,7 @@ def save_to_database_properties(
 
 
 def save_to_database_coordinate(ids, longitude, latitude, depth):
+
     conn = connect_db()
     with conn:
         cur = conn.cursor()
@@ -135,7 +151,10 @@ class Earthquake:
         seq.raise_for_status()
         self.data = json.loads(seq.text)
 
-        run_thread_pool(self.add_features, range(len(self.data["features"])))
+        for i in range(len(self.data["features"])): 
+            self.add_features(i)
+
+        # run_thread_pool(self.add_features, )
 
     def add_features(self, index):
         if self.data["features"][index]["id"] not in self.ids:
@@ -149,7 +168,6 @@ class Earthquake:
             time_object_updated = timedelta(
                 milliseconds=self.data["features"][index]["properties"]["updated"]
             )
-
             updated = self.initial_date + time_object_updated
             tz = self.data["features"][index]["properties"]["tz"]
             felt = self.data["features"][index]["properties"]["felt"]
@@ -206,11 +224,6 @@ class Earthquake:
 
 
 def run_thread_pool(function, my_iter):
-    """
-    :param function:
-    :param my_iter:
-    :return:
-    """
     with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(function, my_iter)
 
@@ -229,14 +242,14 @@ def run_quake_url(url):
     duration = end - start
     new_count_ids = count_database_rows()
 
-    msg = f"Duration: {duration.total_seconds()} seconds\n"\
-          f""\
-          f"Added {new_count_ids[0] - count_ids[0]} earthquakes\n"\
-          f"-----------------------------------------------------"
-
-    _logger.info(
-        msg
+    msg = (
+        f"Duration: {duration.total_seconds()} seconds\n"
+        f""
+        f"Added {new_count_ids[0] - count_ids[0]} earthquakes\n"
+        f"-----------------------------------------------------"
     )
+
+    _logger.info(msg)
 
 
 def load_custom_date_range(year, month):
@@ -257,6 +270,19 @@ def load_recent_date(time):
     :return:
     """
 
-    url = f'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time}.geojson'
+    url = (
+        f"https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time}.geojson"
+    )
     _logger.info(f"Database update started....")
     run_quake_url(url)
+
+
+if __name__ == "__main__":
+
+    year_range = [i for i in range(1900,2023)]
+    month_range = [i for i in range(1,13)]
+
+    for year in year_range: 
+        for month in month_range: 
+            load_custom_date_range(year, month)
+    
