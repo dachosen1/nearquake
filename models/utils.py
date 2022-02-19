@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 from psycopg2 import connect, sql
 
 import tweepy
+
 # from tweepy import TweepError
 
 _logger = logging.getLogger(__name__)
@@ -143,7 +144,7 @@ def post_tweet(tweet):
     try:
         api.update_status(tweet)
         logging.info(f"Poster {tweet} to twitter at {datetime.now()}")
-    except :
+    except:
         logging.info(f"Did not post {tweet}. Duplicate Message ")
 
 

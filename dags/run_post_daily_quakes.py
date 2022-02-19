@@ -52,5 +52,4 @@ with DAG(
 
     t2 = PythonOperator(task_id="Push_to_Twitter", python_callable=fetchtweets)
 
-
     t1 >> t2

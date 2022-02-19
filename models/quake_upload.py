@@ -151,10 +151,12 @@ class Earthquake:
         seq = requests.get(url)
         seq.raise_for_status()
         self.data = json.loads(seq.text)
-        
-        _logger.info(f"Successfully reached the quake API. Preparing to add {self.data['features']} quake")
 
-        for i in range(len(self.data["features"])): 
+        _logger.info(
+            f"Successfully reached the quake API. Preparing to add {self.data['features']} quake"
+        )
+
+        for i in range(len(self.data["features"])):
             self.add_features(i)
 
         _logger.info(f"Done extracting new quakes")
@@ -238,7 +240,9 @@ def run_quake_url(url):
     :return:
     """
     count_ids = count_database_rows()
-    _logger.info(f"Completed checking the status of the live database! Proceeding to add new eartquakes.")
+    _logger.info(
+        f"Completed checking the status of the live database! Proceeding to add new eartquakes."
+    )
     start = datetime.now()
     run = Earthquake()
     run.return_database_ids()
@@ -284,10 +288,9 @@ def load_recent_date(time):
 
 if __name__ == "__main__":
 
-    year_range = [i for i in range(1900,2023)]
-    month_range = [i for i in range(1,13)]
+    year_range = [i for i in range(1900, 2023)]
+    month_range = [i for i in range(1, 13)]
 
-    for year in tqdm(year_range): 
-        for month in month_range: 
+    for year in tqdm(year_range):
+        for month in month_range:
             load_custom_date_range(year, month)
-    

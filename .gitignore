@@ -6,3 +6,4 @@ models/__pycache__/utils.cpython-36.pyc
 models/__pycache__/__init__.cpython-36.pyc
 models/__pycache__/quake_upload.cpython-36.pyc
 models/__pycache__/utils.cpython-36.pyc
+dags/__pycache__/run_post_daily_quakes.cpython-36.pyc
