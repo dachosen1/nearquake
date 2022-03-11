@@ -1,13 +1,14 @@
 import logging
 import os
 from datetime import date, datetime, timedelta
+from httpx import post
 
-# from models import connect_db
+
 from psycopg2 import connect, sql
 
 import tweepy
 
-# from tweepy import TweepError
+
 
 _logger = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ def post_tweet(tweet):
 
 def daily_tweet(quake_title, time):
     duration = datetime.now() - time
-    return f"Recent #EarthQuake: {quake_title} reported {duration.seconds/60:.2f} minutes ago "
+    return f"Recent #EarthQuake: {quake_title} reported {duration.seconds/60:.0f} minutes ago "
 
 
 def weekly_top_tweet():
@@ -169,11 +170,10 @@ def weekly_top_tweet():
         start=ytd, end=datetime.now().date()
     )[0]
 
+    tweet = f"Largest Quakes\nWeek = Mag: {mag_week}, location: {location_week} on {time_week.date()}\n Month = Mag: {mag_month}, location: {location_month} on {time_month.date()} \n YTD = Mag: {mag_ytd}, location: {location_ytd} on {time_ytd.date()}"
+    post_tweet(tweet)
     return (
-        f"Largest Quakes\nWeek = Mag: {mag_week}, location: "
-        f"{location_week} on {time_week.date()}"
-        f"\nMonth = Mag: {mag_month}, location: {location_month} on {time_month.date()}"
-        f"\nYTD = Mag: {mag_ytd}, location: {location_ytd} on {time_ytd.date()}"
+        'Done'
     )
 
 
@@ -186,9 +186,6 @@ def weekly_quake_count():
 
     ytd = datetime.today().replace(day=1, month=1).date()
     count_ytd = count_quake(start=ytd, end=datetime.now().date())[0]
+    tweet =  f"--------- Total Earthquakes Greater than 5.0 ---------\nWeek = Count: {count_week[0]} \nMonth = Count {count_month[0]} \nYTD = Count: {count_ytd[0]} \n #earthquake"
+    return post_tweet(tweet)
 
-    return (
-        f"--------- Total Earthquakes Greater than 5.0 ---------\nWeek = Count: {count_week[0]}"
-        f"\nMonth = Count {count_month[0]}"
-        f"\nYTD = Count: {count_ytd[0]} \n #earthquake"
-    )

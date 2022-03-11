@@ -25,6 +25,9 @@ def connect_db():
     return conn
 
 
+conn = connect_db()
+
+
 def count_database_rows():
 
     """
@@ -67,70 +70,66 @@ def save_to_database_properties(
     quake_title,
 ):
 
-    conn = connect_db()
-    with conn:
-        cur = conn.cursor()
-        query = "select ids from properties"
-        cur.execute(query)
-        all_id = cur.fetchall()
-        all_id = list(map(list, all_id))
-        eval_id = [ids]
-        if eval_id in all_id:
-            pass
-        else:
-            query = sql.SQL(
-                "insert into properties values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,"
-                "%s) "
-            )
+    cur = conn.cursor()
+    query = "select ids from properties"
+    cur.execute(query)
+    all_id = cur.fetchall()
+    all_id = list(map(list, all_id))
+    eval_id = [ids]
+    if eval_id in all_id:
+        pass
+    else:
+        query = sql.SQL(
+            "insert into properties values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,"
+            "%s) "
+        )
 
-            cur.execute(
-                query,
-                (
-                    mag,
-                    place,
-                    time,
-                    updated,
-                    tz,
-                    felt,
-                    cdi,
-                    mmi,
-                    alert,
-                    status,
-                    tsunami,
-                    sig,
-                    net,
-                    code,
-                    ids,
-                    source,
-                    types,
-                    nst,
-                    dmin,
-                    rms,
-                    gap,
-                    magType,
-                    quake_type,
-                    quake_title,
-                ),
-            )
+        cur.execute(
+            query,
+            (
+                mag,
+                place,
+                time,
+                updated,
+                tz,
+                felt,
+                cdi,
+                mmi,
+                alert,
+                status,
+                tsunami,
+                sig,
+                net,
+                code,
+                ids,
+                source,
+                types,
+                nst,
+                dmin,
+                rms,
+                gap,
+                magType,
+                quake_type,
+                quake_title,
+            ),
+        )
 
 
 def save_to_database_coordinate(ids, longitude, latitude, depth):
 
-    conn = connect_db()
-    with conn:
-        cur = conn.cursor()
-        sql = "select ids from coordinate"
-        cur.execute(sql)
-        all_id = cur.fetchall()
-        all_id = list(map(list, all_id))
-        eval_id = [ids]
+    cur = conn.cursor()
+    sql = "select ids from coordinate"
+    cur.execute(sql)
+    all_id = cur.fetchall()
+    all_id = list(map(list, all_id))
+    eval_id = [ids]
 
-        if eval_id in all_id:
+    if eval_id in all_id:
 
-            pass
-        else:
-            sql = "insert into coordinate VALUES (%s,%s,%s,%s)"
-            cur.execute(sql, (ids, longitude, latitude, depth))
+        pass
+    else:
+        sql = "insert into coordinate VALUES (%s,%s,%s,%s)"
+        cur.execute(sql, (ids, longitude, latitude, depth))
 
 
 class Earthquake:
@@ -140,7 +139,7 @@ class Earthquake:
         self.ids = []
 
     def return_database_ids(self):
-        conn = connect_db()
+
         cur = conn.cursor()
         sql = "select ids from properties"
         cur.execute(sql)
