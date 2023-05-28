@@ -7,7 +7,7 @@ def get_quake_image_url(url):
     :param url: URL to the earthquake data.
     :return: String containing the URL to the image, or None if no image could be found.
     """
-    response = requests.get(url)
+    response = requests.get(url, timeout=5)
     if response.status_code != 200:
         print(f"Failed to get data from URL {url}. Status code: {response.status_code}")
         return None
@@ -31,7 +31,7 @@ def download_image(url, id_, directory='image'):
     :return: None
     """
     try:
-        response = requests.get(url)
+        response = requests.get(url,timeout=5)
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
         print(f"Error: {err}")
