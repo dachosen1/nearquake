@@ -8,20 +8,9 @@ import requests
 from psycopg2 import sql
 from psycopg2 import connect
 from tqdm import tqdm
-from nearquake import DbOperator
-
 
 
 _logger = logging.getLogger(__name__)
-
-def extract_properties(data, keylist):
-    table = str.maketrans('', '', ",'")
-    return {
-        key: (data.get(key, '').translate(table) 
-              if isinstance(data.get(key, ''), str) 
-              else data.get(key, ''))
-        for key in keylist
-    }
 
 def connect_db():
     conn = connect(

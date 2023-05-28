@@ -1,5 +1,6 @@
 from psycopg2 import connect, sql
 
+
 class DbOperator:
     """
     Connects to and executes database SQL queries
@@ -29,7 +30,7 @@ class DbOperator:
         except Exception as e:
             _logger.error(f"Failed to connect to the database: {e}")
 
-    def fetch(self, query, type="all"):
+    def fetch(self, query, mode="all"):
         """
         Executes an SQL query
 
@@ -39,9 +40,9 @@ class DbOperator:
         """
         try:
             self.cursor.execute(sql.SQL(query))
-            if type == "all":
+            if mode == "all":
                 return self.cursor.fetchall()
-            elif type == "one":
+            elif mode == "one":
                 return self.cursor.fetchone()
             else:
                 raise ValueError("Invalid type. Expected 'all' or 'one'.")
