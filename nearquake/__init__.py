@@ -36,4 +36,5 @@ from .utils import (
     post_tweet,
     weekly_top_tweet,
     weekly_quake_count,
+    DbOperator
 )

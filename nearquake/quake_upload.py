@@ -9,11 +9,8 @@ from psycopg2 import sql
 from psycopg2 import connect
 from tqdm import tqdm
 
-# from models import connect_db
-
 
 _logger = logging.getLogger(__name__)
-
 
 def connect_db():
     conn = connect(
