@@ -291,15 +291,6 @@ def weekly_quake_count():
     tweet = f"--------- Total Earthquakes Greater than 5.0 ---------\nWeek = Count: {count_week[0]} \nMonth = Count {count_month[0]} \nYTD = Count: {count_ytd[0]} \n #earthquake"
     return post_tweet(tweet)
 
-
-
-def post_tweet(tweet):
-    try:
-        api.update_status(tweet)
-        logging.info(f"Poster {tweet} to twitter at {datetime.now()}")
-    except:
-        logging.info(f"Did not post {tweet}. Duplicate Message ")
-
         
 def get_response(url):
     response = requests.get(url)
