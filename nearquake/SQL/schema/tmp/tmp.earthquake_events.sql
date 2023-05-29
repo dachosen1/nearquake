@@ -1,5 +1,3 @@
-CREATE SCHEMA tmp;
-
 CREATE TABLE IF NOT EXISTS tmp.earthquake_events (
     ids VARCHAR(50) PRIMARY KEY,
     mag FLOAT,
@@ -17,7 +15,6 @@ CREATE TABLE IF NOT EXISTS tmp.earthquake_events (
     title VARCHAR(200),
     upload_time TIMESTAMP
 );
-
 COMMENT ON TABLE tmp.earthquake_events IS 'Table for storing earthquake event data';
 COMMENT ON COLUMN tmp.earthquake_events.ids IS 'Unique identifier for each earthquake event';
 COMMENT ON COLUMN tmp.earthquake_events.mag IS 'Magnitude of the earthquake';
@@ -34,15 +31,3 @@ COMMENT ON COLUMN tmp.earthquake_events.tsunami IS 'Indicates if the earthquake 
 COMMENT ON COLUMN tmp.earthquake_events.type IS 'Type of the earthquake event';
 COMMENT ON COLUMN tmp.earthquake_events.title IS 'Title or summary of the earthquake event';
 COMMENT ON COLUMN tmp.earthquake_events.upload_time IS 'The timestamp of when the event was uploaded to the tmp';
-
-CREATE TABLE IF NOT EXISTS tmp.earthquake_coordinates (
-    ids VARCHAR(50) PRIMARY KEY,
-    longitude FLOAT,
-    latitude FLOAT,
-    depth FLOAT
-);
-
-COMMENT ON COLUMN earthquake.dim__location_coordinates.ids IS 'Primary key';
-COMMENT ON COLUMN earthquake.dim__location_coordinates.longitude IS 'Longitude';
-COMMENT ON COLUMN earthquake.dim__location_coordinates.latitude IS 'Latitude';
-COMMENT ON COLUMN earthquake.dim__location_coordinates.depth IS 'Depth';

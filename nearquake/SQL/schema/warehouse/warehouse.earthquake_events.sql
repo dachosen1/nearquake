@@ -1,5 +1,3 @@
-CREATE SCHEMA warehouse;
-
 CREATE TABLE IF NOT EXISTS warehouse.earthquake_events (
     ids VARCHAR(50) PRIMARY KEY,
     mag FLOAT,
@@ -32,16 +30,4 @@ COMMENT ON COLUMN warehouse.earthquake_events.status IS 'Status description of t
 COMMENT ON COLUMN warehouse.earthquake_events.tsunami IS 'Indicates if the earthquake event caused a tsunami';
 COMMENT ON COLUMN warehouse.earthquake_events.type IS 'Type of the earthquake event';
 COMMENT ON COLUMN warehouse.earthquake_events.title IS 'Title or summary of the earthquake event';
-COMMENT ON COLUMN warehouse.earthquake_events.upload_time  IS 'The timestamp of when the event was uploaded to the warehouse';
-
-
-CREATE TABLE IF NOT EXISTS warehouse.earthquake_coordinates (
-    ids VARCHAR(50) PRIMARY KEY,
-    longitude FLOAT,
-    latitude FLOAT,
-    depth FLOAT
-);
-COMMENT ON COLUMN earthquake.dim__location_coordinates.ids IS 'Primary key';
-COMMENT ON COLUMN earthquake.dim__location_coordinates.longitude IS 'Longitude';
-COMMENT ON COLUMN earthquake.dim__location_coordinates.latitude IS 'Latitude';
-COMMENT ON COLUMN earthquake.dim__location_coordinates.depth IS 'Depth';
+COMMENT ON COLUMN warehouse.earthquake_events.upload_time IS 'The timestamp of when the event was uploaded to the warehouse';
