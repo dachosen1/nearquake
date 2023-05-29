@@ -1,4 +1,7 @@
 from psycopg2 import connect, sql
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class DbOperator:
