@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS earthquake.dim__place (
     place_id INTEGER PRIMARY KEY,
     place VARCHAR(200)
 );
+
 COMMENT ON COLUMN earthquake.dim__place.place_id IS 'Primary key';
 COMMENT ON COLUMN earthquake.dim__place.place IS 'Location of the earthquake';
 
@@ -37,7 +38,7 @@ COMMENT ON COLUMN earthquake.dim__location_coordinates.latitude IS 'Latitude';
 COMMENT ON COLUMN earthquake.dim__location_coordinates.depth IS 'Depth';
 
 CREATE TABLE IF NOT EXISTS earthquake.fct__upload_date (
-    uploadid  PRIMARY KEY,
+    uploadid  INTEGER PRIMARY KEY,
     upload_date DATE,
     max_quake_date DATE,
 );
@@ -67,6 +68,7 @@ CREATE TABLE IF NOT EXISTS earthquake.fct__event_details (
     FOREIGN KEY (alert_id) REFERENCES earthquake.dim__alert(alert_id),
     FOREIGN KEY (time_id) REFERENCES earthquake.dim__time(time_id)
 );
+
 COMMENT ON COLUMN earthquake.fct__event_details.ids IS 'Earlthquake id Primary key';
 COMMENT ON COLUMN earthquake.fct__event_details.mag IS 'Magnitude of the earthquake';
 COMMENT ON COLUMN earthquake.fct__event_details.place_id IS 'Place id ';
