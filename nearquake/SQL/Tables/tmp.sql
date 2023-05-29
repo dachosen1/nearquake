@@ -1,0 +1,48 @@
+CREATE SCHEMA tmp;
+
+CREATE TABLE IF NOT EXISTS tmp.earthquake_events (
+    ids VARCHAR(50) PRIMARY KEY,
+    mag FLOAT,
+    place VARCHAR(200),
+    time BIGINT,
+    updated TIMESTAMP,
+    tz INTEGER,
+    felt INTEGER,
+    cdi FLOAT,
+    mmi FLOAT,
+    alert VARCHAR(50),
+    status VARCHAR(50),
+    tsunami BOOLEAN,
+    type VARCHAR(50),
+    title VARCHAR(200),
+    upload_time TIMESTAMP
+);
+
+COMMENT ON TABLE tmp.earthquake_events IS 'Table for storing earthquake event data';
+COMMENT ON COLUMN tmp.earthquake_events.ids IS 'Unique identifier for each earthquake event';
+COMMENT ON COLUMN tmp.earthquake_events.mag IS 'Magnitude of the earthquake';
+COMMENT ON COLUMN tmp.earthquake_events.place IS 'Location where the earthquake occurred';
+COMMENT ON COLUMN tmp.earthquake_events.time IS 'Timestamp of when the earthquake event happened in miliseconds';
+COMMENT ON COLUMN tmp.earthquake_events.updated IS 'Timestamp of when the earthquake event was last updated in miliseconds';
+COMMENT ON COLUMN tmp.earthquake_events.tz IS 'Timezone offset';
+COMMENT ON COLUMN tmp.earthquake_events.felt IS 'Count of felt reports';
+COMMENT ON COLUMN tmp.earthquake_events.cdi IS 'Community Internet Intensity Map value';
+COMMENT ON COLUMN tmp.earthquake_events.mmi IS 'Modified Mercalli Intensity value';
+COMMENT ON COLUMN tmp.earthquake_events.alert IS 'Alert level of the earthquake';
+COMMENT ON COLUMN tmp.earthquake_events.status IS 'Status description of the earthquake';
+COMMENT ON COLUMN tmp.earthquake_events.tsunami IS 'Indicates if the earthquake event caused a tsunami';
+COMMENT ON COLUMN tmp.earthquake_events.type IS 'Type of the earthquake event';
+COMMENT ON COLUMN tmp.earthquake_events.title IS 'Title or summary of the earthquake event';
+COMMENT ON COLUMN tmp.earthquake_events.upload_time IS 'The timestamp of when the event was uploaded to the tmp';
+
+CREATE TABLE IF NOT EXISTS tmp.earthquake_coordinates (
+    ids VARCHAR(50) PRIMARY KEY,
+    longitude FLOAT,
+    latitude FLOAT,
+    depth FLOAT
+);
+
+COMMENT ON COLUMN earthquake.dim__location_coordinates.ids IS 'Primary key';
+COMMENT ON COLUMN earthquake.dim__location_coordinates.longitude IS 'Longitude';
+COMMENT ON COLUMN earthquake.dim__location_coordinates.latitude IS 'Latitude';
+COMMENT ON COLUMN earthquake.dim__location_coordinates.depth IS 'Depth';
