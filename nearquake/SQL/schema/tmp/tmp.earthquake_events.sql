@@ -30,4 +30,4 @@ COMMENT ON COLUMN tmp.earthquake_events.status IS 'Status description of the ear
 COMMENT ON COLUMN tmp.earthquake_events.tsunami IS 'Indicates if the earthquake event caused a tsunami';
 COMMENT ON COLUMN tmp.earthquake_events.type IS 'Type of the earthquake event';
 COMMENT ON COLUMN tmp.earthquake_events.title IS 'Title or summary of the earthquake event';
-COMMENT ON COLUMN tmp.earthquake_events.upload_time IS 'The timestamp of when the event was uploaded to the tmp';
+COMMENT ON COLUMN tmp.earthquake_events.upload_time IS 'The timestamp of when the event was uploaded';
