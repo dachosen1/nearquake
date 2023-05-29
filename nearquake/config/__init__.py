@@ -15,7 +15,7 @@ EARTH_QUAKE_FEATURES = (
     "title",
 )
 
-API_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
+API_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time}.geojson"
 
 EARTHQUAKE_URL_TEMPLATE = "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={year}-{month}-01%2000:00:00&endtime={year}-{month}-31"
 

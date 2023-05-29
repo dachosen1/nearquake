@@ -1,5 +1,6 @@
 import requests
-
+import json
+import os 
 
 def get_quake_image_url(url):
     """
