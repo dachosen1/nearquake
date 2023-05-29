@@ -1,4 +1,4 @@
-import os
+import os 
 import requests
 import json
 from utils.db import DbOperator
@@ -28,3 +28,16 @@ def load_earthquake_data(url, time_range):
     except json.JSONDecodeError:
         _logger.exception("Could not find image URL in response data.")
         return None
+
+
+if __name__ == "__main__":
+    db = DbOperator()
+    db.connect(
+        host=os.getenv("NEARQUAKE_HOST"),
+        user=os.getenv("NEARQUAKE_USERNAME"),
+        password=os.getenv("NEARQUAKE_PASSWORD"),
+        dbname=os.getenv("NEARQUAKE_DATABASE"),
+        port=5433,
+    )
+
+    load_earthquake_data(url=API_URL, time_range='day')
