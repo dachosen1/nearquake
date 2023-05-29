@@ -1,8 +1,8 @@
-import os 
+import os
 import requests
 import json
 from utils.db import DbOperator
-from config import API_URL, EARTH_QUAKE_FEATURES, generate_earthquake_url
+from config import API_URL, generate_earthquake_url
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ def load_earthquake_data(url, time_range):
 
     if response.status_code != 200:
         _logger.error(
-            f"Failed to get data from URL {url}. Status code: {response.status_code}"
+            "Failed to get data from URL %s. Status code: %s", url, response.status_code
         )
         return None
     try:
@@ -40,4 +40,4 @@ if __name__ == "__main__":
         port=5433,
     )
 
-    load_earthquake_data(url=API_URL, time_range='day')
+    load_earthquake_data(url=API_URL, time_range="day")
