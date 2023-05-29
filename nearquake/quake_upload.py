@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 _logger = logging.getLogger(__name__)
 
+
 def connect_db():
     conn = connect(
         host=os.getenv("NEARQUAKE_HOST"),
@@ -26,7 +27,6 @@ conn = connect_db()
 
 
 def count_database_rows():
-
     """
     :return:
     """
@@ -66,7 +66,6 @@ def save_to_database_properties(
     quake_type,
     quake_title,
 ):
-
     cur = conn.cursor()
     query = "select ids from properties"
     cur.execute(query)
@@ -113,7 +112,6 @@ def save_to_database_properties(
 
 
 def save_to_database_coordinate(ids, longitude, latitude, depth):
-
     cur = conn.cursor()
     sql = "select ids from coordinate"
     cur.execute(sql)
@@ -122,7 +120,6 @@ def save_to_database_coordinate(ids, longitude, latitude, depth):
     eval_id = [ids]
 
     if eval_id in all_id:
-
         pass
     else:
         sql = "insert into coordinate VALUES (%s,%s,%s,%s)"
@@ -136,7 +133,6 @@ class Earthquake:
         self.ids = []
 
     def return_database_ids(self):
-
         cur = conn.cursor()
         sql = "select ids from properties"
         cur.execute(sql)
@@ -283,7 +279,6 @@ def load_recent_date(time):
 
 
 if __name__ == "__main__":
-
     year_range = [i for i in range(1900, 2023)]
     month_range = [i for i in range(1, 13)]
 
