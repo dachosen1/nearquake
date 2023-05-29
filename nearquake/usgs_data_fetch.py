@@ -2,7 +2,7 @@ import os
 import requests
 import json
 from utils.db import DbOperator
-from config import API_URL, generate_earthquake_url
+from config import API_URL
 import logging
 
 _logger = logging.getLogger(__name__)
