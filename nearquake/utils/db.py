@@ -1,7 +1,21 @@
 from psycopg2 import connect, sql
 import logging
+from typing import Protocol
 
 _logger = logging.getLogger(__name__)
+
+
+class DatabaseProtocol(Protocol):
+    def fetch(self, query: str, mode: str):
+        ...
+
+    def insert(self, query: str, data, mode: str):
+        ...
+
+
+class QueryExecutor:
+    def __init__(self, database: DatabaseProtocol):
+        self.database = database
 
 
 class DbOperator:
@@ -87,8 +101,11 @@ class QueryExecutor:
     Functions to run SQL queries and exit the connection to the database
     """
 
-    def __init__(self, database):
+    def __init__(self, database: DatabaseProtocol):
+        if not all(hasattr(database, method) for method in ['fetch', 'insert']):
+            raise TypeError("database must have 'fetch' and 'insert' methods")
         self.database = database
+
 
     def fetch(self, query, mode):
         """
