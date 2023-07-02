@@ -76,3 +76,10 @@ class DimLocationCoordinate(Base):
     latitude = Column(Float, comment="Latitude")
     depth = Column(Float, comment= "Depth")
     event_details = relationship("EventDetails", back_populates="location")
+
+class DimTime(Base): 
+    __tablename__ = "dim__time"
+    __table_args__ = {"schema": "earthquake"}
+
+    id_time = Column(Integer, primary_key=True, comment= "Time ID")
+    ts_event_utc = Column(TIMESTAMP, comments = 'Timestamp of the earthquake')
