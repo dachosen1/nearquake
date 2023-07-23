@@ -47,7 +47,7 @@ class EventDetails(Base):
     place = relationship("DimPlace", back_populates="event_details")
     time = relationship("DimTime", back_populates="event_details")
     alert = relationship("DimAlert", back_populates="event_details")
-    location = relationship("DimLocationCoordinate",back_populates="event_details" )
+    location = relationship("DimLocationCoordinate", back_populates="event_details")
 
 
 class DimPlace(Base):
@@ -67,19 +67,21 @@ class DimAlert(Base):
     alert = Column(String(200), comment="Alert level of the earthquake")
     event_details = relationship("EventDetails", back_populates="alert")
 
-class DimLocationCoordinate(Base): 
+
+class DimLocationCoordinate(Base):
     __tablename__ = "dim__location_coordinates"
     __table_args__ = {"schema": "earthquake"}
 
-    id = Column(Integer,primary_key=True, comment= "Eartquake ID")
-    longitude= Column(Float, comment='Longitude' )
+    id = Column(Integer, primary_key=True, comment="Eartquake ID")
+    longitude = Column(Float, comment='Longitude')
     latitude = Column(Float, comment="Latitude")
-    depth = Column(Float, comment= "Depth")
+    depth = Column(Float, comment="Depth")
     event_details = relationship("EventDetails", back_populates="location")
 
-class DimTime(Base): 
+
+class DimTime(Base):
     __tablename__ = "dim__time"
     __table_args__ = {"schema": "earthquake"}
 
-    id_time = Column(Integer, primary_key=True, comment= "Time ID")
-    ts_event_utc = Column(TIMESTAMP, comments = 'Timestamp of the earthquake')
+    id_time = Column(Integer, primary_key=True, comment="Time ID")
+    ts_event_utc = Column(TIMESTAMP, comments='Timestamp of the earthquake')
