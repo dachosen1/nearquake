@@ -9,25 +9,19 @@ class DbOperator:
     Connects to and executes database SQL queries
     """
 
-    def __init__(self):
+    def __init__(self, host, user, password, dbname, port):
         self.connection = None
         self.cursor = None
-
-    def connect(self, host, user, password, dbname, port):
-        """
-        :param host: Host name
-        :param user: User name
-        :param password: Password
-        :param dbname: Database name
-        """
-
+        self.user = user
         self.host = host
         self.dbname = dbname
         self.port = port
+        self.password = password
 
+    def connect(self):
         try:
             self.connection = connect(
-                host=host, user=user, password=password, dbname=dbname, port=port
+                host=self.host, user=self.user, password=self.password, dbname=self.dbname, port=self.port
             )
             self.cursor = self.connection.cursor()
         except Exception as e:
@@ -38,7 +32,8 @@ class DbOperator:
         Executes an SQL query
 
         :param query: SQL Query
-        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one' (returns a single row).
+        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one'
+                    (returns a single row).
         Defaults to 'all'.
         """
         try:
@@ -95,7 +90,8 @@ class QueryExecutor:
         Fetch data from a database and close the database connection.
 
         :param query: SQL Query
-        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one' (returns a single row).
+        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one'
+        (returns a single row).
         Defaults to 'all'.
         """
         with self.database as db:
@@ -105,8 +101,10 @@ class QueryExecutor:
         """
         Insert data into a database and close the database connection.
 
+        :param data:
         :param query: SQL Query
-        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one' (returns a single row).
+        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one'
+        (returns a single row).
         Defaults to 'all'.
         """
         with self.database as db:
