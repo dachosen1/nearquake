@@ -18,9 +18,7 @@ class EventDetails(Base):
     __tablename__ = "fct__event_details"
     __table_args__ = {"schema": "earthquake"}
 
-    id_event = Column(
-        String(50), primary_key=True, comment="Earlthquake id Primary key"
-    )
+    id_event = Column(String(50), primary_key=True, comment="Earthquake id Primary key")
     mag = Column(Float, comment="Magnitude of the earthquake")
     id_place = Column(
         Integer, ForeignKey("earthquake.dim__place.id_place"), comment="Place id"
@@ -71,9 +69,9 @@ class DimAlert(Base):
 class DimLocationCoordinate(Base):
     __tablename__ = "dim__location_coordinates"
     __table_args__ = {"schema": "earthquake"}
-
-    id = Column(Integer, primary_key=True, comment="Eartquake ID")
-    longitude = Column(Float, comment='Longitude')
+    
+    id = Column(Integer, primary_key=True, comment="Earthquake ID")
+    longitude = Column(Float, comment="Longitude")
     latitude = Column(Float, comment="Latitude")
     depth = Column(Float, comment="Depth")
     event_details = relationship("EventDetails", back_populates="location")
@@ -82,6 +80,5 @@ class DimLocationCoordinate(Base):
 class DimTime(Base):
     __tablename__ = "dim__time"
     __table_args__ = {"schema": "earthquake"}
-
     id_time = Column(Integer, primary_key=True, comment="Time ID")
-    ts_event_utc = Column(TIMESTAMP, comments='Timestamp of the earthquake')
+    ts_event_utc = Column(TIMESTAMP, comments="Timestamp of the earthquake")
