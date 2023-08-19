@@ -8,8 +8,7 @@ from sqlalchemy import (
     String,
     TIMESTAMP,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
@@ -34,6 +33,9 @@ class EventDetails(Base):
     detail = Column(String(500))
     cdi = Column(Float, comment="Community Internet Intensity Map")
     mmi = Column(Float, comment="Modified Mercalli Intensity")
+    longitude = Column(Float, comment="Longitude")
+    latitude = Column(Float, comment="Latitude")
+    depth = Column(Float, comment="Depth")
     id_alert = Column(
         Integer, ForeignKey("earthquake.dim__alert.id_alert"), comment="Alert id"
     )
@@ -45,7 +47,6 @@ class EventDetails(Base):
     place = relationship("DimPlace", back_populates="event_details")
     time = relationship("DimTime", back_populates="event_details")
     alert = relationship("DimAlert", back_populates="event_details")
-    location = relationship("DimLocationCoordinate", back_populates="event_details")
 
 
 class DimPlace(Base):
@@ -66,19 +67,9 @@ class DimAlert(Base):
     event_details = relationship("EventDetails", back_populates="alert")
 
 
-class DimLocationCoordinate(Base):
-    __tablename__ = "dim__location_coordinates"
-    __table_args__ = {"schema": "earthquake"}
-    
-    id = Column(Integer, primary_key=True, comment="Earthquake ID")
-    longitude = Column(Float, comment="Longitude")
-    latitude = Column(Float, comment="Latitude")
-    depth = Column(Float, comment="Depth")
-    event_details = relationship("EventDetails", back_populates="location")
-
-
 class DimTime(Base):
     __tablename__ = "dim__time"
     __table_args__ = {"schema": "earthquake"}
     id_time = Column(Integer, primary_key=True, comment="Time ID")
-    ts_event_utc = Column(TIMESTAMP, comments="Timestamp of the earthquake")
+    ts_event_utc = Column(TIMESTAMP, comment="Timestamp of the earthquake")
+    event_details = relationship("EventDetails", back_populates="time")
