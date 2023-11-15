@@ -73,3 +73,18 @@ class DimTime(Base):
     id_time = Column(Integer, primary_key=True, comment="Time ID")
     ts_event_utc = Column(TIMESTAMP, comment="Timestamp of the earthquake")
     event_details = relationship("EventDetails", back_populates="time")
+
+
+if __name__ == "__main__": 
+    from sqlalchemy import create_engine 
+    from sqlalchemy.orm import sessionmaker
+
+    engine=create_engine(url= 'postgresql://airflow:airflow@localhost:5432/airflow')
+    
+
+    # Create all tables in the engine
+    Base.metadata.create_all(engine)
+
+    # Create a sessionmaker, bound to our engine
+    Session = sessionmaker(bind=engine)
+    session = Session() 
