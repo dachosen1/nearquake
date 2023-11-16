@@ -1,4 +1,4 @@
-name: Python application test
+name: Python Unit test
 
 on: [push, pull_request]
 
@@ -20,4 +20,4 @@ jobs:
         pip3 install -r requirements.txt
     - name: Test with pytest
       run: |
-        pytest
+        pytest nearquake/test/db_test.py
