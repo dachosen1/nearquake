@@ -43,7 +43,7 @@ def test_schema():
 def test_event_details_columns():
     columns = EventDetails.__table__.columns
     assert "id_event" in columns
-    assert columns["id_event"].primary_key == True
+    assert columns["id_event"].primary_key is True
 
 
 def test_relationships():
