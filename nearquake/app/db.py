@@ -76,6 +76,7 @@ class DimTime(Base):
 
 
 if __name__ == "__main__":
+    #TODO: Remove
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
 
