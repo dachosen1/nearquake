@@ -1,4 +1,4 @@
-apache-airflow==2.7.1
+apache-airflow==2.7.3
 psycopg2-binary==2.9.6
 requests==2.31.0
 tqdm==4.66.1
