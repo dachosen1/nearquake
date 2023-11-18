@@ -74,6 +74,14 @@ class DimTime(Base):
     ts_event_utc = Column(TIMESTAMP, comment="Timestamp of the earthquake")
     event_details = relationship("EventDetails", back_populates="time")
 
+class Post(Base):
+    __tablename__ = "fct__post"
+    __table_args__ = {"schema": "tweet"}
+
+    id_post = Column(String(50), primary_key=True, comment="Post ID")
+    post = Column(String(2000), comment="Content of the tweet")
+    ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
+
 
 if __name__ == "__main__":
     #TODO: Remove

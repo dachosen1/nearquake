@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine, MetaData
 import sqlalchemy.orm
-from nearquake.app.db import EventDetails, Base, DimAlert, DimPlace, DimTime
+from nearquake.app.db import EventDetails, Base, DimAlert, DimPlace, DimTime, Post
 
 DATABASE_URL = "sqlite:///:memory:"
 
@@ -28,13 +28,17 @@ def session(connection, metadata):
     metadata.create_all(bind=connection, tables=[EventDetails.__table__])
     yield session
     session.close()
+    
 
-
-def test_table_name():
+def test_earquake_schema_tables():
     assert EventDetails.__tablename__ == "fct__event_details"
     assert DimAlert.__tablename__ == "dim__alert"
     assert DimPlace.__tablename__ == "dim__place"
     assert DimTime.__tablename__ == "dim__time"
+
+
+def test_twiiter_schema_tables():
+    assert Post.__tablename__ == "fct__post"
 
 
 def test_schema():
