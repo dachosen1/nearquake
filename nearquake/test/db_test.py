@@ -38,7 +38,7 @@ def test_earquake_schema_tables():
 
 
 def test_twiiter_schema_tables():
-    assert Post.__tablename__ == "fct___post"
+    assert Post.__tablename__ == "fct__post"
 
 
 def test_schema():
