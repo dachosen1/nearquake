@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
-class config:
+class Config:
     def __init__(self) -> None:
         self.EARTH_QUAKE_FEATURES = (
             "ids",
@@ -32,4 +32,4 @@ class config:
         :param month: Month
         :return: The URL path for the earthquakes that happened during the specified month and year.
         """
-        return config.EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month)
+        return Config.EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month)
