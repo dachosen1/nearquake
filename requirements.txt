@@ -1,7 +1,7 @@
-apache-airflow==2.6.2
+apache-airflow==2.7.3
 psycopg2-binary==2.9.6
 pytest==7.4.3
 requests==2.31.0
 SQLAlchemy==1.4.50
-tqdm==4.65.0
+tqdm==4.66.1
 tweepy==4.14.0
