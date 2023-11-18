@@ -28,13 +28,14 @@ def session(connection, metadata):
     metadata.create_all(bind=connection, tables=[EventDetails.__table__])
     yield session
     session.close()
-
+    
 
 def test_earquake_schema_tables():
     assert EventDetails.__tablename__ == "fct__event_details"
     assert DimAlert.__tablename__ == "dim__alert"
     assert DimPlace.__tablename__ == "dim__place"
     assert DimTime.__tablename__ == "dim__time"
+
 
 def test_twiiter_schema_tables():
     assert Post.__tablename__ == "fct___post"
