@@ -1,5 +1,8 @@
 from psycopg2 import connect, sql
 import logging
+from sqlalchemy import create_engine
+
+from nearquake.config import ConnectionConfig
 
 _logger = logging.getLogger(__name__)
 
@@ -9,21 +12,13 @@ class DbOperator:
     Connects to and executes database SQL queries
     """
 
-    def __init__(self, host, user, password, dbname, port):
-        self.connection = None
-        self.cursor = None
-        self.user = user
-        self.host = host
-        self.dbname = dbname
-        self.port = port
-        self.password = password
-
-    def connect(self):
-        try:
-            self.connection = connect(
-                host=self.host, user=self.user, password=self.password, dbname=self.dbname, port=self.port
-            )
-            self.cursor = self.connection.cursor()
+    def connect(self, sqlengine):
+        config = ConnectionConfig()
+        try:  
+            # self.engine = create_engine(url=config.generate_connection_url(sqlengine))
+            print(config.generate_connection_url(sqlengine))
+            self.engine= create_engine(url="postgresql://airflow:airflow@localhost:5432/airflow")
+            print('Successfully conection to the Database')
         except Exception as e:
             _logger.error(f"Failed to connect to the database: {e}")
 
@@ -109,3 +104,9 @@ class QueryExecutor:
         """
         with self.database as db:
             return db.insert(query, data, mode)
+
+
+if __name__ == "__main__":
+    db = DbOperator()
+    db.connect('postgresql')
+

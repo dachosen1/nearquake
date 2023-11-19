@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+import os
 
 
 @dataclass
-class Config:
+class QuakeConfig:
     EARTH_QUAKE_FEATURES: tuple = (
         "ids",
         "mag",
@@ -35,4 +36,22 @@ class Config:
         :param month: Month
         :return: The URL path for the earthquakes that happened during the specified month and year.
         """
-        return Config.EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month)
+        return QuakeConfig.EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month)
+
+
+@dataclass
+class ConnectionConfig:
+    user = os.environ.get("NEARQUAKE_USERNAME")
+    host = os.environ.get("NEARQUAKE_HOST")
+    dbname = os.environ.get("NEARQUAKE_DATABASE")
+    port = os.environ.get("NEARQUAKE_PORT")
+    password = os.environ.get("NEARQUAKE_PASSWORD")
+
+    def generate_connection_url(self, sqlengine):
+        if sqlengine is None: 
+            raise ValueError("SQL Engine is not specifed")
+        return f"{sqlengine}://{self.user}:{self.password}@{self.port}:{self.port}/{self.dbname}"
+
+if __name__ == '__main__': 
+    config = ConnectionConfig()
+    config.generate_connection_url('postgresql')

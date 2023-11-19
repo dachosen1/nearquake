@@ -181,3 +181,7 @@ def weekly_quake_count():
     count_ytd = count_quake(start=ytd, end=datetime.now().date())[0]
     tweet = f"--------- Total Earthquakes Greater than 5.0 ---------\nWeek = Count: {count_week[0]} \nMonth = Count {count_month[0]} \nYTD = Count: {count_ytd[0]} \n #earthquake"
     return post_tweet(tweet)
+
+
+if __name__ == "__main__":
+    print('test')

@@ -85,11 +85,12 @@ class Post(Base):
 
 if __name__ == "__main__":
     #TODO: Remove
-    from sqlalchemy import create_engine
+    from sqlalchemy import create_engine 
     from sqlalchemy.orm import sessionmaker
+    from nearquake.config import ConnectionConfig
+
 
     engine = create_engine(url="postgresql://airflow:airflow@localhost:5432/airflow")
-
     # Create all tables in the engine
     Base.metadata.create_all(engine)
 
