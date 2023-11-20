@@ -1,5 +1,8 @@
 from dataclasses import dataclass
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 
 @dataclass
@@ -48,10 +51,11 @@ class ConnectionConfig:
     password = os.environ.get("NEARQUAKE_PASSWORD")
 
     def generate_connection_url(self, sqlengine):
-        if sqlengine is None: 
+        if sqlengine is None:
             raise ValueError("SQL Engine is not specifed")
         return f"{sqlengine}://{self.user}:{self.password}@{self.port}:{self.port}/{self.dbname}"
 
-if __name__ == '__main__': 
+
+if __name__ == "__main__":
     config = ConnectionConfig()
-    config.generate_connection_url('postgresql')
+    config.generate_connection_url("postgresql")
