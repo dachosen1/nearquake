@@ -9,6 +9,7 @@ from sqlalchemy import (
     TIMESTAMP,
 )
 from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.sql import text
 
 Base = declarative_base()
 
@@ -74,6 +75,7 @@ class DimTime(Base):
     ts_event_utc = Column(TIMESTAMP, comment="Timestamp of the earthquake")
     event_details = relationship("EventDetails", back_populates="time")
 
+
 class Post(Base):
     __tablename__ = "fct__post"
     __table_args__ = {"schema": "tweet"}
@@ -83,14 +85,30 @@ class Post(Base):
     ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
 
 
+def create_schemas(engine, schema_names):
+    connection = engine.connect()
+
+    for schema_name in schema_names:
+        create_schema_sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
+        connection.execute(create_schema_sql)
+
+
 if __name__ == "__main__":
-    #TODO: Remove
-    from sqlalchemy import create_engine 
+    # TODO: Remove
+    from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from nearquake.config import ConnectionConfig
 
+    config = ConnectionConfig()
+    url = config.generate_connection_url("postgresql")
 
-    engine = create_engine(url="postgresql://airflow:airflow@localhost:5432/airflow")
+    engine = create_engine(url=url)
+
+    schema_names = ["earthquake", "tweet", "tmp", "warehouse"]
+
+    # Create schemas if they don't exist
+    create_schemas(engine, schema_names)
+
     # Create all tables in the engine
     Base.metadata.create_all(engine)
 
