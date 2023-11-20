@@ -13,12 +13,12 @@ class DbOperator:
     """
 
     def connect(self, sqlengine):
-        config = ConnectionConfig()
-        try:  
-            # self.engine = create_engine(url=config.generate_connection_url(sqlengine))
-            print(config.generate_connection_url(sqlengine))
-            self.engine= create_engine(url="postgresql://airflow:airflow@localhost:5432/airflow")
-            print('Successfully conection to the Database')
+        self.config = ConnectionConfig()
+        try:
+            self.engine = create_engine(
+                url=self.config.generate_connection_url(sqlengine)
+            )
+            _logger.info(" Connected to the Database")
         except Exception as e:
             _logger.error(f"Failed to connect to the database: {e}")
 
@@ -104,9 +104,3 @@ class QueryExecutor:
         """
         with self.database as db:
             return db.insert(query, data, mode)
-
-
-if __name__ == "__main__":
-    db = DbOperator()
-    db.connect('postgresql')
-
