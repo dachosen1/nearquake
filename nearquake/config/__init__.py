@@ -53,7 +53,7 @@ class ConnectionConfig:
     def generate_connection_url(self, sqlengine):
         if sqlengine is None:
             raise ValueError("SQL Engine is not specifed")
-        return f"{sqlengine}://{self.user}:{self.password}@{self.port}:{self.port}/{self.dbname}"
+        return f"{sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
 
 
 if __name__ == "__main__":
