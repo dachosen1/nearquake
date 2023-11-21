@@ -3,6 +3,8 @@ import logging
 from sqlalchemy import create_engine
 
 from nearquake.config import ConnectionConfig
+from sqlalchemy.orm import sessionmaker
+from nearquake.app.db import DimPlace
 
 _logger = logging.getLogger(__name__)
 
@@ -19,6 +21,9 @@ class DbOperator:
                 url=self.config.generate_connection_url(sqlengine)
             )
             _logger.info(" Connected to the Database")
+            Session = sessionmaker(bind=self.engine)
+            self.session = Session()
+
         except Exception as e:
             _logger.error(f"Failed to connect to the database: {e}")
 
@@ -104,3 +109,12 @@ class QueryExecutor:
         """
         with self.database as db:
             return db.insert(query, data, mode)
+
+
+if __name__ == "__main__":
+    db = DbOperator()
+    db.connect("postgresql")
+    item = DimPlace(id_place=1219187, place="New York")
+    db.session.add(item)
+    db.session.commit()
+    db.close()
