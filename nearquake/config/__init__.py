@@ -49,11 +49,12 @@ class ConnectionConfig:
     dbname = os.environ.get("NEARQUAKE_DATABASE")
     port = os.environ.get("NEARQUAKE_PORT")
     password = os.environ.get("NEARQUAKE_PASSWORD")
+    sqlengine = os.environ.get("NEARQUAKE_ENGINE")
 
-    def generate_connection_url(self, sqlengine):
-        if sqlengine is None:
+    def generate_connection_url(self):
+        if self.sqlengine is None:
             raise ValueError("SQL Engine is not specifed")
-        return f"{sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
+        return f"{self.sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
 
 
 if __name__ == "__main__":
