@@ -11,15 +11,26 @@ _logger = logging.getLogger(__name__)
 
 class DbOperator:
     """
-    Connects to and executes database SQL queries
+    Establishes a connection to the database using the provided configuration.
+
+    Example usage:
+
+    with DbOperator() as db:
+        config = Config()
+        db.connect()
+        item = {"id": 123, "location": "St. Louis"}
+        row = Model(**item)
+        item = db.insert(row)
     """
 
-    def connect(self, sqlengine):
-        self.config = ConnectionConfig()
+    def connect(self, config):
+        """Establishes a connection to the database using the provided configuration.
+
+        :param config: A configuration object containing the necessary database connection details.
+        """
+        self.config = config
         try:
-            self.engine = create_engine(
-                url=self.config.generate_connection_url(sqlengine)
-            )
+            self.engine = create_engine(url=self.config.generate_connection_url())
             _logger.info(" Connected to the Database")
             Session = sessionmaker(bind=self.engine)
             self.session = Session()
@@ -27,94 +38,35 @@ class DbOperator:
         except Exception as e:
             _logger.error(f"Failed to connect to the database: {e}")
 
-    def fetch(self, query, mode="all"):
+    def fetch(self):
+        # TODO:
+        pass
+
+    def insert(self, model):
         """
-        Executes an SQL query
+        Inserts a given model instance into the database.
 
-        :param query: SQL Query
-        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one'
-                    (returns a single row).
-        Defaults to 'all'.
-        """
-        try:
-            self.cursor.execute(sql.SQL(query))
-            if mode == "all":
-                return self.cursor.fetchall()
-            elif mode == "one":
-                return self.cursor.fetchone()
-            else:
-                raise ValueError("Invalid type. Expected 'all' or 'one'.")
-
-        except Exception as e:
-            print("Failed to execute fetch query: ", e)
-
-    def insert(self, query, data, mode):
-        """
-        Insert data into the database.
-
-        :param query: SQL Query
-        :param data: Data
-        :param mode: _description_
+        :param model: An instance of an SQLAlchemy ORM model to be inserted into the database.
         """
         try:
-            if mode == "one":
-                return self.cursor.execute(sql.SQL(query), data)
-
-            elif mode == "all":
-                return self.cursor.executemany(sql.SQL(query), data)
+            self.session.add(model)
+            self.session.commit()
 
         except Exception as e:
             print("Failed to execute insert query: ", e)
 
     def close(self):
-        self.cursor.close()
-        self.connection.close()
+        """
+        An instance of an SQLAlchemy ORM model to be inserted into the database.
+        """
+        self.session.close()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Exits the runtime context and closes the database session.
+
+        """
         self.close()
-
-
-class QueryExecutor:
-    """
-    Functions to run SQL queries and exit the connection to the database
-    """
-
-    def __init__(self, database):
-        self.database = database
-
-    def fetch(self, query, mode):
-        """
-        Fetch data from a database and close the database connection.
-
-        :param query: SQL Query
-        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one'
-        (returns a single row).
-        Defaults to 'all'.
-        """
-        with self.database as db:
-            return db.fetch(query, mode)
-
-    def insert(self, query, data, mode):
-        """
-        Insert data into a database and close the database connection.
-
-        :param data:
-        :param query: SQL Query
-        :param mode: Specifies the type of query. Options are 'all' (retrieves all rows) and 'one'
-        (returns a single row).
-        Defaults to 'all'.
-        """
-        with self.database as db:
-            return db.insert(query, data, mode)
-
-
-if __name__ == "__main__":
-    db = DbOperator()
-    db.connect("postgresql")
-    item = DimPlace(id_place=1219187, place="New York")
-    db.session.add(item)
-    db.session.commit()
-    db.close()
