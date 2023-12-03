@@ -9,13 +9,13 @@ from nearquake.app.db import DimPlace
 _logger = logging.getLogger(__name__)
 
 
-class DbOperator:
+class DbSessionManager:
     """
     Establishes a connection to the database using the provided configuration.
 
     Example usage:
 
-    with DbOperator() as db:
+    with DbSessionManager() as db:
         config = Config()
         db.connect()
         item = {"id": 123, "location": "St. Louis"}
