@@ -1,9 +1,9 @@
 name: Python Unit test
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
-  build:
+  UnitTesting:
 
     runs-on: ubuntu-latest
 
@@ -21,3 +21,12 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+
+  Linter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+      
