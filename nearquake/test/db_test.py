@@ -28,7 +28,7 @@ def session(connection, metadata):
     metadata.create_all(bind=connection, tables=[EventDetails.__table__])
     yield session
     session.close()
-    
+
 
 def test_earquake_schema_tables():
     assert EventDetails.__tablename__ == "fct__event_details"

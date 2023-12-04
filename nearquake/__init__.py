@@ -1,12 +1,7 @@
 import logging
 import sys
-import os
-
-from psycopg2 import connect
 
 # --------------------------------------------------------------------------------- Logging
-
-FORMATTER = logging.Formatter()
 
 FORMATTER = logging.Formatter(
     "%(asctime)s — %(name)s — %(levelname)s —" "%(funcName)s:%(lineno)d — %(message)s"

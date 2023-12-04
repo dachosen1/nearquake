@@ -1,8 +1,12 @@
 from dataclasses import dataclass
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 @dataclass
-class Config:
+class QuakeConfig:
     EARTH_QUAKE_FEATURES: tuple = (
         "ids",
         "mag",
@@ -35,4 +39,24 @@ class Config:
         :param month: Month
         :return: The URL path for the earthquakes that happened during the specified month and year.
         """
-        return Config.EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month)
+        return QuakeConfig.EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month)
+
+
+@dataclass
+class ConnectionConfig:
+    user = os.environ.get("NEARQUAKE_USERNAME")
+    host = os.environ.get("NEARQUAKE_HOST")
+    dbname = os.environ.get("NEARQUAKE_DATABASE")
+    port = os.environ.get("NEARQUAKE_PORT")
+    password = os.environ.get("NEARQUAKE_PASSWORD")
+    sqlengine = os.environ.get("NEARQUAKE_ENGINE")
+
+    def generate_connection_url(self):
+        if self.sqlengine is None:
+            raise ValueError("SQL Engine is not specifed")
+        return f"{self.sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
+
+
+if __name__ == "__main__":
+    config = ConnectionConfig()
+    config.generate_connection_url("postgresql")

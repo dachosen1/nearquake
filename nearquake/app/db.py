@@ -9,6 +9,7 @@ from sqlalchemy import (
     TIMESTAMP,
 )
 from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.sql import text
 
 Base = declarative_base()
 
@@ -74,6 +75,7 @@ class DimTime(Base):
     ts_event_utc = Column(TIMESTAMP, comment="Timestamp of the earthquake")
     event_details = relationship("EventDetails", back_populates="time")
 
+
 class Post(Base):
     __tablename__ = "fct__post"
     __table_args__ = {"schema": "tweet"}
@@ -83,16 +85,9 @@ class Post(Base):
     ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
 
 
-if __name__ == "__main__":
-    #TODO: Remove
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
+def create_schemas(engine, schema_names):
+    connection = engine.connect()
 
-    engine = create_engine(url="postgresql://airflow:airflow@localhost:5432/airflow")
-
-    # Create all tables in the engine
-    Base.metadata.create_all(engine)
-
-    # Create a sessionmaker, bound to our engine
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    for schema_name in schema_names:
+        create_schema_sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
+        connection.execute(create_schema_sql)

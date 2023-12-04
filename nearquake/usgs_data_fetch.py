@@ -1,7 +1,7 @@
 import os
 import requests
 import json
-from utils.db import DbOperator
+from nearquake.utils.db_sessions import DbSessionManager
 from config import API_URL
 import logging
 
@@ -31,7 +31,7 @@ def load_earthquake_data(url, time_range):
 
 
 if __name__ == "__main__":
-    db = DbOperator()
+    db = DbSessionManager()
     db.connect(
         host=os.getenv("NEARQUAKE_HOST"),
         user=os.getenv("NEARQUAKE_USERNAME"),

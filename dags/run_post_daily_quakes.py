@@ -10,8 +10,8 @@ from nearquake import (
     generate_recent_quakes,
     update_last_updated_date,
     load_recent_date,
-    weekly_top_tweet, 
-    weekly_quake_count
+    weekly_top_tweet,
+    weekly_quake_count,
 )
 
 
@@ -46,7 +46,6 @@ with DAG(
     schedule_interval=timedelta(minutes=5),
     tags=["fetch"],
 ) as dag:
-
     t1 = PythonOperator(
         task_id="Update_database_to_last_post_date",
         python_callable=update_last_updated_date,
@@ -63,13 +62,14 @@ with DAG(
     description="A bot to push tweet to twitter",
     schedule_interval=timedelta(days=7),
 ) as dag:
-
     t1 = PythonOperator(
         task_id="weekly_top_tweet",
         python_callable=weekly_top_tweet,
     )
 
-    t2 = PythonOperator(task_id="weekly_quake_count", python_callable=weekly_quake_count)
+    t2 = PythonOperator(
+        task_id="weekly_quake_count", python_callable=weekly_quake_count
+    )
 
-    t1 
+    t1
     t2
