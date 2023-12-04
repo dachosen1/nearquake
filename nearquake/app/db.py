@@ -91,27 +91,3 @@ def create_schemas(engine, schema_names):
     for schema_name in schema_names:
         create_schema_sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
         connection.execute(create_schema_sql)
-
-
-if __name__ == "__main__":
-    # TODO: Remove
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    from nearquake.config import ConnectionConfig
-
-    config = ConnectionConfig()
-    url = config.generate_connection_url("postgresql")
-
-    engine = create_engine(url=url)
-
-    schema_names = ["earthquake", "tweet", "tmp", "warehouse"]
-
-    # Create schemas if they don't exist
-    create_schemas(engine, schema_names)
-
-    # Create all tables in the engine
-    Base.metadata.create_all(engine)
-
-    # Create a sessionmaker, bound to our engine
-    Session = sessionmaker(bind=engine)
-    session = Session()
