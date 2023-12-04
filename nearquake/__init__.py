@@ -26,15 +26,3 @@ logger.setLevel(logging.INFO)
 logger.addHandler(get_console_handler())
 
 logger.propagate = False
-
-
-from .quake_upload import load_recent_date
-from .utils import (
-    generate_recent_quakes,
-    update_last_updated_date,
-    daily_tweet,
-    post_tweet,
-    weekly_top_tweet,
-    weekly_quake_count,
-    DbOperator,
-)
