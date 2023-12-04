@@ -1,10 +1,7 @@
-from psycopg2 import connect, sql
 import logging
 from sqlalchemy import create_engine
 
-from nearquake.config import ConnectionConfig
 from sqlalchemy.orm import sessionmaker
-from nearquake.app.db import DimPlace
 
 _logger = logging.getLogger(__name__)
 
