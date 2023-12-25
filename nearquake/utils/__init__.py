@@ -11,7 +11,7 @@ def extract_properties(data: dict, keylist: list):
     """
     Extracts specified properties from a data dictionary and removes specific characters.
 
-    Given a dictionary and a list of keys, this function creates a new dictionary containing 
+    Given a dictionary and a list of keys, this function creates a new dictionary containing
     only the key-value pairs where the keys are in the provided list.
 
     Example:
@@ -21,8 +21,8 @@ def extract_properties(data: dict, keylist: list):
     :param data: The dictionary from which to extract properties
     :param keylist: A list of keys to extract from the dictionary.
 
-    :return: dict: A dictionary containing key-value pairs for each key in keylist. String values 
-              are stripped of commas, single quotes, and spaces. Non-string values are 
+    :return: dict: A dictionary containing key-value pairs for each key in keylist. String values
+              are stripped of commas, single quotes, and spaces. Non-string values are
               included as-is.
     """
     table = str.maketrans("", "", ",'")
@@ -97,10 +97,10 @@ def fetch_json_data_from_url(url):
     """
     Fetches and loads JSON data from a specified URL.
 
-    This function sends an HTTP GET request to the provided URL and attempts to parse 
-    the response as JSON. 
+    This function sends an HTTP GET request to the provided URL and attempts to parse
+    the response as JSON.
 
-    Note: 
+    Note:
         This function assumes that the response is JSON. Non-JSON responses will result in a JSONDecodeError
 
     Example:
@@ -110,7 +110,7 @@ def fetch_json_data_from_url(url):
     :param url: he URL from which to fetch JSON data.
 
 
-    :return:  dict or None: A Python dictionary parsed from the JSON response if the request is successful and the response contains valid JSON. 
+    :return:  dict or None: A Python dictionary parsed from the JSON response if the request is successful and the response contains valid JSON.
     Returns None if there's an HTTP error or if the response is not valid JSON.
 
     """
@@ -133,10 +133,10 @@ def convert_timestamp_to_utc(timestamp: int):
     """
     Converts a given timestamp into a UTC datetime object.
 
-    This function takes a timestamp (assumed to be in milliseconds since the Unix epoch) 
-    and converts it into a Python datetime object in UTC. 
+    This function takes a timestamp (assumed to be in milliseconds since the Unix epoch)
+    and converts it into a Python datetime object in UTC.
 
-    :param timestamp: The timestamp to be converted. This should be an integer representing the time in milliseconds since the Unix epoch 
+    :param timestamp: The timestamp to be converted. This should be an integer representing the time in milliseconds since the Unix epoch
     (00:00:00 UTC on 1 January 1970).
 
     Example:
@@ -169,9 +169,9 @@ def generate_date_range(start_date: str, end_date: str):
     Generates a list of [year, month] pairs between two specified dates.
 
     This function creates a range of dates from the start date to the end date, inclusive.
-    It assumes that the provided dates are in 'YYYY-MM' format. The function iterates 
-    through each year and month within the specified range and returns a list of [year, month] 
-    pairs. 
+    It assumes that the provided dates are in 'YYYY-MM' format. The function iterates
+    through each year and month within the specified range and returns a list of [year, month]
+    pairs.
 
     Example:
         >>> generate_date_range('2020-01', '2020-03')
@@ -179,7 +179,7 @@ def generate_date_range(start_date: str, end_date: str):
 
     :param start_date: The start date in 'YYYY-MM' format.
     :param end_date: The end date in 'YYYY-MM' format.
-    :return: list of [int, int]: A list where each element is a list containing two integers, the first being the year and the second the month, for each 
+    :return: list of [int, int]: A list where each element is a list containing two integers, the first being the year and the second the month, for each
     month in the range from start_date to end_date, inclusive.
 
     """
