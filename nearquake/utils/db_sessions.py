@@ -13,7 +13,7 @@ class DbSessionManager:
     Example usage:
 
     conn = DbSessionManager(config=ConnectionConfig())
-    
+
     with conn :
         item = {"id_event": 'c-jjerh', "longitude": 982.28, "latitude": 129.827}
         row = DimPlace(**item)
@@ -26,13 +26,13 @@ class DbSessionManager:
 
     def create_engine(self):
         return create_engine(url=self.config.generate_connection_url())
-    
+
     def connect(self):
         """Establishes a connection to the database using the provided configuration.
 
         :param config: A configuration object containing the necessary database connection details.
         """
-        
+
         try:
             self.engine = self.create_engine()
             _logger.info(" Connected to the Database")
@@ -42,16 +42,16 @@ class DbSessionManager:
         except Exception as e:
             _logger.error(f"Failed to connect to the database: {e}")
 
-    def fetch(self,model, column, item):
+    def fetch(self, model, column, item):
         """
-        
+
 
         :param model: _description_
         :param column: _description_
         :param item: _description_
         :return: _description_
         """
-        return self.session.query(model).filter(getattr(model, column)  == item).all()
+        return self.session.query(model).filter(getattr(model, column) == item).all()
 
     def insert(self, model):
         """
@@ -74,7 +74,7 @@ class DbSessionManager:
 
     def __enter__(self):
         return self
-    
+
     def __enter__(self):
         self.connect()
         return self

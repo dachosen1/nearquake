@@ -81,11 +81,15 @@ class Earthquake:
         :param start_date: _description_
         :param end_date: _description_
         """
-    
+
         date_range = generate_date_range(start_date, end_date)
         for year, month in date_range:
-            for day in range(1,32): 
-                url=generate_time_range_url(year=str(year).zfill(2), month=str(month).zfill(2), day=str(day).zfill(2))
+            for day in range(1, 32):
+                url = generate_time_range_url(
+                    year=str(year).zfill(2),
+                    month=str(month).zfill(2),
+                    day=str(day).zfill(2),
+                )
                 self.extract_data_properties(url)
 
         _logger.info(f"Completed the Backfill.. Horray :) ")
