@@ -16,10 +16,29 @@ _logger = logging.getLogger(__name__)
 
 
 class Earthquake:
-    def extract_data_properties(self, url):
-        """_summary_
+    """
+    The Earthquake class is designed to interact with the earthquake.usgs.gov API to
+    retrieve and store earthquake data. It provides functionalities to extract earthquake
+    event data and perform backfill operations for a specified date range.
+    """
 
-        :param url: _description_
+    def extract_data_properties(self, url):
+        """
+
+        Extracts earthquake data from a given URL, typically from earthquake.usgs.gov, and
+        uploads key properties of each earthquake event into a database.
+
+        This method iterates through the earthquake data, extracts relevant properties, and
+        inserts them into the database. It also handles duplicate records by skipping insertion
+        if an event with the same ID already exists in the database.
+
+        Note: this function only works for a speficific url, since it's expect the JSON api repsonse to follow a specific format.
+
+        Example Usage:
+        run = Earthquake()
+        run.extract_data_properties("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson")
+
+        :param url: The URL to fetch earthquake data from.
         """
         data = fetch_json_data_from_url(url=url)
 
@@ -69,32 +88,38 @@ class Earthquake:
                     else:
                         skipped += 1
                 _logger.info(
-                    f"Upload Complete for {time_stamp_date}. Added {added} records, and {skipped} records were already in the database"
+                    f" Upload Complete for {time_stamp_date}. Added {added} records, and {skipped} records were already in the database"
                 )
 
             except Exception as e:
-                _logger.error(f"Encountereed an unexpected error: {e}")
+                _logger.error(f" Encountereed an unexpected error: {e}")
 
     def backfill_data_properties(self, start_date: str, end_date: str):
-        """_summary_
+        """
+         Performs a backfill operation for earthquake data between specified start and end dates.
+        It generates URLs for each day within the date range and calls `extract_data_properties`
+        to process and store data for each day.
 
-        :param start_date: _description_
-        :param end_date: _description_
+        This is useful for populating the database with historical earthquake data for analysis
+
+        Example:
+        run = Earthquake()
+        run.backfill_data_properties(start_date="2023-01-01", end_date="2023-10-01")
+
+        :param start_date: The start date for the backfill operation, in 'YYYY-MM-DD' format.
+        :param end_date: The end date for the backfill operation, in 'YYYY-MM-DD' format.
         """
 
         date_range = generate_date_range(start_date, end_date)
         for year, month in date_range:
-            for day in range(1, 32):
-                url = generate_time_range_url(
-                    year=str(year).zfill(2),
-                    month=str(month).zfill(2),
-                    day=str(day).zfill(2),
-                )
-                self.extract_data_properties(url)
+            url = generate_time_range_url(
+                year=str(year).zfill(2), month=str(month).zfill(2)
+            )
+            self.extract_data_properties(url)
 
         _logger.info(f"Completed the Backfill.. Horray :) ")
 
 
 if __name__ == "__main__":
     test = Earthquake()
-    test.backfill_data_properties(start_date="2023-01-01", end_date="2023-09-01")
+    test.backfill_data_properties(start_date="1970-01-01", end_date="2023-09-01")
