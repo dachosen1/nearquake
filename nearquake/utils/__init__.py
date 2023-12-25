@@ -7,7 +7,24 @@ from datetime import datetime, timezone
 _logger = logging.getLogger(__name__)
 
 
-def extract_properties(data, keylist):
+def extract_properties(data: dict, keylist: list):
+    """
+    Extracts specified properties from a data dictionary and removes specific characters.
+
+    Given a dictionary and a list of keys, this function creates a new dictionary containing 
+    only the key-value pairs where the keys are in the provided list.
+
+    Example:
+    >>> extract_properties({'name': 'John, Doe', 'age': 30, 'city': 'New York'}, ['name', 'age'])
+    {'name': 'JohnDoe', 'age': 30}
+
+    :param data: The dictionary from which to extract properties
+    :param keylist: A list of keys to extract from the dictionary.
+
+    :return: dict: A dictionary containing key-value pairs for each key in keylist. String values 
+              are stripped of commas, single quotes, and spaces. Non-string values are 
+              included as-is.
+    """
     table = str.maketrans("", "", ",'")
     return {
         key: (
@@ -78,9 +95,24 @@ def download_image(url, id_, directory="image"):
 
 def fetch_json_data_from_url(url):
     """
-    Loads  data from a provided URL.
+    Fetches and loads JSON data from a specified URL.
 
-    :param url: URL
+    This function sends an HTTP GET request to the provided URL and attempts to parse 
+    the response as JSON. 
+
+    Note: 
+        This function assumes that the response is JSON. Non-JSON responses will result in a JSONDecodeError
+
+    Example:
+        >>> fetch_json_data_from_url('https://api.example.com/data')
+        {'key': 'value'}
+
+    :param url: he URL from which to fetch JSON data.
+
+
+    :return:  dict or None: A Python dictionary parsed from the JSON response if the request is successful and the response contains valid JSON. 
+    Returns None if there's an HTTP error or if the response is not valid JSON.
+
     """
     response = requests.get(url, timeout=5)
 
@@ -97,25 +129,60 @@ def fetch_json_data_from_url(url):
         return None
 
 
-def convert_timestamp_to_utc(timestamp):
-    # The given timestamp (assuming it's in milliseconds)
-    timestamp = timestamp
+def convert_timestamp_to_utc(timestamp: int):
+    """
+    Converts a given timestamp into a UTC datetime object.
 
-    # Convert milliseconds to seconds
-    timestamp_seconds = timestamp / 1000
+    This function takes a timestamp (assumed to be in milliseconds since the Unix epoch) 
+    and converts it into a Python datetime object in UTC. 
 
-    # Convert to datetime object in UTC
-    utc_datetime = datetime.fromtimestamp(timestamp_seconds, timezone.utc)
+    :param timestamp: The timestamp to be converted. This should be an integer representing the time in milliseconds since the Unix epoch 
+    (00:00:00 UTC on 1 January 1970).
 
-    return utc_datetime
+    Example:
+        >>> convert_timestamp_to_utc(1609459200000)
+        datetime.datetime(2021, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
+
+    :return: datetime: A datetime object representing the given timestamp in UTC.
+
+    """
+    return datetime.fromtimestamp(timestamp / 1000, timezone.utc)
 
 
-def extract_year_and_month(date):
+def extract_year_and_month(date: str):
+    """
+    Extracts the year and month from a given date string.
+
+    Example:
+        >>> extract_year_and_month('2021-03-15')
+        (2021, 3)
+
+    :param date: A date string in 'YYYY-MM-DD' format.
+    :return: tuple: A tuple containing two integers, the first being the year and the second the month extracted from the given date.
+    """
     date = datetime.strptime(date, "%Y-%m-%d").date()
     return date.year, date.month
 
 
-def generate_date_range(start_date, end_date):
+def generate_date_range(start_date: str, end_date: str):
+    """
+    Generates a list of [year, month] pairs between two specified dates.
+
+    This function creates a range of dates from the start date to the end date, inclusive.
+    It assumes that the provided dates are in 'YYYY-MM' format. The function iterates 
+    through each year and month within the specified range and returns a list of [year, month] 
+    pairs. 
+
+    Example:
+        >>> generate_date_range('2020-01', '2020-03')
+        [[2020, 1], [2020, 2], [2020, 3]]
+
+    :param start_date: The start date in 'YYYY-MM' format.
+    :param end_date: The end date in 'YYYY-MM' format.
+    :return: list of [int, int]: A list where each element is a list containing two integers, the first being the year and the second the month, for each 
+    month in the range from start_date to end_date, inclusive.
+
+    """
     start_year, start_month = extract_year_and_month(start_date)
     end_year, end_month = extract_year_and_month(end_date)
 
