@@ -1,15 +1,19 @@
+from typing import List, Optional
+from nearquake.config import ConnectionConfig
 from sqlalchemy import (
     Boolean,
     Column,
     Date,
-    ForeignKey,
     Float,
     Integer,
     String,
     TIMESTAMP,
 )
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import text
+from sqlalchemy.exc import SQLAlchemyError
+
 
 Base = declarative_base()
 
@@ -20,60 +24,24 @@ class EventDetails(Base):
 
     id_event = Column(String(50), primary_key=True, comment="Earthquake id Primary key")
     mag = Column(Float, comment="Magnitude of the earthquake")
-    id_place = Column(
-        Integer, ForeignKey("earthquake.dim__place.id_place"), comment="Place id"
-    )
-    id_time = Column(
-        Integer, ForeignKey("earthquake.dim__time.id_time"), comment="Time id"
-    )
+
     ts_updated_utc = Column(TIMESTAMP, comment="Timestamp of the last update")
+    ts_event_utc = Column(TIMESTAMP, comment="Timestamp of the earthquake")
     tz = Column(Integer, comment="Time zone")
     felt = Column(
         Integer, comment="Number of people who reported feeling the earthquake"
     )
+    longitude = Column(Float, comment="Longitude")
+    latitude = Column(Float, comment="Latitude")
     detail = Column(String(500))
     cdi = Column(Float, comment="Community Internet Intensity Map")
     mmi = Column(Float, comment="Modified Mercalli Intensity")
-    longitude = Column(Float, comment="Longitude")
-    latitude = Column(Float, comment="Latitude")
-    depth = Column(Float, comment="Depth")
-    id_alert = Column(
-        Integer, ForeignKey("earthquake.dim__alert.id_alert"), comment="Alert id"
-    )
     status = Column(String(50), comment="Status of the earthquake report")
     tsunami = Column(Boolean, comment="Indicates if a tsunami was generated")
     type = Column(String(50), comment="Type of seismic event")
     title = Column(String(200), comment="Title of the earthquake event")
     date = Column(Date, comment="Date of the earthquake")
-    place = relationship("DimPlace", back_populates="event_details")
-    time = relationship("DimTime", back_populates="event_details")
-    alert = relationship("DimAlert", back_populates="event_details")
-
-
-class DimPlace(Base):
-    __tablename__ = "dim__place"
-    __table_args__ = {"schema": "earthquake"}
-
-    id_place = Column(Integer, primary_key=True, comment="Primary key")
-    place = Column(String(200), comment="Location of the earthquake")
-    event_details = relationship("EventDetails", back_populates="place")
-
-
-class DimAlert(Base):
-    __tablename__ = "dim__alert"
-    __table_args__ = {"schema": "earthquake"}
-
-    id_alert = Column(Integer, primary_key=True, comment="Alert Id Primary Key")
-    alert = Column(String(200), comment="Alert level of the earthquake")
-    event_details = relationship("EventDetails", back_populates="alert")
-
-
-class DimTime(Base):
-    __tablename__ = "dim__time"
-    __table_args__ = {"schema": "earthquake"}
-    id_time = Column(Integer, primary_key=True, comment="Time ID")
-    ts_event_utc = Column(TIMESTAMP, comment="Timestamp of the earthquake")
-    event_details = relationship("EventDetails", back_populates="time")
+    place = Column(String(200), comment="Place of the event")
 
 
 class Post(Base):
@@ -85,9 +53,41 @@ class Post(Base):
     ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
 
 
-def create_schemas(engine, schema_names):
+def create_schema(engine, schema_names):
     connection = engine.connect()
 
     for schema_name in schema_names:
         create_schema_sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
         connection.execute(create_schema_sql)
+
+
+def create_database(url: str, schema: Optional[List[str]] = None):
+    """
+    Creates a database engine and initializes the tables. Optiional parameter to create a scheme if it doesn't exist
+
+    :param url: The URL for the database, e.g., 'sqlite:///sqlalchemy_example.db'
+    :param schema: a list containing the list of schemas to be created
+    """
+    engine = create_engine(url)
+
+    try:
+        Base.metadata.create_all(engine)
+
+    except SQLAlchemyError as e:
+        if "InvalidSchemaName" in str(e):
+            if schema:
+                create_schema(engine, schema)
+                Base.metadata.create_all(engine)
+
+            else:
+                raise ValueError("Schema name not provided")
+        else:
+            return SQLAlchemyError
+
+    return engine
+
+
+if __name__ == "__main__":
+    config = ConnectionConfig()
+    url = config.generate_connection_url()
+    create_database(url, schema=["earthquake", "tweet"])
