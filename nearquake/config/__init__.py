@@ -24,7 +24,7 @@ def generate_time_range_url(year: int, month: int) -> str:
     return EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month)
 
 
-def generate_time_period(time_period: int) -> str:
+def generate_time_period_url(time_period: int) -> str:
     """
     Generate the URL for extracting earthquakes that occurred during a specific time.
 

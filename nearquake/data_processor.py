@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from nearquake.config import generate_time_range_url, ConnectionConfig
+from nearquake.config import generate_time_range_url, generate_time_period_url, ConnectionConfig
 from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.app.db import EventDetails
 from tqdm import tqdm
@@ -122,4 +122,5 @@ class Earthquake:
 
 if __name__ == "__main__":
     test = Earthquake()
-    test.backfill_data_properties(start_date="1970-01-01", end_date="2023-09-01")
+    # test.backfill_data_properties(start_date="2023-12-01", end_date="2023-12-31")
+    test.extract_data_properties(generate_time_period_url('day'))
