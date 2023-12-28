@@ -1,10 +1,7 @@
-from psycopg2 import connect, sql
 import logging
 from sqlalchemy import create_engine
 
-from nearquake.config import ConnectionConfig
 from sqlalchemy.orm import sessionmaker
-from nearquake.app.db import DimPlace
 
 _logger = logging.getLogger(__name__)
 
@@ -15,22 +12,29 @@ class DbSessionManager:
 
     Example usage:
 
-    with DbSessionManager() as db:
-        config = Config()
-        db.connect()
-        item = {"id": 123, "location": "St. Louis"}
-        row = Model(**item)
-        item = db.insert(row)
+    conn = DbSessionManager(config=ConnectionConfig())
+
+    with conn :
+        item = {"id_event": 'c-jjerh', "longitude": 982.28, "latitude": 129.827}
+        row = DimPlace(**item)
+        conn.insert(row)
+
     """
 
-    def connect(self, config):
+    def __init__(self, config) -> None:
+        self.config = config
+
+    def create_engine(self):
+        return create_engine(url=self.config.generate_connection_url())
+
+    def connect(self):
         """Establishes a connection to the database using the provided configuration.
 
         :param config: A configuration object containing the necessary database connection details.
         """
-        self.config = config
+
         try:
-            self.engine = create_engine(url=self.config.generate_connection_url())
+            self.engine = self.create_engine()
             _logger.info(" Connected to the Database")
             Session = sessionmaker(bind=self.engine)
             self.session = Session()
@@ -38,9 +42,16 @@ class DbSessionManager:
         except Exception as e:
             _logger.error(f"Failed to connect to the database: {e}")
 
-    def fetch(self):
-        # TODO:
-        pass
+    def fetch(self, model, column, item):
+        """
+
+
+        :param model: _description_
+        :param column: _description_
+        :param item: _description_
+        :return: _description_
+        """
+        return self.session.query(model).filter(getattr(model, column) == item).all()
 
     def insert(self, model):
         """
@@ -62,6 +73,10 @@ class DbSessionManager:
         self.session.close()
 
     def __enter__(self):
+        return self
+
+    def __enter__(self):
+        self.connect()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
