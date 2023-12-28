@@ -47,7 +47,7 @@ def get_earthquake_image_url(url):
     """
     Extract the image URL from the results of the USA.gov earthquake API
 
-    Example: 
+    Example:
         get_earthquake_image_url("https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000kd0n&format=geojson")
 
     :param url: URL to the earthquake data.
