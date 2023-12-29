@@ -1,18 +1,27 @@
 FROM python:3.11.6-slim
 
-RUN mkdir -p /opt/dagster/dagster_home /opt/dagster/app
+RUN apt-get update && apt-get -y install cron
 
-WORKDIR /opt/dagster/app
+WORKDIR /usr/src/app
 
 COPY ./requirements.txt .
 
 RUN  pip3 install --no-cache-dir --upgrade pip \
     -r requirements.txt
 
-COPY . /opt/dagster/app/
+COPY . /usr/src/app
 
-ENV DAGSTER_HOME=/opt/dagster/dagster_home/
+# Add crontab file in the cron directory
+ADD crontab /etc/cron.d/my-cron-job
 
-EXPOSE 3000
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/my-cron-job
 
-ENTRYPOINT ["dagster-webserver", "-h", "0.0.0.0", "-p", "3000"]
+# Apply cron job
+RUN crontab /etc/cron.d/my-cron-job
+
+# Create the log file to be able to run tail
+RUN touch /var/log/cron.log
+
+# Run the command on container startup
+CMD cron && tail -f /var/log/cron.log

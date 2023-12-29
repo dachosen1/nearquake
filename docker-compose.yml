@@ -1,17 +1,8 @@
 version: '3.4'
 
 services:
-  nearquake_webserver:
+  nearquake_cron:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: nearquake_webserver
-    networks:
-      - nearquake_network
-    ports:
-      - 3000:${PORT:-3000}
-
-networks:
-  nearquake_network:
-    driver: bridge
-    name: nearquake_network
+    env_file: .env

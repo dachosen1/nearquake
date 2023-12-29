@@ -1,7 +1,0 @@
-load_from:
-  # References the file copied into your Dockerfile
-  - python_file: dags/run.py
-  - grpc_server:
-      host: docker_example_user_code
-      port: 4000
-      location_name: "example_user_code"
