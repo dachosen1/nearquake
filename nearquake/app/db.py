@@ -64,10 +64,10 @@ def create_schema(engine, schema_names):
 def create_database(url: str, schema: Optional[List[str]] = None):
     """
     Creates a database engine and initializes the tables. Optiional parameter to create a scheme if it doesn't exist
-    
-    Example Usage: 
+
+    Example Usage:
         create_database(url, schema=["earthquake", "tweet"])
-    
+
     :param url: The URL for the database, e.g., 'sqlite:///sqlalchemy_example.db'
     :param schema: a list containing the list of schemas to be created
     """
