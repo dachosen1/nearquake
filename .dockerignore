@@ -1,0 +1,7 @@
+.venv/
+.github/
+.pytest_cache/
+.gitignore
+.github/
+.vscode/
+.dockerignore
