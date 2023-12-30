@@ -84,14 +84,19 @@ def download_image(url, id_, directory="image"):
         response = requests.get(url, timeout=5)
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
-        print(f"Error: {err}")
+        _logger.error(
+            "Failed to download the image from %s: %s", url, err, exc_info=True
+        )
         return
 
     os.makedirs(directory, exist_ok=True)
+    file_path = os.path.join(directory, f"{id_}.jpg")
 
     try:
         with open(os.path.join(directory, f"{id_}.jpg"), "wb") as f:
             f.write(response.content)
+            _logger.info("Image downloaded and saved to %s", file_path)
+
     except Exception as e:
         _logger.error("An error occured while writing the file: %e", e)
 
@@ -117,18 +122,46 @@ def fetch_json_data_from_url(url):
     Returns None if there's an HTTP error or if the response is not valid JSON.
 
     """
-    response = requests.get(url, timeout=5)
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()  # Raise an HTTPError for bad requests (4xx or 5xx)
 
-    if response.status_code != 200:
+        try:
+            return json.loads(response.text)
+        except json.JSONDecodeError:
+            _logger.error(
+                "Failed to decode JSON from response: %s", response.text, exc_info=True
+            )
+            return None
+
+    except requests.exceptions.HTTPError as e:
         _logger.error(
-            "Failed to get data from URL %s. Status code: %s", url, response.status_code
+            "HTTP error occurred while fetching data from %s: %s", url, e, exc_info=True
         )
         return None
-    try:
-        response.raise_for_status()
-        return json.loads(response.text)
-    except json.JSONDecodeError:
-        _logger.exception("Could not find image URL in response data.")
+
+    except requests.exceptions.ConnectionError as e:
+        _logger.error(
+            "Connection error occurred while fetching data from %s: %s",
+            url,
+            e,
+            exc_info=True,
+        )
+        return None
+
+    except requests.exceptions.Timeout as e:
+        _logger.error(
+            "Timeout error occurred while fetching data from %s: %s",
+            url,
+            e,
+            exc_info=True,
+        )
+        return None
+
+    except requests.exceptions.RequestException as e:
+        _logger.error(
+            "An error occurred while fetching data from %s: %s", url, e, exc_info=True
+        )
         return None
 
 
