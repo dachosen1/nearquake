@@ -70,4 +70,3 @@ def setup_logging():
 DEBUG_MODE = True  # Set to False in production
 setup_logging()
 logger = logging.getLogger(__name__)
-
