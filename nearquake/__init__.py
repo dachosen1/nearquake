@@ -8,20 +8,22 @@ class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_record = {
             "time": self.formatTime(record, self.datefmt),
-            "module": record.module, 
+            "module": record.module,
             "level": record.levelname,
             "name": record.name,
-            "process": record.process, 
-            "processName":record.processName, 
+            "process": record.process,
+            "processName": record.processName,
             "fileName": record.filename,
             "message": record.getMessage(),
-            "duration": record.msecs
+            "duration": record.msecs,
         }
         return json.dumps(log_record)
 
 
 # Standard Formatter for ConsoleHandler
-standard_formatter = logging.Formatter("%(asctime)s — %(levelname)s - %(name)s — %(message)s")
+standard_formatter = logging.Formatter(
+    "%(asctime)s — %(levelname)s - %(name)s — %(message)s"
+)
 
 
 # Filter for determining the output target
