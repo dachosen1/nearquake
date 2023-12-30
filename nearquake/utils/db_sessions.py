@@ -24,7 +24,6 @@ class DbSessionManager:
         _logger.debug("DbSessionManager initialized with given configuration.")
 
     def create_engine(self):
-        _logger.debug("Creating database engine.")
         return create_engine(url=self.config.generate_connection_url())
 
     def connect(self):
@@ -65,7 +64,6 @@ class DbSessionManager:
         try:
             self.session.add(model)
             self.session.commit()
-            _logger.info("Record inserted successfully into the database.")
 
         except Exception as e:
             _logger.error("Failed to execute insert query: %s", e, exc_info=True)
