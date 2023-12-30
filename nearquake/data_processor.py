@@ -58,7 +58,7 @@ class Earthquake:
                     properties = i["properties"]
                     coordinates = i["geometry"]["coordinates"]
 
-                    timestamp_utc = convert_timestamp_to_utc(properties.get("updated"))
+                    timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
                     time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
 
                     earthquake_properties = {
