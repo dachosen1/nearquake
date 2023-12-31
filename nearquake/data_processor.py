@@ -3,8 +3,8 @@ from datetime import datetime
 
 from nearquake.config import (
     generate_time_range_url,
-    generate_time_period_url,
     ConnectionConfig,
+    QuakeFeatures,
 )
 from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.app.db import EventDetails
@@ -50,6 +50,7 @@ class Earthquake:
         timestamp_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         added = 0
         skipped = 0
+        summary = {}
 
         with conn:
             try:
@@ -61,39 +62,48 @@ class Earthquake:
                     timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
                     time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
 
-                    earthquake_properties = {
-                        "id_event": id_event,
-                        "mag": properties.get("mag"),
-                        "ts_event_utc": timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                        "ts_updated_utc": timestamp_now,
-                        "tz": properties.get("tz"),
-                        "felt": properties.get("felt"),
-                        "detail": properties.get("detail"),
-                        "cdi": properties.get("cdi"),
-                        "mmi": properties.get("mmi"),
-                        "status": properties.get("status"),
-                        "tsunami": properties.get("tsunami"),
-                        "type": properties.get("type"),
-                        "title": properties.get("title"),
-                        "date": time_stamp_date,
-                        "place": properties.get("place"),
-                        "longitude": coordinates[0],
-                        "latitude": coordinates[1],
-                    }
+                    quake_entry = QuakeFeatures(
+                        id_event=id_event,
+                        mag=properties.get("mag"),
+                        ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                        ts_updated_utc=timestamp_now,
+                        tz=properties.get("tz"),
+                        felt=properties.get("felt"),
+                        detail=properties.get("felt"),
+                        cdi=properties.get("felt"),
+                        mmi=properties.get("mmi"),
+                        status=properties.get("status"),
+                        tsunami=properties.get("tsunami"),
+                        type=properties.get("type"),
+                        title=properties.get("title"),
+                        date=time_stamp_date,
+                        place=properties.get("place"),
+                        longitude=coordinates[0],
+                        latitude=coordinates[1],
+                    )
 
                     fetched_records = conn.fetch(
                         model=EventDetails, column="id_event", item=id_event
                     )
 
+                    if time_stamp_date in summary:
+                        summary[time_stamp_date] += 1
+                    else:
+                        summary[time_stamp_date] = 1
+
                     if len(fetched_records) == 0:
-                        property_items = EventDetails(**earthquake_properties)
+                        property_items = EventDetails(**quake_entry.__dict__)
                         conn.insert(property_items)
                         added += 1
                     else:
                         skipped += 1
-                _logger.info(
-                    f" Upload Complete for {time_stamp_date}. Added {added} records, and {skipped} records were already in the database"
+
+                log_message = (
+                    f"Upload Complete for {time_stamp_date}. "
+                    "Added {added} records, and {skipped} records were already in the database"
+                    f"Summary: {summary}"
                 )
+                _logger.info(log_message)
 
             except Exception as e:
                 _logger.error(f" Encountereed an unexpected error: {e}")
@@ -122,9 +132,3 @@ class Earthquake:
             self.extract_data_properties(url)
 
         _logger.info(f"Completed the Backfill.. Horray :) ")
-
-
-if __name__ == "__main__":
-    test = Earthquake()
-    # test.backfill_data_properties(start_date="2023-12-01", end_date="2023-12-31")
-    test.extract_data_properties(generate_time_period_url("day"))

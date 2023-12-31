@@ -15,7 +15,6 @@ class JsonFormatter(logging.Formatter):
             "processName": record.processName,
             "fileName": record.filename,
             "message": record.getMessage(),
-            "duration": record.msecs,
         }
         return json.dumps(log_record)
 
