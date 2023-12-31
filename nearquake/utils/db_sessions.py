@@ -21,7 +21,7 @@ class DbSessionManager:
 
     def __init__(self, config) -> None:
         self.config = config
-        _logger.debug("DbSessionManager initialized with given configuration.")
+        _logger.info("DbSessionManager initialized with given configuration.")
 
     def create_engine(self):
         return create_engine(url=self.config.generate_connection_url())
