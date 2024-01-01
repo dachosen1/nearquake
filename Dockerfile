@@ -1,4 +1,4 @@
-FROM python:3.11.6-slim
+FROM python:3.12.1-slim
 
 RUN apt-get update && apt-get -y install cron
 
