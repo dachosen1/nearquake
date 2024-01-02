@@ -207,3 +207,18 @@ def generate_date_range(start_date: str, end_date: str):
             date_list.append([year, month])
 
     return date_list
+
+
+def create_dir(path: str):
+    """
+    Creates a directory if it doesn't exist
+
+    :param path: directory path
+    :return:
+    """
+    if os.path.exists(path):
+        pass
+    else:
+        os.mkdir(path)
+        _logger.info(f"Created a new directory path: {path}")
+    return None

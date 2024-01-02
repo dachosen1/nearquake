@@ -4,6 +4,7 @@ import json
 import sys
 
 from nearquake.config import TIMESTAMP_NOW
+from nearquake.utils import create_dir
 
 
 class JsonFormatter(logging.Formatter):
@@ -54,6 +55,9 @@ class CustomFormatter(logging.Formatter):
 def setup_logging():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
+
+    # Create directory path to save logs
+    create_dir("logs")
 
     # Console Handler with Standard Formatter
     console_handler = logging.StreamHandler(sys.stdout)
