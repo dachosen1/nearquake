@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dotenv import load_dotenv
 import os
 from datetime import datetime
@@ -54,17 +54,28 @@ def generate_time_period_url(time_period: int) -> str:
 
 @dataclass
 class ConnectionConfig:
-    user = os.environ.get("NEARQUAKE_USERNAME")
-    host = os.environ.get("NEARQUAKE_HOST")
-    dbname = os.environ.get("NEARQUAKE_DATABASE")
-    port = os.environ.get("NEARQUAKE_PORT")
-    password = os.environ.get("NEARQUAKE_PASSWORD")
-    sqlengine = os.environ.get("NEARQUAKE_ENGINE")
+    user: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_USERNAME"))
+    host: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_HOST"))
+    dbname: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_DATABASE"))
+    port: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_PORT"))
+    password: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_PASSWORD"))
+    sqlengine: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_ENGINE"))
 
-    def generate_connection_url(self):
-        if self.sqlengine is None:
-            raise ValueError("SQL Engine is not specifed")
+    def __post_init__(self):
+        missing = [
+            attr
+            for attr in ["user", "host", "dbname", "port", "password", "sqlengine"]
+            if getattr(self, attr) is None
+        ]
+        if missing:
+            error_message = (
+                f"The following attributes are not specified: {', '.join(missing)}"
+            )
+            _logger.error(error_message)
+            raise ValueError(error_message)
+
+    def generate_connection_url(self) -> str:
         _logger.info(
-            f"Successcully generated the credentials and URL to connect to the {self.dbname} on {self.sqlengine} "
+            f"Successfully generated the URL to connect to the {self.dbname} database using the {self.sqlengine} engine."
         )
         return f"{self.sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"

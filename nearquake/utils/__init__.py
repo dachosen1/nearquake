@@ -211,14 +211,16 @@ def generate_date_range(start_date: str, end_date: str):
 
 def create_dir(path: str):
     """
-    Creates a directory if it doesn't exist
+    Creates a directory if it doesn't exist.
 
-    :param path: directory path
-    :return:
+    :param path: The path of the directory to be created.
+    :return: None
     """
-    if os.path.exists(path):
-        pass
-    else:
-        os.mkdir(path)
-        _logger.info(f"Created a new directory path: {path}")
+    try:
+        os.makedirs(path, exist_ok=True)
+        _logger.info(f"Directory ensured at path: {path}")
+    except Exception as e:
+        _logger.error(f"Failed to create directory at {path}: {e}")
+        raise ValueError
+
     return None
