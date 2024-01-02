@@ -5,6 +5,7 @@ from nearquake.config import (
     generate_time_range_url,
     generate_time_period_url,
     ConnectionConfig,
+    TIMESTAMP_NOW,
 )
 from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.app.db import EventDetails
@@ -47,7 +48,7 @@ class Earthquake:
         data = fetch_json_data_from_url(url=url)
 
         conn = DbSessionManager(config=ConnectionConfig())
-        timestamp_now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
         added = 0
         skipped = 0
 
@@ -65,7 +66,7 @@ class Earthquake:
                         "id_event": id_event,
                         "mag": properties.get("mag"),
                         "ts_event_utc": timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                        "ts_updated_utc": timestamp_now,
+                        "ts_updated_utc": TIMESTAMP_NOW,
                         "tz": properties.get("tz"),
                         "felt": properties.get("felt"),
                         "detail": properties.get("detail"),
@@ -92,7 +93,7 @@ class Earthquake:
                     else:
                         skipped += 1
                 _logger.info(
-                    f" Upload Complete for {time_stamp_date}. Added {added} records, and {skipped} records were already in the database"
+                    f"Upload Complete for {time_stamp_date}. Added {added} records, and {skipped} records were already in the database"
                 )
 
             except Exception as e:
@@ -121,7 +122,9 @@ class Earthquake:
             )
             self.extract_data_properties(url)
 
-        _logger.info(f"Completed the Backfill.. Horray :) ")
+        _logger.info(
+            f"Completed the Backfill for {len(date_range)} months!!! Horray :)"
+        )
 
 
 if __name__ == "__main__":

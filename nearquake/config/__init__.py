@@ -1,9 +1,15 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dotenv import load_dotenv
 import os
+from datetime import datetime
+import logging
+
+
+_logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+TIMESTAMP_NOW = datetime.utcnow().strftime("%Y%m%d")
 
 API_BASE_URL: str = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
 
@@ -35,22 +41,41 @@ def generate_time_period_url(time_period: int) -> str:
     valid_periods = {"day", "week", "month"}
     if time_period not in valid_periods:
         raise ValueError(
-            f"Invalid time period: {time_period}. Valid options are: {valid_periods}"
+            f"Invalid time period: {time_period}. Valid options are: {valid_periods}",
+            time_period,
+            valid_periods,
         )
+    _logger.info(
+        f"Generated the url to upload earthquake events for the last {time_period}"
+    )
 
     return API_BASE_URL.format(time_period=time_period)
 
 
 @dataclass
 class ConnectionConfig:
-    user = os.environ.get("NEARQUAKE_USERNAME")
-    host = os.environ.get("NEARQUAKE_HOST")
-    dbname = os.environ.get("NEARQUAKE_DATABASE")
-    port = os.environ.get("NEARQUAKE_PORT")
-    password = os.environ.get("NEARQUAKE_PASSWORD")
-    sqlengine = os.environ.get("NEARQUAKE_ENGINE")
+    user: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_USERNAME"))
+    host: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_HOST"))
+    dbname: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_DATABASE"))
+    port: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_PORT"))
+    password: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_PASSWORD"))
+    sqlengine: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_ENGINE"))
 
-    def generate_connection_url(self):
-        if self.sqlengine is None:
-            raise ValueError("SQL Engine is not specifed")
+    def __post_init__(self):
+        missing = [
+            attr
+            for attr in ["user", "host", "dbname", "port", "password", "sqlengine"]
+            if getattr(self, attr) is None
+        ]
+        if missing:
+            error_message = (
+                f"The following attributes are not specified: {', '.join(missing)}"
+            )
+            _logger.error(error_message)
+            raise ValueError(error_message)
+
+    def generate_connection_url(self) -> str:
+        _logger.info(
+            f"Successfully generated the URL to connect to the {self.dbname} database using the {self.sqlengine} engine."
+        )
         return f"{self.sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
