@@ -1,9 +1,15 @@
 from dataclasses import dataclass
 from dotenv import load_dotenv
 import os
+from datetime import datetime
+import logging
+
+
+_logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+TIMESTAMP_NOW = datetime.utcnow().strftime("%Y%m%d")
 
 API_BASE_URL: str = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
 
@@ -35,8 +41,13 @@ def generate_time_period_url(time_period: int) -> str:
     valid_periods = {"day", "week", "month"}
     if time_period not in valid_periods:
         raise ValueError(
-            f"Invalid time period: {time_period}. Valid options are: {valid_periods}"
+            f"Invalid time period: {time_period}. Valid options are: {valid_periods}",
+            time_period,
+            valid_periods,
         )
+    _logger.info(
+        f"Generated the url to upload earthquake events for the last {time_period}"
+    )
 
     return API_BASE_URL.format(time_period=time_period)
 
@@ -53,4 +64,7 @@ class ConnectionConfig:
     def generate_connection_url(self):
         if self.sqlengine is None:
             raise ValueError("SQL Engine is not specifed")
+        _logger.info(
+            f"Successcully generated the credentials and URL to connect to the {self.dbname} on {self.sqlengine} "
+        )
         return f"{self.sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"

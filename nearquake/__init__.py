@@ -3,6 +3,8 @@ import logging.handlers
 import json
 import sys
 
+from nearquake.config import TIMESTAMP_NOW
+
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
@@ -11,6 +13,9 @@ class JsonFormatter(logging.Formatter):
             "module": record.module,
             "level": record.levelname,
             "name": record.name,
+            "pathname": record.pathname,
+            "thread": record.thread,
+            "funcName": record.funcName,
             "process": record.process,
             "processName": record.processName,
             "fileName": record.filename,
@@ -58,7 +63,7 @@ def setup_logging():
 
     # File Handler with Log Rotation and JSON Formatter
     file_handler = logging.handlers.RotatingFileHandler(
-        "nearquake.log", maxBytes=1048576, backupCount=5
+        f"logs/{TIMESTAMP_NOW}-nearquake.log", maxBytes=1048576, backupCount=5
     )
     file_handler.addFilter(FilterForHandler("file"))
     file_handler.setFormatter(CustomFormatter())

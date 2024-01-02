@@ -56,7 +56,7 @@ def get_earthquake_image_url(url):
     response = requests.get(url, timeout=5)
     if response.status_code != 200:
         _logger.error(
-            "Failed to get data from URL %s. Status code: %s", url, response.status_code
+            f"Failed to get data from URL {url}. Status code: {response.status_code}"
         )
         return None
 
@@ -65,6 +65,7 @@ def get_earthquake_image_url(url):
         image_url = data["properties"]["products"]["shakemap"][0]["contents"][
             "download/pga.jpg"
         ]["url"]
+        _logger.info("")
         return image_url
     except KeyError:
         _logger.error("Could not find image URL in response data.")
@@ -84,9 +85,7 @@ def download_image(url, id_, directory="image"):
         response = requests.get(url, timeout=5)
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
-        _logger.error(
-            "Failed to download the image from %s: %s", url, err, exc_info=True
-        )
+        _logger.error(f"Failed to download the image from {url}: {err}")
         return
 
     os.makedirs(directory, exist_ok=True)
@@ -95,7 +94,7 @@ def download_image(url, id_, directory="image"):
     try:
         with open(os.path.join(directory, f"{id_}.jpg"), "wb") as f:
             f.write(response.content)
-            _logger.info("Image downloaded and saved to %s", file_path)
+            _logger.info(f"Image downloaded and saved to {file_path}")
 
     except Exception as e:
         _logger.error("An error occured while writing the file: %e", e)
@@ -130,25 +129,23 @@ def fetch_json_data_from_url(url):
             return json.loads(response.text)
 
         except json.JSONDecodeError:
-            _logger.error("Failed to decode JSON from response: %s", response.text)
+            _logger.error(f"Failed to decode JSON from response: {response.text}")
             return None
 
     except requests.exceptions.HTTPError as e:
-        _logger.error("HTTP error occurred while fetching data from %s: %s", url, e)
+        _logger.error(f"HTTP error occurred while fetching data from {url}: {e}")
         return None
 
     except requests.exceptions.ConnectionError as e:
-        _logger.error(
-            "Connection error occurred while fetching data from %s: %s", url, e
-        )
+        _logger.error(f"Connection error occurred while fetching data from {url}: {e}")
         return None
 
     except requests.exceptions.Timeout as e:
-        _logger.error("Timeout error occurred while fetching data from %s: %s", url, e)
+        _logger.error(f"Timeout error occurred while fetching data from {url}: {e}")
         return None
 
     except requests.exceptions.RequestException as e:
-        _logger.error("An error occurred while fetching data from %s: %s", url, e)
+        _logger.error(f"An error occurred while fetching data from {url}: {e}")
         return None
 
 
@@ -199,7 +196,7 @@ def generate_date_range(start_date: str, end_date: str):
     # Check if the start date is later than the end date
     if start_datetime > end_datetime:
         logging.error("Start time cannot be greater than end time")
-        raise ValueError("Start time cannot be greater than end time")
+        raise ValueError(f"Start time cannot be greater than end time")
 
     date_list = []
 
@@ -210,7 +207,3 @@ def generate_date_range(start_date: str, end_date: str):
             date_list.append([year, month])
 
     return date_list
-
-
-if __name__ == "__main__":
-    print(generate_date_range(start_date="2023-01-01", end_date="2023-03-01"))
