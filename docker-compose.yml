@@ -1,8 +1,8 @@
 version: '3.4'
 
 services:
-  earthquake.usgs.gov:
-    image: earthquake.usgs.gov.cron:1.0.0
+  earthquake_usgs:
+    image: earthquake_usgs_cron:1.0.0
     build:
       context: .
       dockerfile: Dockerfile
