@@ -73,7 +73,7 @@ def generate_time_period_url(time_period: int) -> str:
     return API_BASE_URL.format(time_period=time_period)
 
 
-@dataclass(init=False)
+@dataclass()
 class ConnectionConfig:
     user: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_USERNAME"))
     host: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_HOST"))

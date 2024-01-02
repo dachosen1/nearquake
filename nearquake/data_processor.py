@@ -101,8 +101,8 @@ class Earthquake:
 
                 log_message = (
                     f"Upload Complete for {time_stamp_date}. "
-                    "Added {added} records, and {skipped} records were already in the database"
-                    f"Summary: {summary}"
+                    f"Added {added} records, and {skipped} records were already added. "
+                    f"Summary of date added: {summary}"
                 )
                 _logger.info(log_message)
 
