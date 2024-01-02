@@ -1,0 +1,41 @@
+pull_request_rules:
+  - name: warn on conflicts
+    conditions:
+      - conflict
+      - -draft # filter-out GH draft PRs
+      - -label="has conflicts"
+    actions:
+      # comment:
+      #   message: This pull request is now in conflict... :(
+      label:
+        add: ["has conflicts"]
+
+  - name: resolved conflicts
+    conditions:
+      - -conflict
+      - label="has conflicts"
+      - -draft # filter-out GH draft PRs
+      - -merged # not merged yet
+      - -closed
+    actions:
+      label:
+        remove: ["has conflicts"]
+
+  - name: Ready to Go
+    conditions:
+      - -conflict
+      - -draft # filter-out GH draft PRs
+      - check-success=CI
+      - -title~=(?i)wip # skip all PR that title contains “WIP” (ignoring case)
+    actions:
+      label:
+        add: ["ready"]
+
+  - name: Not ready yet
+    conditions:
+      - or:
+          - draft # filter-out GH draft PRs
+          - label="has conflicts"
+    actions:
+      label:
+        remove: ["ready"]
