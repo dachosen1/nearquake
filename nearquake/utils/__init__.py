@@ -128,39 +128,27 @@ def fetch_json_data_from_url(url):
 
         try:
             return json.loads(response.text)
-        
+
         except json.JSONDecodeError:
-            _logger.error(
-                "Failed to decode JSON from response: %s", response.text
-            )
+            _logger.error("Failed to decode JSON from response: %s", response.text)
             return None
 
     except requests.exceptions.HTTPError as e:
-        _logger.error(
-            "HTTP error occurred while fetching data from %s: %s", url, e
-        )
+        _logger.error("HTTP error occurred while fetching data from %s: %s", url, e)
         return None
 
     except requests.exceptions.ConnectionError as e:
         _logger.error(
-            "Connection error occurred while fetching data from %s: %s",
-            url,
-            e
+            "Connection error occurred while fetching data from %s: %s", url, e
         )
         return None
 
     except requests.exceptions.Timeout as e:
-        _logger.error(
-            "Timeout error occurred while fetching data from %s: %s",
-            url,
-            e
-        )
+        _logger.error("Timeout error occurred while fetching data from %s: %s", url, e)
         return None
 
     except requests.exceptions.RequestException as e:
-        _logger.error(
-            "An error occurred while fetching data from %s: %s", url, e
-        )
+        _logger.error("An error occurred while fetching data from %s: %s", url, e)
         return None
 
 
@@ -222,7 +210,3 @@ def generate_date_range(start_date: str, end_date: str):
             date_list.append([year, month])
 
     return date_list
-
-
-if __name__ == "__main__":
-    print(generate_date_range(start_date="2023-01-01", end_date="2023-03-01"))

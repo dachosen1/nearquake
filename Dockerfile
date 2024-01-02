@@ -14,6 +14,9 @@ COPY . /usr/src/app
 # Add crontab file in the cron directory
 ADD crontab /etc/cron.d/my-cron-job
 
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/my-cron-job
+
 # Apply cron job
 RUN crontab /etc/cron.d/my-cron-job
 
