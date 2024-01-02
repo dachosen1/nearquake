@@ -1,2 +1,2 @@
-0 0 * * * /usr/local/bin/python3 /usr/src/app/main.py >> /var/log/cron.log 2>&1
-# Don't forget to end with an empty new line
+0 0 * * * /usr/local/bin/python3 /usr/src/app/main.py -d >> /var/log/cron.log 2>&1
+0 9 * * 1 /usr/local/bin/python3 /usr/src/app/main.py -w >> /var/log/cron.log 2>&1
