@@ -56,7 +56,7 @@ def get_earthquake_image_url(url):
     response = requests.get(url, timeout=5)
     if response.status_code != 200:
         _logger.error(
-            "Failed to get data from URL %s. Status code: %s", url, response.status_code
+            f"Failed to get data from URL {url}. Status code: {response.status_code}"
         )
         return None
 
@@ -65,6 +65,7 @@ def get_earthquake_image_url(url):
         image_url = data["properties"]["products"]["shakemap"][0]["contents"][
             "download/pga.jpg"
         ]["url"]
+        _logger.info("")
         return image_url
     except KeyError:
         _logger.error("Could not find image URL in response data.")
@@ -84,9 +85,7 @@ def download_image(url, id_, directory="image"):
         response = requests.get(url, timeout=5)
         response.raise_for_status()
     except requests.exceptions.RequestException as err:
-        _logger.error(
-            "Failed to download the image from %s: %s", url, err, exc_info=True
-        )
+        _logger.error(f"Failed to download the image from {url}: {err}")
         return
 
     os.makedirs(directory, exist_ok=True)
@@ -95,7 +94,7 @@ def download_image(url, id_, directory="image"):
     try:
         with open(os.path.join(directory, f"{id_}.jpg"), "wb") as f:
             f.write(response.content)
-            _logger.info("Image downloaded and saved to %s", file_path)
+            _logger.info(f"Image downloaded and saved to {file_path}")
 
     except Exception as e:
         _logger.error("An error occured while writing the file: %e", e)
@@ -128,40 +127,25 @@ def fetch_json_data_from_url(url):
 
         try:
             return json.loads(response.text)
+
         except json.JSONDecodeError:
-            _logger.error(
-                "Failed to decode JSON from response: %s", response.text, exc_info=True
-            )
+            _logger.error(f"Failed to decode JSON from response: {response.text}")
             return None
 
     except requests.exceptions.HTTPError as e:
-        _logger.error(
-            "HTTP error occurred while fetching data from %s: %s", url, e, exc_info=True
-        )
+        _logger.error(f"HTTP error occurred while fetching data from {url}: {e}")
         return None
 
     except requests.exceptions.ConnectionError as e:
-        _logger.error(
-            "Connection error occurred while fetching data from %s: %s",
-            url,
-            e,
-            exc_info=True,
-        )
+        _logger.error(f"Connection error occurred while fetching data from {url}: {e}")
         return None
 
     except requests.exceptions.Timeout as e:
-        _logger.error(
-            "Timeout error occurred while fetching data from %s: %s",
-            url,
-            e,
-            exc_info=True,
-        )
+        _logger.error(f"Timeout error occurred while fetching data from {url}: {e}")
         return None
 
     except requests.exceptions.RequestException as e:
-        _logger.error(
-            "An error occurred while fetching data from %s: %s", url, e, exc_info=True
-        )
+        _logger.error(f"An error occurred while fetching data from {url}: {e}")
         return None
 
 
@@ -185,21 +169,6 @@ def convert_timestamp_to_utc(timestamp: int):
     return datetime.fromtimestamp(timestamp / 1000, timezone.utc)
 
 
-def extract_year_and_month(date: str):
-    """
-    Extracts the year and month from a given date string.
-
-    Example:
-        >>> extract_year_and_month('2021-03-15')
-        (2021, 3)
-
-    :param date: A date string in 'YYYY-MM-DD' format.
-    :return: tuple: A tuple containing two integers, the first being the year and the second the month extracted from the given date.
-    """
-    date = datetime.strptime(date, "%Y-%m-%d").date()
-    return date.year, date.month
-
-
 def generate_date_range(start_date: str, end_date: str):
     """
     Generates a list of [year, month] pairs between two specified dates.
@@ -210,7 +179,7 @@ def generate_date_range(start_date: str, end_date: str):
     pairs.
 
     Example:
-        >>> generate_date_range('2020-01', '2020-03')
+        >>> generate_date_range('2020-01-01', '2020-03-01')
         [[2020, 1], [2020, 2], [2020, 3]]
 
     :param start_date: The start date in 'YYYY-MM' format.
@@ -219,17 +188,39 @@ def generate_date_range(start_date: str, end_date: str):
     month in the range from start_date to end_date, inclusive.
 
     """
-    start_year, start_month = extract_year_and_month(start_date)
-    end_year, end_month = extract_year_and_month(end_date)
+
+    # Parse the start and end dates
+    start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
+    end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+
+    # Check if the start date is later than the end date
+    if start_datetime > end_datetime:
+        logging.error("Start time cannot be greater than end time")
+        raise ValueError(f"Start time cannot be greater than end time")
 
     date_list = []
 
-    for year in range(start_year, end_year + 1):
-        for month in range(1, 13):
-            if year == start_year and month >= start_month:
-                date_list.append([year, month])
-            elif year == end_year and month <= end_month:
-                date_list.append([year, month])
-            elif year > start_year and year <= end_year:
-                date_list.append([year, month])
+    for year in range(start_datetime.year, end_datetime.year + 1):
+        start_month = start_datetime.month if year == start_datetime.year else 1
+        end_month = end_datetime.month if year == end_datetime.year else 12
+        for month in range(start_month, end_month + 1):
+            date_list.append([year, month])
+
     return date_list
+
+
+def create_dir(path: str):
+    """
+    Creates a directory if it doesn't exist.
+
+    :param path: The path of the directory to be created.
+    :return: None
+    """
+    try:
+        os.makedirs(path, exist_ok=True)
+        _logger.info(f"Directory ensured at path: {path}")
+    except Exception as e:
+        _logger.error(f"Failed to create directory at {path}: {e}")
+        raise ValueError
+
+    return None

@@ -1,7 +1,8 @@
 version: '3.4'
 
 services:
-  nearquake_cron:
+  earthquake_usgs:
+    image: earthquake_usgs_cron:1.0.0
     build:
       context: .
       dockerfile: Dockerfile
