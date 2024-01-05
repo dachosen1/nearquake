@@ -161,7 +161,7 @@ def process_earthquake_data(conn, tweet: TweetOperator, threshold: str):
             if i.mag >= threshold:
                 duration = TIMESTAMP_NOW - i.ts_event_utc
 
-                text = f"Recent #Earthquake: {i.title} reported {duration.seconds/60:.0f} minutes ago, felt by {i.felt} people. \nSee more details at {EVENT_DETAIL_URL.format(i.id_event)}. \nData provided by https://www.usgs.gov/"
+                text = f"Recent #Earthquake: {i.title} reported {duration.seconds/60:.0f} minutes ago, felt by {i.felt} people. \nSee more details at {EVENT_DETAIL_URL.format(id=i.id_event)}. \nData provided by https://www.usgs.gov/"
                 item = {
                     "post": text,
                     "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
