@@ -17,11 +17,7 @@ class JsonFormatter(logging.Formatter):
             "module": record.module,
             "level": record.levelname,
             "name": record.name,
-            "pathname": record.pathname,
-            "thread": record.thread,
             "funcName": record.funcName,
-            "process": record.process,
-            "processName": record.processName,
             "fileName": record.filename,
             "message": record.getMessage(),
         }

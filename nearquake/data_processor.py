@@ -1,14 +1,17 @@
 import logging
 from datetime import datetime
+from sqlalchemy import desc
 
 from nearquake.config import (
     generate_time_range_url,
     ConnectionConfig,
     QuakeFeatures,
     TIMESTAMP_NOW,
+    EVENT_DETAIL_URL,
 )
+from nearquake.tweet_processor import TweetOperator
 from nearquake.utils.db_sessions import DbSessionManager
-from nearquake.app.db import EventDetails
+from nearquake.app.db import EventDetails, Post
 from tqdm import tqdm
 from nearquake.utils import (
     fetch_json_data_from_url,
@@ -136,4 +139,46 @@ class Earthquake:
 
         _logger.info(
             f"Completed the Backfill for {len(date_range)} months!!! Horray :)"
+        )
+
+
+def process_earthquake_data(conn, tweet: TweetOperator, threshold: str):
+    most_recent_date = (
+        conn.session.query(EventDetails.ts_updated_utc)
+        .order_by(desc(EventDetails.ts_updated_utc))
+        .first()
+    )
+
+    most_recent_date = most_recent_date[0].strftime("%Y-%m-%d %H:%M:%S")
+    _logger.info(f"Most recent upload timestamp is {most_recent_date}")
+    most_recent_date_quakes = conn.fetch(
+        model=EventDetails, column="ts_updated_utc", item=most_recent_date
+    )
+    eligible_quakes = [i for i in most_recent_date_quakes if i.mag > 5]
+
+    if len(eligible_quakes) > 0:
+        for i in eligible_quakes:
+            if i.mag >= threshold:
+                duration = TIMESTAMP_NOW - i.ts_event_utc
+
+                text = f"Recent #Earthquake: {i.title} reported {duration.seconds/60:.0f} minutes ago, felt by {i.felt} people. \nSee more details at {EVENT_DETAIL_URL.format(i.id_event)}. \nData provided by https://www.usgs.gov/"
+                item = {
+                    "post": text,
+                    "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
+                }
+
+                conn.insert(Post(**item))
+                _logger.info(text)
+                try:
+                    tweet.post_tweet(tweet=text)
+                    _logger.info(
+                        "Recorded recent tweet posted in the database  recent into the Database "
+                    )
+                except Exception as e:
+                    _logger.error(f"Encountered an unexpected error: {e}")
+                    pass
+
+    else:
+        _logger.info(
+            f"No recent earthquakes with a magnitude of {threshold} or higher were found. Nothing was posted to the database."
         )
