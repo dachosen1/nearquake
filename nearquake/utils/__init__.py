@@ -2,6 +2,10 @@ import requests
 import json
 import os
 import logging
+from PIL import Image
+from io import BytesIO
+
+
 from datetime import datetime, timezone
 
 _logger = logging.getLogger(__name__)
@@ -72,28 +76,57 @@ def get_earthquake_image_url(url):
         return None
 
 
-def download_image(url, id_, directory="image"):
+def extract_url_content(url: str) -> bytes:
     """
-    Downloads an image from a given URL and saves it into a specified directory.
+    Extract content from a given URL.
 
-    :param url: URL of the image to download.
+    :param url: The URL from which content will be extracted.
+    :return: The content retrieved from the URL in binary format (bytes).
+    """
+    response = requests.get(url, timeout=5)
+
+    if response.status_code != 200:
+        _logger.error(
+            f"Failed to get data from URL {url}. Status code: {response.status_code}"
+        )
+        return None
+
+    try:
+        content = response.content
+        return content
+
+    except KeyError:
+        _logger.error("Could not find image URL in response data.")
+        return None
+
+
+def extract_image(image_data: bytes) -> Image.Image:
+    """
+    Extract an image from binary image data.
+
+    :param image_data: The binary image data to be processed.
+    :return: A Pillow (PIL) Image object representing the extracted image.
+    """
+    image_stream = BytesIO(image_data)
+    image = Image.open(image_stream)
+    return image
+
+
+def save_content(content: bytes, id: str, directory: str = "image"):
+    """
+    save byte content into a specified directory.
+
     :param id_: Identifier to be used in the image file name.
     :param directory: Directory where the image will be saved. Defaults to 'image'.
     :return: None
     """
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as err:
-        _logger.error(f"Failed to download the image from {url}: {err}")
-        return
 
     os.makedirs(directory, exist_ok=True)
-    file_path = os.path.join(directory, f"{id_}.jpg")
+    file_path = os.path.join(directory, f"{id}.jpg")
 
     try:
-        with open(os.path.join(directory, f"{id_}.jpg"), "wb") as f:
-            f.write(response.content)
+        with open(os.path.join(directory, f"{id}.jpg"), "wb") as f:
+            f.write(content)
             _logger.info(f"Image downloaded and saved to {file_path}")
 
     except Exception as e:
@@ -224,3 +257,14 @@ def create_dir(path: str):
         raise ValueError
 
     return None
+
+
+if __name__ == "__main__":
+    url = get_earthquake_image_url(
+        "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000kd0n&format=geojson"
+    )
+
+    content = extract_url_content(url=url)
+    extract_image(content)
+
+    save_content(content=content)

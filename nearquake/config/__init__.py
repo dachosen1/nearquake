@@ -9,11 +9,14 @@ _logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-TIMESTAMP_NOW = datetime.utcnow().strftime("%Y%m%d")
+TIMESTAMP_NOW = datetime.utcnow()
 
 API_BASE_URL: str = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
 
 EARTHQUAKE_URL_TEMPLATE: str = "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={year}-{month}-01%2000:00:00&endtime={year}-{month}-31%2023:59:59"
+
+EVENT_DETAIL_URL: str = "https://earthquake.usgs.gov/earthquakes/eventpage/{id}/executive"
+
 
 
 @dataclass(kw_only=True)
@@ -100,3 +103,16 @@ class ConnectionConfig:
             f"Successfully generated the URL to connect to the {self.dbname} database using the {self.sqlengine} engine."
         )
         return f"{self.sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
+
+
+@dataclass()
+class TwitterAuth:
+    CONSUMER_KEY: str = field(default_factory=lambda: os.environ.get("CONSUMER_KEY"))
+    CONSUMER_SECRET: str = field(
+        default_factory=lambda: os.environ.get("CONSUMER_SECRET")
+    )
+    ACCESS_TOKEN: str = field(default_factory=lambda: os.environ.get("ACCESS_TOKEN"))
+    ACCESS_TOKEN_SECRET: str = field(
+        default_factory=lambda: os.environ.get("ACCESS_TOKEN_SECRET")
+    )
+    BEARER_TOKEN: str = field(default_factory=lambda: os.environ.get("BEARER_TOKEN"))

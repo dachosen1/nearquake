@@ -27,9 +27,11 @@ class Earthquake:
     event data and perform backfill operations for a specified date range.
     """
 
+    def __init__(self) -> None:
+        self.TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
+
     def extract_data_properties(self, url):
         """
-
         Extracts earthquake data from a given URL, typically from earthquake.usgs.gov, and
         uploads key properties of each earthquake event into a database.
 
@@ -67,7 +69,7 @@ class Earthquake:
                         id_event=id_event,
                         mag=properties.get("mag"),
                         ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                        ts_updated_utc=TIMESTAMP_NOW,
+                        ts_updated_utc=self.TIMESTAMP_NOW,
                         tz=properties.get("tz"),
                         felt=properties.get("felt"),
                         detail=properties.get("felt"),

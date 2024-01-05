@@ -7,6 +7,9 @@ from nearquake.config import TIMESTAMP_NOW
 from nearquake.utils import create_dir
 
 
+TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y%m%d")
+
+
 class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_record = {
@@ -68,6 +71,7 @@ def setup_logging():
     file_handler = logging.handlers.RotatingFileHandler(
         f"logs/{TIMESTAMP_NOW}-nearquake.log", maxBytes=1048576, backupCount=5
     )
+
     file_handler.addFilter(FilterForHandler("file"))
     file_handler.setFormatter(CustomFormatter())
     file_handler.setLevel(logging.DEBUG)
@@ -80,3 +84,6 @@ def setup_logging():
 DEBUG_MODE = True  # Set to False in production
 setup_logging()
 logger = logging.getLogger(__name__)
+
+
+from nearquake import config, utils, app
