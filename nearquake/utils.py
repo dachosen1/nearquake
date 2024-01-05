@@ -1,7 +1,6 @@
 import logging
 import os
 from datetime import date, datetime, timedelta
-from httpx import post
 from psycopg2 import connect, sql
 import tweepy
 
