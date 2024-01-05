@@ -15,8 +15,9 @@ API_BASE_URL: str = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/a
 
 EARTHQUAKE_URL_TEMPLATE: str = "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={year}-{month}-01%2000:00:00&endtime={year}-{month}-31%2023:59:59"
 
-EVENT_DETAIL_URL: str = "https://earthquake.usgs.gov/earthquakes/eventpage/{id}/executive"
-
+EVENT_DETAIL_URL: str = (
+    "https://earthquake.usgs.gov/earthquakes/eventpage/{id}/executive"
+)
 
 
 @dataclass(kw_only=True)
