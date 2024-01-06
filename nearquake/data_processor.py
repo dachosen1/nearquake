@@ -1,6 +1,11 @@
 import logging
-from datetime import datetime
+
+
 from sqlalchemy import desc
+from typing import List, Type
+from sqlalchemy.orm import Session
+from sqlalchemy.ext.declarative import declarative_base
+
 import random
 from nearquake.config import (
     generate_time_range_url,
@@ -23,6 +28,8 @@ from nearquake.utils import (
 
 _logger = logging.getLogger(__name__)
 
+Base = declarative_base()
+
 
 class Earthquake:
     """
@@ -34,7 +41,7 @@ class Earthquake:
     def __init__(self) -> None:
         self.TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
 
-    def extract_data_properties(self, url):
+    def extract_data_properties(self, url: str):
         """
         Extracts earthquake data from a given URL, typically from earthquake.usgs.gov, and
         uploads key properties of each earthquake event into a database.
@@ -143,7 +150,7 @@ class Earthquake:
         )
 
 
-def process_earthquake_data(conn, tweet: TweetOperator, threshold: str):
+def process_earthquake_data(conn: Session, tweet: TweetOperator, threshold: str):
     most_recent_date = (
         conn.session.query(EventDetails.ts_updated_utc)
         .order_by(desc(EventDetails.ts_updated_utc))
@@ -186,3 +193,22 @@ def process_earthquake_data(conn, tweet: TweetOperator, threshold: str):
         _logger.info(
             f"No recent earthquakes with a magnitude of {threshold} or higher were found. Nothing was posted to the database."
         )
+
+
+def get_date_range_summary(
+    conn: Session, model: Type[Base], start_date: str, end_date: str
+) -> List[Base]:
+    """
+    Retrieves all records from a specified database model within a given date range.
+
+    :param conn: An instance of a database connection, used to interact with the database.
+    :param model: The SQLAlchemy model class representing the database table to query.
+    :param start_date: The start date of the period for which the data is to be retrieved.
+    :param end_date: The end date of the period for which the data is to be retrieved.
+    :return: _description_
+    """
+    query = conn.session.query(model).filter(
+        EventDetails.ts_event_utc.between(start_date, end_date)
+    )
+
+    return query.all()

@@ -1,9 +1,20 @@
 import argparse
 
-from nearquake.data_processor import Earthquake, process_earthquake_data
-from nearquake.config import generate_time_period_url, ConnectionConfig, CHAT_PROMPT
+from nearquake.data_processor import (
+    Earthquake,
+    process_earthquake_data,
+    get_date_range_summary,
+)
+from nearquake.config import (
+    generate_time_period_url,
+    ConnectionConfig,
+    CHAT_PROMPT,
+    TWEET_CONCLUSION,
+)
+from nearquake.app.db import EventDetails
 
 from random import randint
+from datetime import datetime, timedelta
 from nearquake.open_ai_client import generate_response
 from nearquake.tweet_processor import TweetOperator
 from nearquake.utils.db_sessions import DbSessionManager
@@ -15,6 +26,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d", "--daily", action="store_true", help="Execute the daily program"
     )
+
+    parser.add_argument(
+        "-l",
+        "--live",
+        action="store_true",
+        help=" Periodically check for new earhquakes",
+    )
+
     parser.add_argument(
         "-i",
         "--initialize",
@@ -39,18 +58,60 @@ if __name__ == "__main__":
     run = Earthquake()
 
     with conn:
-        if args.daily:
+        if args.live:
             run.extract_data_properties(url=generate_time_period_url("day"))
 
             conn = DbSessionManager(config=ConnectionConfig())
             conn.connect()
             process_earthquake_data(conn, tweet, threshold=4)
 
+        if args.daily:
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
+            start_date = yesterday - timedelta(days=1)
+            content = get_date_range_summary(
+                conn=conn, model=EventDetails, start_date=start_date, end_date=yesterday
+            )
+
+            GREATER_THAN_5 = sum(1 for i in content if i.mag >= 5.0)
+            TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
+                randint(0, len(TWEET_CONCLUSION) - 1)
+            ]
+            message = f"Yesterday, there were {len(content)} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
+            tweet.post_tweet(tweet=message)
+
         if args.weekly:
             run.extract_data_properties(url=generate_time_period_url("week"))
 
+            start_date = datetime.now().date()
+            end_date = start_date - timedelta(days=7)
+            content = get_date_range_summary(
+                conn=conn, model=EventDetails, start_date=start_date, end_date=end_date
+            )
+
+            GREATER_THAN_5 = sum(1 for i in content if i.mag >= 5.0)
+            TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
+                randint(0, len(TWEET_CONCLUSION) - 1)
+            ]
+
+            message = f"During the past week, there were {len(content)} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
+            tweet.post_tweet(tweet=message)
+
         if args.monthly:
             run.extract_data_properties(url=generate_time_period_url("month"))
+
+            start_date = datetime.now().date()
+            end_date = start_date - timedelta(days=30)
+            content = get_date_range_summary(
+                conn=conn, model=EventDetails, start_date=start_date, end_date=end_date
+            )
+
+            GREATER_THAN_5 = sum(1 for i in content if i.mag >= 5.0)
+            TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
+                randint(0, len(TWEET_CONCLUSION) - 1)
+            ]
+            message = f"During the past month, there were {len(content)} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
+            tweet.post_tweet(tweet=message)
 
         if args.initialize:
             url = ConnectionConfig()
