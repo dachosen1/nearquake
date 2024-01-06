@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
             conn = DbSessionManager(config=ConnectionConfig())
             conn.connect()
-            process_earthquake_data(conn, tweet, threshold=5)
+            process_earthquake_data(conn, tweet, threshold=4)
 
         if args.weekly:
             run.extract_data_properties(url=generate_time_period_url("week"))
