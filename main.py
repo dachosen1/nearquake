@@ -1,10 +1,10 @@
 import argparse
 
 from nearquake.data_processor import Earthquake, process_earthquake_data
-from nearquake.config import (
-    generate_time_period_url,
-    ConnectionConfig,
-)
+from nearquake.config import generate_time_period_url, ConnectionConfig, CHAT_PROMPT
+
+from random import randint
+from nearquake.open_ai_client import generate_response
 from nearquake.tweet_processor import TweetOperator
 from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.app.db import create_database
@@ -26,6 +26,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-m", "--monthly", action="store_true", help="Execute the monthly program"
+    )
+
+    parser.add_argument(
+        "-f", "--fun", action="store_true", help="Tells a fun fact about earthquakes"
     )
 
     args = parser.parse_args()
@@ -53,3 +57,9 @@ if __name__ == "__main__":
             create_database(
                 url.generate_connection_url(), schema=["earthquake", "tweet"]
             )
+
+        if args.fun:
+            content = generate_response(
+                prompt=CHAT_PROMPT[randint(0, len(CHAT_PROMPT) - 0)]
+            )
+            tweet.post_tweet(tweet=content)
