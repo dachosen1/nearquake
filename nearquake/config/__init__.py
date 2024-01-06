@@ -117,3 +117,15 @@ class TwitterAuth:
         default_factory=lambda: os.environ.get("ACCESS_TOKEN_SECRET")
     )
     BEARER_TOKEN: str = field(default_factory=lambda: os.environ.get("BEARER_TOKEN"))
+
+
+TWEET_CONCLUSION = [
+    "How do you prepare? Share tips and stay safe! #earthquakePrep",
+    "Remember, in an earthquake: Drop, Cover, and Hold On! #earthquakeSafety #earthquake",
+    "Were you near the epicenter? Share your experience. #earthquake",
+    "Post an earhquake: check gas, electricity! 🔍 #Safety",
+    "In an #earthquake, use stairs, not elevators! 🚶‍♂️🚶‍♀ #safetyfirst", 
+    "keep calm if you are ever in an earthquake",
+    "Quake's over? Expect aftershocks. 📉 #StayAlert", 
+    "Keep a flashlight handy for quakes! 🔦 #BePrepared", 
+]

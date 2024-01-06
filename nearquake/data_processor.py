@@ -1,13 +1,14 @@
 import logging
 from datetime import datetime
 from sqlalchemy import desc
-
+import random
 from nearquake.config import (
     generate_time_range_url,
     ConnectionConfig,
     QuakeFeatures,
     TIMESTAMP_NOW,
     EVENT_DETAIL_URL,
+    TWEET_CONCLUSION,
 )
 from nearquake.tweet_processor import TweetOperator
 from nearquake.utils.db_sessions import DbSessionManager
@@ -160,8 +161,11 @@ def process_earthquake_data(conn, tweet: TweetOperator, threshold: str):
         for i in eligible_quakes:
             if i.mag >= threshold:
                 duration = TIMESTAMP_NOW - i.ts_event_utc
+                TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
+                    random.randint(0, len(TWEET_CONCLUSION) - 1)
+                ]
 
-                text = f"Recent #Earthquake: {i.title} reported {duration.seconds/60:.0f} minutes ago.  \nSee more details at {EVENT_DETAIL_URL.format(id=i.id_event)}. \nData provided by https://www.usgs.gov/"
+                text = f"Recent #Earthquake: {i.title} reported {duration.seconds/60:.0f} minutes ago. #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=i.id_event)}. \n {TWEET_CONCLUSION_TEXT}"
                 item = {
                     "post": text,
                     "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
