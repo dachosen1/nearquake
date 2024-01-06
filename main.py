@@ -73,7 +73,7 @@ if __name__ == "__main__":
                 conn=conn, model=EventDetails, start_date=start_date, end_date=yesterday
             )
 
-            GREATER_THAN_5 = sum(1 for i in content if i.mag >= 5.0)
+            GREATER_THAN_5 = sum(1 for i in content if i.mag is not None and i.mag >= 5)
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
@@ -83,13 +83,13 @@ if __name__ == "__main__":
         if args.weekly:
             run.extract_data_properties(url=generate_time_period_url("week"))
 
-            start_date = datetime.now().date()
-            end_date = start_date - timedelta(days=7)
+            end_date = datetime.now().date()
+            start_date = end_date - timedelta(days=7)
             content = get_date_range_summary(
                 conn=conn, model=EventDetails, start_date=start_date, end_date=end_date
             )
 
-            GREATER_THAN_5 = sum(1 for i in content if i.mag >= 5.0)
+            GREATER_THAN_5 = sum(1 for i in content if i.mag is not None and i.mag >= 5)
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
@@ -100,13 +100,13 @@ if __name__ == "__main__":
         if args.monthly:
             run.extract_data_properties(url=generate_time_period_url("month"))
 
-            start_date = datetime.now().date()
-            end_date = start_date - timedelta(days=30)
+            end_date = datetime.now().date()
+            start_date = end_date - timedelta(days=30)
             content = get_date_range_summary(
                 conn=conn, model=EventDetails, start_date=start_date, end_date=end_date
             )
 
-            GREATER_THAN_5 = sum(1 for i in content if i.mag >= 5.0)
+            GREATER_THAN_5 = sum(1 for i in content if i.mag is not None and i.mag >= 5)
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
