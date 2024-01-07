@@ -133,12 +133,6 @@ TWEET_CONCLUSION = [
 CHAT_PROMPT = [
     "Tell me an interesting fact about earthquakes in 140 characters or less.",
     "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
-    "Explain why earthquakes happen in 140 characters or less.",
-    "What are the safest places during an earthquake? Answer in 140 characters or less.",
-    "Name the biggest earthquake ever recorded in 140 characters or less.",
-    "How do animals react to earthquakes? Briefly explain in 140 characters or less.",
-    "What are aftershocks? Describe in 140 characters or less.",
     "List some common misconceptions about earthquakes in 140 characters or less.",
     "How do I make my home earthquake-proof? Tips in 140 characters or less.",
-    "What should be in an earthquake emergency kit? List items in 140 characters or less.",
 ]
