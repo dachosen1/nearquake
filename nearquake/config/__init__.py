@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 import logging
+from random import randint
 
 
 _logger = logging.getLogger(__name__)
@@ -131,8 +132,27 @@ TWEET_CONCLUSION = [
 
 
 CHAT_PROMPT = [
+    "Explain why earthquakes happen in 140 characters or less.",
+    "What are the safest places during an earthquake? Answer in 140 characters or less.",
     "Tell me an interesting fact about earthquakes in 140 characters or less.",
     "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
     "List some common misconceptions about earthquakes in 140 characters or less.",
     "How do I make my home earthquake-proof? Tips in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    f" What does a {randint(1,8)} magnitude earthquake feel like in 140 characters or less",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "How do animals react to earthquakes? Briefly explain in 140 characters or less.",
+    "What are aftershocks? Describe in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "Describe the safest actions during an earthquake in 140 characters or less.",
+    "Explain the Richter Scale in simple terms, within 140 characters.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
+    "What's the difference between an earthquake's epicenter and focus? 140 characters.",
+    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
+    "Identify signs of an impending earthquake in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
 ]
