@@ -121,11 +121,9 @@ class TwitterAuth:
 
 
 TWEET_CONCLUSION = [
-    "How do you prepare? Share tips and stay safe! #earthquakePrep data provided by #usgs",
-    "Were you near the epicenter? Share your experience. #earthquake data provided by #usgs",
-    "In an #earthquake, use stairs, not elevators! 🚶‍♂️🚶‍♀ #safetyfirst data provided by #usgs",
-    "keep calm if you are ever in an earthquake data provided by #usgs",
-    "Keep a flashlight handy for quakes! 🔦 #BePrepared data provided by #usgs",
+    "How do you prepare? Share tips and stay safe! #earthquakePrep. Data provided by #usgs",
+    "Were you near the epicenter? Share your experience. #earthquake. Data provided by #usgs",
+    "In an #earthquake, use stairs, not elevators! 🚶‍♂️🚶‍♀ #safetyfirst. Data provided by #usgs",
 ]
 
 
