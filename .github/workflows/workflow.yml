@@ -42,7 +42,7 @@ jobs:
       
     steps:
     - uses: actions/checkout@v4
-    - name: SSH into container 
+    - name: Build and Deploy
       env:
         PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         HOSTNAME: ${{ secrets.IP_ADDRESS }}
@@ -50,13 +50,10 @@ jobs:
 
       run: | 
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-
-    - name: Navigate to the directory and deploy the latest change 
-      run: |
-        cd /home/ubuntu/nearquake && 
-        git pull origin master && 
-        sudo docker-compose up -d --build 
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME}
+          cd /home/ubuntu/nearquake && 
+          git pull origin master && 
+          sudo docker-compose up -d --build 
           
     - name: clean up images
       run: sudo docker image prune -f
