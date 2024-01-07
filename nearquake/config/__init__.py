@@ -159,7 +159,7 @@ CHAT_PROMPT = [
     "what are some movies that describe the realities of earthquakes in 140 characters of less",
     "What are aftershocks and why do they occur? Explain in 140 characters",
     "Tell me an interesting fact or tip about aftershocks? Explain in 140 characters",
-    "Tell me something interesting about studying seismology it could be a course you take or ssubject that's required in 140 characters or less"
+    "Tell me something interesting about studying seismology it could be a course you take or ssubject that's required in 140 characters or less", 
     "Tell me an interesting discovery made about earthquakes and who made it",
     "Tell me a course someone takes when studing seismology and briefly explain to me that class in 140 characters or less", 
     "Name me a big earthquake that recorded  and a fact about it in 140 characters or less.",
