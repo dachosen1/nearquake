@@ -31,14 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: psf/black@stable
         with:
-          python-version: 3.12.1
-      - name: Install Black
-        run: pip install black
-      - name: Run Black
-        run: black --check --verbose
+          options: "--check --verbose"
 
   Deploy:
     needs: [Unit_Test, Linter]
@@ -46,16 +41,15 @@ jobs:
     runs-on: ubuntu-latest
       
     steps:
-      - uses: actions/checkout@v4
-      - name: SSH into container 
-        run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.IP_ADDRESS }}
+    - uses: actions/checkout@v4
+    - name: SSH into container 
+      run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.IP_ADDRESS }}
 
     - name: Navigate to the directory and deploy the latest change 
-        run: |
-          cd /home/ubuntu/nearquake && 
-          git pull origin master && 
-          sudo docker-compose up -d --build 
+      run: |
+        cd /home/ubuntu/nearquake && 
+        git pull origin master && 
+        sudo docker-compose up -d --build 
           
     - name: clean up images
-        run: sudo docker image prune -f
-        
+      run: sudo docker image prune -f
