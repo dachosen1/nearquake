@@ -36,7 +36,9 @@ jobs:
       with:
         python-version: 3.12.1
     - name: Install Black
-      run: pip install black
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install black
     - name: Run Black
       run: black --check --verbose
 
