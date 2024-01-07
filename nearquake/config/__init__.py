@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 import logging
+from random import randint
 
 
 _logger = logging.getLogger(__name__)
@@ -121,9 +122,7 @@ class TwitterAuth:
 
 TWEET_CONCLUSION = [
     "How do you prepare? Share tips and stay safe! #earthquakePrep data provided by #usgs",
-    "Remember, in an earthquake: Drop, Cover, and Hold On! #earthquakeSafety #earthquake data provided by #usgs",
     "Were you near the epicenter? Share your experience. #earthquake data provided by #usgs",
-    "Post an earhquake: check gas, electricity! 🔍 #Safety data provided by #usgs",
     "In an #earthquake, use stairs, not elevators! 🚶‍♂️🚶‍♀ #safetyfirst data provided by #usgs",
     "keep calm if you are ever in an earthquake data provided by #usgs",
     "Keep a flashlight handy for quakes! 🔦 #BePrepared data provided by #usgs",
@@ -131,14 +130,39 @@ TWEET_CONCLUSION = [
 
 
 CHAT_PROMPT = [
-    "Tell me an interesting fact about earthquakes in 140 characters or less.",
-    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
     "Explain why earthquakes happen in 140 characters or less.",
     "What are the safest places during an earthquake? Answer in 140 characters or less.",
-    "Name the biggest earthquake ever recorded in 140 characters or less.",
-    "How do animals react to earthquakes? Briefly explain in 140 characters or less.",
-    "What are aftershocks? Describe in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
     "List some common misconceptions about earthquakes in 140 characters or less.",
     "How do I make my home earthquake-proof? Tips in 140 characters or less.",
-    "What should be in an earthquake emergency kit? List items in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    f" What does a {randint(1,8)} magnitude earthquake feel like in 140 characters or less",
+    "Tell me an interesting fact about earthquakes and volcanoes in 140 characters or less.",
+    "How do animals react to earthquakes? Briefly explain in 140 characters or less.",
+    "What are aftershocks? Describe in 140 characters or less.",
+    "Tell me an interesting fact about under water earthquakes in 140 characters or less.",
+    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
+    "Tell me an interesting fact about the epicenter of an earthquake in 140 characters or less.",
+    "Tell me an interesting fact about tectonic plates in 140 characters or less.",
+    "Describe the safest actions during an earthquake in 140 characters or less.",
+    "Explain the Richter Scale in simple terms, within 140 characters.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
+    "What's the difference between an earthquake's epicenter and focus? 140 characters.",
+    "Give me some tips on how to prepare for an earthquake in 140 characters or less.",
+    "Identify signs of an impending earthquake in 140 characters or less.",
+    "Tell me an interesting fact about earthquakes in 140 characters or less.",
+    "why can't earthquakes be predicted? tell me in 140 characters or less",
+    "what are tectonic plates and why do they exist in 140 characters or less ",
+    "what does an earthquake feel like in 140 characters or less",
+    "what are some movies that describe the realities of earthquakes in 140 characters of less",
+    "What are aftershocks and why do they occur? Explain in 140 characters",
+    "Tell me an interesting fact or tip about aftershocks? Explain in 140 characters",
+    "Tell me something interesting about studying seismology it could be a course you take or ssubject that's required in 140 characters or less",
+    "Tell me an interesting discovery made about earthquakes and who made it",
+    "Tell me a course someone takes when studing seismology and briefly explain to me that class in 140 characters or less",
+    "Name me a big earthquake that recorded  and a fact about it in 140 characters or less.",
+    "How do animals react to earthquakes and something interesting about it? Briefly explain in 140 characters or less.",
+    "What are aftershocks or why they happen and or fact aboutt hem ? pick one of the questions and describe it 140 characters or less.",
 ]
