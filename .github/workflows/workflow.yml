@@ -43,7 +43,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: SSH into container 
-      run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.USERNAME }}@${{ secrets.IP_ADDRESS }}
+      env:
+        PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        HOSTNAME: ${{ secrets.IP_ADDRESS }}
+        USER_NAME: ${{ secrets.USERNAME }}
+
+      run: | 
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
 
     - name: Navigate to the directory and deploy the latest change 
       run: |
