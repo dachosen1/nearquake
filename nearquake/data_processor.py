@@ -1,7 +1,7 @@
 import logging
 
 
-from sqlalchemy import desc
+from sqlalchemy import desc, and_
 from typing import List, Type
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.declarative import declarative_base
@@ -83,8 +83,8 @@ class Earthquake:
                         ts_updated_utc=self.TIMESTAMP_NOW,
                         tz=properties.get("tz"),
                         felt=properties.get("felt"),
-                        detail=properties.get("felt"),
-                        cdi=properties.get("felt"),
+                        detail=properties.get("detail"),
+                        cdi=properties.get("cdi"),
                         mmi=properties.get("mmi"),
                         status=properties.get("status"),
                         tsunami=properties.get("tsunami"),
@@ -205,10 +205,14 @@ def get_date_range_summary(
     :param model: The SQLAlchemy model class representing the database table to query.
     :param start_date: The start date of the period for which the data is to be retrieved.
     :param end_date: The end date of the period for which the data is to be retrieved.
-    :return: _description_
+    :return: a list of all items meeting the queries criteria.
     """
     query = conn.session.query(model).filter(
-        EventDetails.ts_event_utc.between(start_date, end_date)
+        and_(
+            model.ts_event_utc.between(start_date, end_date),
+            model.mag > 0,
+            model.type == "earthquake",
+        )
     )
 
     return query.all()
