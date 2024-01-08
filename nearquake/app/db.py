@@ -13,6 +13,9 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 
+import logging
+
+_logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -63,6 +66,9 @@ def create_schema(engine, schema_names):
     for schema_name in schema_names:
         create_schema_sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
         connection.execute(create_schema_sql)
+        _logger.info(
+            f"Successfuly created a new schema with the name: {schema_name} in the datase"
+        )
 
 
 def create_database(url: str, schema: Optional[List[str]] = None):
