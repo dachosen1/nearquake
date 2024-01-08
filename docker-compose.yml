@@ -9,3 +9,31 @@ services:
     volumes:
       - /var/log/nearquake:/usr/src/app/logs
     env_file: .env
+    restart: always
+    networks:
+      - nearquake-network
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${NEARQUAKE_USERNAME}
+      POSTGRES_PASSWORD: ${NEARQUAKE_PASSWORD}
+      POSTGRES_DB: ${NEARQUAKE_DATABASE}
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "airflow" ]
+      interval: 5s
+      retries: 5
+    restart: always
+    networks:
+      - nearquake-network
+
+networks:
+  nearquake-network:
+  
+volumes:
+  postgres-db-volume:
