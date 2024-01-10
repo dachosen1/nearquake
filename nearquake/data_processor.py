@@ -222,5 +222,5 @@ if __name__ == "__main__":
     run = Earthquake()
 
     run.extract_data_properties(
-            url="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
-        )
+        url="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
+    )
