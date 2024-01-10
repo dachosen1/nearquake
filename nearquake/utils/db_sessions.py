@@ -37,7 +37,7 @@ class DbSessionManager:
         except Exception as e:
             _logger.error("Failed to connect to the database: %s", e, exc_info=True)
 
-    def fetch(self, model, column, item):
+    def fetch(self, model, column, items):
         """
         Fetches records from the database based on the model and filter conditions.
 
@@ -47,7 +47,9 @@ class DbSessionManager:
         """
         try:
             result = (
-                self.session.query(model).filter(getattr(model, column) == item).all()
+                self.session.query(model)
+                .filter(getattr(model, column).in_(items))
+                .all()
             )
             return result
 
@@ -67,6 +69,21 @@ class DbSessionManager:
 
         except Exception as e:
             _logger.error("Failed to execute insert query: %s", e, exc_info=True)
+
+    def insert_many(self, models):
+        """
+        Inserts multiple instances of an SQLAlchemy ORM model into the database.
+
+        :param models: A list of model instances to be inserted into the database.
+        """
+        try:
+            for model in models:
+                self.session.add(model)
+            self.session.commit()
+
+        except Exception as e:
+            _logger.error("Failed to execute insert_many query: %s", e, exc_info=True)
+            self.session.rollback()
 
     def close(self):
         """Closes the database session."""

@@ -3,14 +3,12 @@ import logging
 
 from sqlalchemy import desc, and_
 from typing import List, Type
-from sqlalchemy.orm import Session
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session, declarative_base
 
 import random
 from nearquake.config import (
     generate_time_range_url,
     ConnectionConfig,
-    QuakeFeatures,
     TIMESTAMP_NOW,
     EVENT_DETAIL_URL,
     TWEET_CONCLUSION,
@@ -41,7 +39,7 @@ class Earthquake:
     def __init__(self) -> None:
         self.TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
 
-    def extract_data_properties(self, url: str):
+    def extract_data_properties(self, url: str) -> None:
         """
         Extracts earthquake data from a given URL, typically from earthquake.usgs.gov, and
         uploads key properties of each earthquake event into a database.
@@ -62,67 +60,65 @@ class Earthquake:
 
         conn = DbSessionManager(config=ConnectionConfig())
 
-        added = 0
-        skipped = 0
-        summary = {}
-
         with conn:
             try:
-                for i in tqdm(data["features"]):
-                    id_event = i["id"]
-                    properties = i["properties"]
-                    coordinates = i["geometry"]["coordinates"]
+                # check for all the records in the api
+                event_id_set = {i["id"] for i in data["features"]}
 
-                    timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
-                    time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
-
-                    quake_entry = QuakeFeatures(
-                        id_event=id_event,
-                        mag=properties.get("mag"),
-                        ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                        ts_updated_utc=self.TIMESTAMP_NOW,
-                        tz=properties.get("tz"),
-                        felt=properties.get("felt"),
-                        detail=properties.get("detail"),
-                        cdi=properties.get("cdi"),
-                        mmi=properties.get("mmi"),
-                        status=properties.get("status"),
-                        tsunami=properties.get("tsunami"),
-                        type=properties.get("type"),
-                        title=properties.get("title"),
-                        date=time_stamp_date,
-                        place=properties.get("place"),
-                        longitude=coordinates[0],
-                        latitude=coordinates[1],
-                    )
-
-                    fetched_records = conn.fetch(
-                        model=EventDetails, column="id_event", item=id_event
-                    )
-
-                    if time_stamp_date in summary:
-                        summary[time_stamp_date] += 1
-                    else:
-                        summary[time_stamp_date] = 1
-
-                    if len(fetched_records) == 0:
-                        property_items = EventDetails(**quake_entry.__dict__)
-                        conn.insert(property_items)
-                        added += 1
-                    else:
-                        skipped += 1
-
-                log_message = (
-                    f"Upload Complete for {time_stamp_date}. "
-                    f"Added {added} records, and {skipped} records were already added. "
-                    f"Summary of date added: {summary}"
+                # check for records that exists in the database
+                fetched_records = conn.fetch(
+                    model=EventDetails, column="id_event", items=event_id_set
                 )
-                _logger.info(log_message)
+
+                # find all the missing records
+                exist_id_events_set = {i.id_event for i in fetched_records}
+                records_to_add_set = event_id_set - exist_id_events_set
+
+                records_to_add = [
+                    i for i in data["features"] if i["id"] in records_to_add_set
+                ]
+
+                if len(records_to_add) > 0:
+                    records_to_add_list = []
+                    for i in tqdm(records_to_add):
+                        id_event = i["id"]
+                        properties = i["properties"]
+                        coordinates = i["geometry"]["coordinates"]
+
+                        timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
+                        time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
+
+                        quake_entry = EventDetails(
+                            id_event=id_event,
+                            mag=properties.get("mag"),
+                            ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                            ts_updated_utc=self.TIMESTAMP_NOW,
+                            tz=properties.get("tz"),
+                            felt=properties.get("felt"),
+                            detail=properties.get("detail"),
+                            cdi=properties.get("cdi"),
+                            mmi=properties.get("mmi"),
+                            status=properties.get("status"),
+                            tsunami=properties.get("tsunami"),
+                            type=properties.get("type"),
+                            title=properties.get("title"),
+                            date=time_stamp_date,
+                            place=properties.get("place"),
+                            longitude=coordinates[0],
+                            latitude=coordinates[1],
+                        )
+
+                        records_to_add_list.append(quake_entry)
+                    conn.insert_many(records_to_add_list)
+                    _logger.info(f"Added {len(records_to_add)} records")
+
+                else:
+                    _logger.info("No new records found")
 
             except Exception as e:
                 _logger.error(f" Encountereed an unexpected error: {e}")
 
-    def backfill_data_properties(self, start_date: str, end_date: str):
+    def backfill_data_properties(self, start_date: str, end_date: str) -> None:
         """
          Performs a backfill operation for earthquake data between specified start and end dates.
         It generates URLs for each day within the date range and calls `extract_data_properties`
@@ -143,6 +139,7 @@ class Earthquake:
             url = generate_time_range_url(
                 year=str(year).zfill(2), month=str(month).zfill(2)
             )
+            _logger.info(f"Running a backfill for {year} {month}")
             self.extract_data_properties(url)
 
         _logger.info(
@@ -150,7 +147,9 @@ class Earthquake:
         )
 
 
-def process_earthquake_data(conn: Session, tweet: TweetOperator, threshold: str):
+def process_earthquake_data(
+    conn: Session, tweet: TweetOperator, threshold: str
+) -> None:
     most_recent_date = (
         conn.session.query(EventDetails.ts_updated_utc)
         .order_by(desc(EventDetails.ts_updated_utc))
@@ -216,3 +215,12 @@ def get_date_range_summary(
     )
 
     return query.all()
+
+
+if __name__ == "__main__":
+    conn = DbSessionManager(config=ConnectionConfig())
+    run = Earthquake()
+
+    run.extract_data_properties(
+            url="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
+        )
