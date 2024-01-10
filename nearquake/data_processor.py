@@ -118,7 +118,7 @@ class Earthquake:
             except Exception as e:
                 _logger.error(f" Encountereed an unexpected error: {e}")
 
-    def backfill_data_properties(self, start_date: str, end_date: str) -> None:
+    def backfill(self, start_date: str, end_date: str) -> None:
         """
          Performs a backfill operation for earthquake data between specified start and end dates.
         It generates URLs for each day within the date range and calls `extract_data_properties`
@@ -128,7 +128,7 @@ class Earthquake:
 
         Example:
         run = Earthquake()
-        run.backfill_data_properties(start_date="2023-01-01", end_date="2023-10-01")
+        run.backfill(start_date="2023-01-01", end_date="2023-10-01")
 
         :param start_date: The start date for the backfill operation, in 'YYYY-MM-DD' format.
         :param end_date: The end date for the backfill operation, in 'YYYY-MM-DD' format.
