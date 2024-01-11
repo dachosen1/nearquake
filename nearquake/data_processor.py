@@ -113,7 +113,7 @@ class Earthquake:
 
                         records_to_add_list.append(quake_entry)
 
-                        # Increments a county by one for each date added in the datase. If no record exist, assign the value of 1
+                        # Increments the count by one for each date added to the database. If no record exists, initialize the date at 1
                         summary[time_stamp_date] = summary.get(time_stamp_date, 0) + 1
 
                     conn.insert_many(records_to_add_list)
