@@ -1,11 +1,10 @@
 import logging
-
+import random
 
 from sqlalchemy import desc, and_
 from typing import List, Type
 from sqlalchemy.orm import Session, declarative_base
 
-import random
 from nearquake.config import (
     generate_time_range_url,
     ConnectionConfig,
@@ -62,16 +61,16 @@ class Earthquake:
 
         with conn:
             try:
-                # check for all the records in the api
+                # Check for all the records in the api
                 event_id_set = {i["id"] for i in data["features"]}
 
-                # check for records that exists in the database
+                # Check for records that exists in the database
                 fetched_records = conn.fetch(
                     model=EventDetails, column="id_event", items=event_id_set
                 )
 
-                # find all the missing records
-                try: 
+                # In case where there are no records in the database it returns a type error and we add all the records in the API fetch
+                try:
                     exist_id_events_set = {i.id_event for i in fetched_records}
                     records_to_add_set = event_id_set - exist_id_events_set
                 except TypeError:
@@ -218,12 +217,3 @@ def get_date_range_summary(
     )
 
     return query.all()
-
-
-if __name__ == "__main__":
-    conn = DbSessionManager(config=ConnectionConfig())
-    run = Earthquake()
-
-    run.extract_data_properties(
-        url="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
-    )
