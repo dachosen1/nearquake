@@ -168,7 +168,7 @@ def process_earthquake_data(
     most_recent_date = most_recent_date[0].strftime("%Y-%m-%d %H:%M:%S")
     _logger.info(f"Most recent upload timestamp is {most_recent_date}")
     most_recent_date_quakes = conn.fetch(
-        model=EventDetails, column="ts_updated_utc", item=most_recent_date
+        model=EventDetails, column="ts_updated_utc", items=most_recent_date
     )
     eligible_quakes = [i for i in most_recent_date_quakes if i.mag > 5]
 
