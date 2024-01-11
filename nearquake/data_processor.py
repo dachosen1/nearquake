@@ -58,6 +58,7 @@ class Earthquake:
         data = fetch_json_data_from_url(url=url)
 
         conn = DbSessionManager(config=ConnectionConfig())
+        summary = {}
 
         with conn:
             try:
@@ -111,8 +112,14 @@ class Earthquake:
                         )
 
                         records_to_add_list.append(quake_entry)
+
+                        # Increments a county by one for each date added in the datase. If no record exist, assign the value of 1
+                        summary[time_stamp_date] = summary.get(time_stamp_date, 0) + 1
+
                     conn.insert_many(records_to_add_list)
-                    _logger.info(f"Added {len(records_to_add)} records")
+                    _logger.info(
+                        f"Added {len(records_to_add)} records and {len(exist_id_events_set)} records were already added. Summary of date added: {summary}"
+                    )
 
                 else:
                     _logger.info("No new records found")
