@@ -71,8 +71,11 @@ class Earthquake:
                 )
 
                 # find all the missing records
-                exist_id_events_set = {i.id_event for i in fetched_records}
-                records_to_add_set = event_id_set - exist_id_events_set
+                try: 
+                    exist_id_events_set = {i.id_event for i in fetched_records}
+                    records_to_add_set = event_id_set - exist_id_events_set
+                except TypeError:
+                    records_to_add_set = event_id_set
 
                 records_to_add = [
                     i for i in data["features"] if i["id"] in records_to_add_set
@@ -139,7 +142,7 @@ class Earthquake:
             url = generate_time_range_url(
                 year=str(year).zfill(2), month=str(month).zfill(2)
             )
-            _logger.info(f"Running a backfill for {year} {month}")
+            _logger.info(f"Running a backfill for Year: {year}, and Month: {month}")
             self.extract_data_properties(url)
 
         _logger.info(
@@ -222,5 +225,5 @@ if __name__ == "__main__":
     run = Earthquake()
 
     run.extract_data_properties(
-        url="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
+        url="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
     )
