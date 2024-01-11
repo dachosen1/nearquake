@@ -7,8 +7,9 @@ from sqlalchemy import (
     Integer,
     String,
     TIMESTAMP,
+    create_engine,
 )
-from sqlalchemy import create_engine
+
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError

@@ -21,27 +21,6 @@ EVENT_DETAIL_URL: str = (
 )
 
 
-@dataclass(kw_only=True)
-class QuakeFeatures:
-    id_event: str = field(default_factory=str)
-    mag: float = field(default_factory=float)
-    ts_event_utc: str = field(default_factory=str)
-    ts_updated_utc: str = field(default_factory=str)
-    tz: str = field(default_factory=str)
-    felt: str = field(default_factory=str)
-    detail: str = field(default_factory=str)
-    cdi: str = field(default_factory=str)
-    mmi: str = field(default_factory=str)
-    status: str = field(default_factory=str)
-    tsunami: str = field(default_factory=str)
-    type: str = field(default_factory=str)
-    title: str = field(default_factory=str)
-    date: str = field(default_factory=str)
-    place: str = field(default_factory=str)
-    longitude: float = field(default_factory=float)
-    latitude: float = field(default_factory=float)
-
-
 def generate_time_range_url(year: int, month: int) -> str:
     """
     Generate the URL for extracting earthquakes that occurred during a specific year and month.
