@@ -37,9 +37,27 @@ class DbSessionManager:
         except Exception as e:
             _logger.error("Failed to connect to the database: %s", e, exc_info=True)
 
-    def fetch(self, model, column, items):
+    def fetch_single(self, model, column, item):
         """
-        Fetches records from the database based on the model and filter conditions.
+        Fetches records from a single item  from the database based on the model and filter conditions.
+
+        :param model: SQLAlchemy ORM model class.
+        :param column: The column name to apply the filter on.
+        :param item: The value to filter by
+        """
+        try:
+            result = (
+                self.session.query(model).filter(getattr(model, column) == item).all()
+            )
+            return result
+
+        except Exception as e:
+            _logger.error("Failed to execute fetch query: %s", e, exc_info=True)
+            return None
+
+    def fetch_many(self, model, column, items):
+        """
+        Fetches records from multiple items from the database based on the model and filter conditions.
 
         :param model: SQLAlchemy ORM model class.
         :param column: The column name to apply the filter on.

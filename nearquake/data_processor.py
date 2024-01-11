@@ -66,7 +66,7 @@ class Earthquake:
                 event_id_set = {i["id"] for i in data["features"]}
 
                 # Check for records that exists in the database
-                fetched_records = conn.fetch(
+                fetched_records = conn.fetch_many(
                     model=EventDetails, column="id_event", items=event_id_set
                 )
 
@@ -167,8 +167,8 @@ def process_earthquake_data(
 
     most_recent_date = most_recent_date[0].strftime("%Y-%m-%d %H:%M:%S")
     _logger.info(f"Most recent upload timestamp is {most_recent_date}")
-    most_recent_date_quakes = conn.fetch(
-        model=EventDetails, column="ts_updated_utc", items=most_recent_date
+    most_recent_date_quakes = conn.fetch_single(
+        model=EventDetails, column="ts_updated_utc", item=most_recent_date
     )
     eligible_quakes = [i for i in most_recent_date_quakes if i.mag > 5]
 
