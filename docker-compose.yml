@@ -9,7 +9,6 @@ services:
     volumes:
       - /var/log/nearquake:/usr/src/app/logs
     env_file: .env
-    restart: always
     networks:
       - nearquake-network
 
