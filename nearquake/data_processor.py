@@ -38,7 +38,7 @@ class Earthquake:
     def __init__(self) -> None:
         self.TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
 
-    def extract_data_properties(self, url: str) -> None:
+    def extract_data_properties(self, url: str, conn: Session) -> None:
         """
         Extracts earthquake data from a given URL, typically from earthquake.usgs.gov, and
         uploads key properties of each earthquake event into a database.
@@ -57,75 +57,73 @@ class Earthquake:
         """
         data = fetch_json_data_from_url(url=url)
 
-        conn = DbSessionManager(config=ConnectionConfig())
         summary = {}
 
-        with conn:
+        try:
+            # Check for all the records in the api
+            event_id_set = {i["id"] for i in data["features"]}
+
+            # Check for records that exists in the database
+            fetched_records = conn.fetch_many(
+                model=EventDetails, column="id_event", items=event_id_set
+            )
+
+            # In case where there are no records in the database it returns a type error and we add all the records in the API fetch
             try:
-                # Check for all the records in the api
-                event_id_set = {i["id"] for i in data["features"]}
+                exist_id_events_set = {i.id_event for i in fetched_records}
+                records_to_add_set = event_id_set - exist_id_events_set
+            except TypeError:
+                records_to_add_set = event_id_set
 
-                # Check for records that exists in the database
-                fetched_records = conn.fetch_many(
-                    model=EventDetails, column="id_event", items=event_id_set
-                )
+            records_to_add = [
+                i for i in data["features"] if i["id"] in records_to_add_set
+            ]
 
-                # In case where there are no records in the database it returns a type error and we add all the records in the API fetch
-                try:
-                    exist_id_events_set = {i.id_event for i in fetched_records}
-                    records_to_add_set = event_id_set - exist_id_events_set
-                except TypeError:
-                    records_to_add_set = event_id_set
+            if len(records_to_add) > 0:
+                records_to_add_list = []
+                for i in tqdm(records_to_add):
+                    id_event = i["id"]
+                    properties = i["properties"]
+                    coordinates = i["geometry"]["coordinates"]
 
-                records_to_add = [
-                    i for i in data["features"] if i["id"] in records_to_add_set
-                ]
+                    timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
+                    time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
 
-                if len(records_to_add) > 0:
-                    records_to_add_list = []
-                    for i in tqdm(records_to_add):
-                        id_event = i["id"]
-                        properties = i["properties"]
-                        coordinates = i["geometry"]["coordinates"]
-
-                        timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
-                        time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
-
-                        quake_entry = EventDetails(
-                            id_event=id_event,
-                            mag=properties.get("mag"),
-                            ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                            ts_updated_utc=self.TIMESTAMP_NOW,
-                            tz=properties.get("tz"),
-                            felt=properties.get("felt"),
-                            detail=properties.get("detail"),
-                            cdi=properties.get("cdi"),
-                            mmi=properties.get("mmi"),
-                            status=properties.get("status"),
-                            tsunami=properties.get("tsunami"),
-                            type=properties.get("type"),
-                            title=properties.get("title"),
-                            date=time_stamp_date,
-                            place=properties.get("place"),
-                            longitude=coordinates[0],
-                            latitude=coordinates[1],
-                        )
-
-                        records_to_add_list.append(quake_entry)
-
-                        # Increments the count by one for each date added to the database. If no record exists, initialize the date at 1
-                        summary[time_stamp_date] = summary.get(time_stamp_date, 0) + 1
-
-                    conn.insert_many(records_to_add_list)
-                    _logger.info(
-                        f"Added {len(records_to_add)} records and {len(exist_id_events_set)} records were already added. Summary of date added: {summary}"
+                    quake_entry = EventDetails(
+                        id_event=id_event,
+                        mag=properties.get("mag"),
+                        ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                        ts_updated_utc=self.TIMESTAMP_NOW,
+                        tz=properties.get("tz"),
+                        felt=properties.get("felt"),
+                        detail=properties.get("detail"),
+                        cdi=properties.get("cdi"),
+                        mmi=properties.get("mmi"),
+                        status=properties.get("status"),
+                        tsunami=properties.get("tsunami"),
+                        type=properties.get("type"),
+                        title=properties.get("title"),
+                        date=time_stamp_date,
+                        place=properties.get("place"),
+                        longitude=coordinates[0],
+                        latitude=coordinates[1],
                     )
 
-                else:
-                    _logger.info("No new records found")
+                    records_to_add_list.append(quake_entry)
 
-            except Exception as e:
-                _logger.error(f" Encountereed an unexpected error: {e}")
+                    # Increments the count by one for each date added to the database. If no record exists, initialize the date at 1
+                    summary[time_stamp_date] = summary.get(time_stamp_date, 0) + 1
+
+                conn.insert_many(records_to_add_list)
+                _logger.info(
+                    f"Added {len(records_to_add)} records and {len(exist_id_events_set)} records were already added. Summary of date added: {summary}"
+                )
+
+            else:
+                _logger.info("No new records found")
+
+        except Exception as e:
+            _logger.error(f" Encountereed an unexpected error: {e}")
 
     def backfill(self, start_date: str, end_date: str) -> None:
         """
@@ -170,7 +168,7 @@ def process_earthquake_data(
     most_recent_date_quakes = conn.fetch_single(
         model=EventDetails, column="ts_updated_utc", item=most_recent_date
     )
-    eligible_quakes = [i for i in most_recent_date_quakes if i.mag > 5]
+    eligible_quakes = [i for i in most_recent_date_quakes if i.mag > threshold]
 
     if len(eligible_quakes) > 0:
         for i in eligible_quakes:
@@ -179,8 +177,9 @@ def process_earthquake_data(
                 TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                     random.randint(0, len(TWEET_CONCLUSION) - 1)
                 ]
+                earthquake_ts_event = i.ts_event_utc.strftime("%H:%M:%S")
 
-                text = f"Recent #Earthquake: {i.title} reported {duration.seconds/60:.0f} minutes ago. #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=i.id_event)}. \n {TWEET_CONCLUSION_TEXT}"
+                text = f"Recent #Earthquake: {i.title} reported at {earthquake_ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=i.id_event)}. \n {TWEET_CONCLUSION_TEXT}"
                 item = {
                     "post": text,
                     "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),

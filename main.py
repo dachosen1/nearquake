@@ -59,10 +59,9 @@ if __name__ == "__main__":
 
     with conn:
         if args.live:
-            run.extract_data_properties(url=generate_time_period_url("day"))
-
-            conn = DbSessionManager(config=ConnectionConfig())
-            conn.connect()
+            run.extract_data_properties(
+                url=generate_time_period_url("month"), conn=conn
+            )
             process_earthquake_data(conn, tweet, threshold=4)
 
         if args.daily:
@@ -77,11 +76,11 @@ if __name__ == "__main__":
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
-            message = f"Yesterday, there were {len(content)} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
+            message = f"Yesterday, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
             tweet.post_tweet(tweet=message)
 
         if args.weekly:
-            run.extract_data_properties(url=generate_time_period_url("week"))
+            run.extract_data_properties(url=generate_time_period_url("week"), conn=conn)
 
             end_date = datetime.now().date()
             start_date = end_date - timedelta(days=7)
@@ -94,11 +93,13 @@ if __name__ == "__main__":
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
 
-            message = f"During the past week, there were {len(content)} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
+            message = f"During the past week, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
             tweet.post_tweet(tweet=message)
 
         if args.monthly:
-            run.extract_data_properties(url=generate_time_period_url("month"))
+            run.extract_data_properties(
+                url=generate_time_period_url("month"), conn=conn
+            )
 
             end_date = datetime.now().date()
             start_date = end_date - timedelta(days=30)
@@ -110,7 +111,7 @@ if __name__ == "__main__":
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
-            message = f"During the past month, there were {len(content)} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
+            message = f"During the past month, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
             tweet.post_tweet(tweet=message)
 
         if args.initialize:
@@ -121,6 +122,6 @@ if __name__ == "__main__":
 
         if args.fun:
             content = generate_response(
-                prompt=CHAT_PROMPT[randint(0, len(CHAT_PROMPT) - 0)]
+                prompt=CHAT_PROMPT[randint(0, len(CHAT_PROMPT) - 1)]
             )
             tweet.post_tweet(tweet=content)
