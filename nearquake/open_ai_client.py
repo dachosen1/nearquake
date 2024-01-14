@@ -10,7 +10,6 @@ def generate_response(prompt: str, role: str = "user", model: str = "gpt-4") -> 
     """
     Generates a response from the open ai model based on the given role and prompt.
 
-
     :param role: The role of the user in the conversation ('user', 'system')
     :param prompt: The input prompt for the model
     :param model: Type of GPT model to use, defaults to gpt-4
@@ -33,6 +32,7 @@ def generate_response(prompt: str, role: str = "user", model: str = "gpt-4") -> 
                 },
             ],
         )
+        _logger.info(f"Prompt:{prompt}")
 
         return completion.choices[0].message.content
 

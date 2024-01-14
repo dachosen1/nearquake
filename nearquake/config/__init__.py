@@ -107,11 +107,11 @@ TWEET_CONCLUSION = [
 
 
 CHAT_PROMPT = [
-    "Tell me an interesting fact about earthquakes in 140 characters or less. Make it twitter post format.Convert the response to be appropriate for a Twitter post. There should be a clear intro followed by the content, and include some hashtags. Do not include quotes ",
-    "Give me some tips on how to prepare for an earthquake in 140 characters or less. Convert the response to be appropriate for a Twitter post. There should be a clear intro followed by the content, and include some hashtags. Do not include quotes ",
-    "List on common misconceptions about earthquakes in 140 characters or less. Convert the response to be appropriate for a Twitter post. There should be a clear intro followed by the content, and include some hashtags. Do not include quotes ",
-    "give me tips on how to make my home earthquake-proof in 140 characters or less. Convert the response to be appropriate for a Twitter post. There should be a clear intro followed by the content, and include some hashtags. Do not include quotes ",
-    f" What does a {randint(1,10)} magnitude earthquake feel like in 140 characters or less. Convert the response to be appropriate for a Twitter post. There should be a clear intro followed by the content, and include some hashtags. Do not include quotes",
-    "Tell me an interesting fact about under water earthquakes in 140 characters or less. Convert the response to be appropriate for a Twitter post. There should be a clear intro followed by the content, and include some hashtags. Do not include quotes ",
-    "Tell me an interesting fact or tip about aftershocks? Explain in 140 characters. Convert the response to be appropriate for a Twitter post. There should be a clear intro followed by the content, and include some hashtags. Do not include quotes ",
+    "Tell me an interesting fact about earthquakes in 140 characters or less, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "Tell me one useful tip on how to prepare for an earthquake in 140 characters or less, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "Tell me one common misconceptions about earthquakes in 140 characters or less, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "Tell me tips on how to make my home earthquake-proof in 140 characters or less, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    f"Tell me What a {randint(1,10)} magnitude earthquake feel like in 140 characters or less, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "Tell me an interesting fact about under water earthquakes in 140 characters or less, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "Tell me an interesting fact or tip about aftershocks? Explain in 140 characters, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
 ]
