@@ -59,9 +59,7 @@ if __name__ == "__main__":
 
     with conn:
         if args.live:
-            run.extract_data_properties(
-                url=generate_time_period_url("day"), conn=conn
-            )
+            run.extract_data_properties(url=generate_time_period_url("day"), conn=conn)
             process_earthquake_data(conn, tweet, threshold=4)
 
         if args.daily:
