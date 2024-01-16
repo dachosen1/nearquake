@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - /var/log/nearquake:/usr/src/app/logs
+      - /var/log/cron.log:/var/log/cron.log
     env_file: .env
     networks:
       - nearquake-network
