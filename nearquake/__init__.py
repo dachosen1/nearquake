@@ -54,7 +54,6 @@ def setup_logging():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
 
-
     # Console Handler with Standard Formatter
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.addFilter(FilterForHandler("console"))
