@@ -116,7 +116,7 @@ class Earthquake:
 
                 conn.insert_many(records_to_add_list)
                 _logger.info(
-                    f"Added {len(records_to_add)} records and {len(exist_id_events_set)} records were already added. Summary of date added: {summary}"
+                    f"Added {len(records_to_add)} records and {len(exist_id_events_set)} records were already added."
                 )
 
             else:
@@ -125,7 +125,7 @@ class Earthquake:
         except Exception as e:
             _logger.error(f" Encountereed an unexpected error: {e}")
 
-    def backfill(self, start_date: str, end_date: str) -> None:
+    def backfill(self, conn, start_date: str, end_date: str) -> None:
         """
          Performs a backfill operation for earthquake data between specified start and end dates.
         It generates URLs for each day within the date range and calls `extract_data_properties`
@@ -147,7 +147,7 @@ class Earthquake:
                 year=str(year).zfill(2), month=str(month).zfill(2)
             )
             _logger.info(f"Running a backfill for Year: {year}, and Month: {month}")
-            self.extract_data_properties(url)
+            self.extract_data_properties(url=url, conn=conn)
 
         _logger.info(
             f"Completed the Backfill for {len(date_range)} months!!! Horray :)"
