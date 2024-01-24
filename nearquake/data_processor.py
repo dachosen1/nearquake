@@ -10,6 +10,7 @@ from nearquake.config import (
     TIMESTAMP_NOW,
     EVENT_DETAIL_URL,
     TWEET_CONCLUSION,
+    REPORTED_SINCE_THRESHOLD,
 )
 from nearquake.tweet_processor import TweetOperator
 from nearquake.app.db import EventDetails, Post
@@ -177,8 +178,8 @@ def process_earthquake_data(
 
     if len(eligible_quakes) > 0:
         for i in eligible_quakes:
-            if i.mag >= threshold:
-                duration = TIMESTAMP_NOW - i.ts_event_utc
+            duration = TIMESTAMP_NOW - i.ts_event_utc
+            if i.mag >= threshold and duration < REPORTED_SINCE_THRESHOLD:
                 TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                     random.randint(0, len(TWEET_CONCLUSION) - 1)
                 ]
