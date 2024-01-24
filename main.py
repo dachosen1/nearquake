@@ -10,6 +10,7 @@ from nearquake.config import (
     ConnectionConfig,
     CHAT_PROMPT,
     TWEET_CONCLUSION,
+    EARTHQUAKE_POST_THRESHOLD,
 )
 from nearquake.app.db import EventDetails
 
@@ -59,8 +60,8 @@ if __name__ == "__main__":
 
     with conn:
         if args.live:
-            run.extract_data_properties(url=generate_time_period_url("day"), conn=conn)
-            process_earthquake_data(conn, tweet, threshold=4)
+            run.extract_data_properties(url=generate_time_period_url("hour"), conn=conn)
+            process_earthquake_data(conn, tweet, threshold=EARTHQUAKE_POST_THRESHOLD)
 
         if args.daily:
             today = datetime.now().date()
@@ -70,7 +71,11 @@ if __name__ == "__main__":
                 conn=conn, model=EventDetails, start_date=start_date, end_date=yesterday
             )
 
-            GREATER_THAN_5 = sum(1 for i in content if i.mag is not None and i.mag >= 5)
+            GREATER_THAN_5 = sum(
+                1
+                for i in content
+                if i.mag is not None and i.mag >= EARTHQUAKE_POST_THRESHOLD
+            )
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
@@ -86,7 +91,11 @@ if __name__ == "__main__":
                 conn=conn, model=EventDetails, start_date=start_date, end_date=end_date
             )
 
-            GREATER_THAN_5 = sum(1 for i in content if i.mag is not None and i.mag >= 5)
+            GREATER_THAN_5 = sum(
+                1
+                for i in content
+                if i.mag is not None and i.mag >= EARTHQUAKE_POST_THRESHOLD
+            )
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
@@ -105,7 +114,11 @@ if __name__ == "__main__":
                 conn=conn, model=EventDetails, start_date=start_date, end_date=end_date
             )
 
-            GREATER_THAN_5 = sum(1 for i in content if i.mag is not None and i.mag >= 5)
+            GREATER_THAN_5 = sum(
+                1
+                for i in content
+                if i.mag is not None and i.mag >= EARTHQUAKE_POST_THRESHOLD
+            )
             TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                 randint(0, len(TWEET_CONCLUSION) - 1)
             ]
