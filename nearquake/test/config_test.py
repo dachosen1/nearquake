@@ -12,8 +12,6 @@ def test_generate_time_range_url():
 
 
 def test_generate_time_period_url_day_url():
-    year = 2021
-    month = 5
     expected_url = (
         "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
     )
@@ -21,8 +19,6 @@ def test_generate_time_period_url_day_url():
 
 
 def test_generate_time_period_url_week_url():
-    year = 2021
-    month = 5
     expected_url = (
         "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
     )
@@ -30,12 +26,17 @@ def test_generate_time_period_url_week_url():
 
 
 def test_generate_time_period_url_month_url():
-    year = 2021
-    month = 5
     expected_url = (
         "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
     )
     assert generate_time_period_url(time_period="month") == expected_url
+
+
+def test_generate_time_period_url_hour_url():
+    expected_url = (
+        "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
+    )
+    assert generate_time_period_url(time_period="hour") == expected_url
 
 
 def test_generate_period_url_error():
