@@ -10,7 +10,7 @@ from nearquake.config import (
     TIMESTAMP_NOW,
     EVENT_DETAIL_URL,
     TWEET_CONCLUSION,
-    REPORTED_SINCE_THRESHOLD
+    REPORTED_SINCE_THRESHOLD,
 )
 from nearquake.tweet_processor import TweetOperator
 from nearquake.app.db import EventDetails, Post
