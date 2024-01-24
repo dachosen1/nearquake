@@ -21,6 +21,9 @@ EVENT_DETAIL_URL: str = (
 )
 
 
+EARTHQUAKE_POST_THRESHOLD = 4.5
+
+
 def generate_time_range_url(year: int, month: int) -> str:
     """
     Generate the URL for extracting earthquakes that occurred during a specific year and month.
@@ -43,7 +46,7 @@ def generate_time_period_url(time_period: int) -> str:
     :return: The URL path for the earthquakes that happened during the specified month and year.
     """
 
-    valid_periods = {"day", "week", "month"}
+    valid_periods = {"hour", "day", "week", "month"}
     if time_period not in valid_periods:
         raise ValueError(
             f"Invalid time period: {time_period}. Valid options are: {valid_periods}",
