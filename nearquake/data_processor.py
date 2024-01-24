@@ -7,13 +7,11 @@ from sqlalchemy.orm import Session, declarative_base
 
 from nearquake.config import (
     generate_time_range_url,
-    ConnectionConfig,
     TIMESTAMP_NOW,
     EVENT_DETAIL_URL,
     TWEET_CONCLUSION,
 )
 from nearquake.tweet_processor import TweetOperator
-from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.app.db import EventDetails, Post
 from tqdm import tqdm
 from nearquake.utils import (
@@ -143,11 +141,19 @@ class Earthquake:
 
         date_range = generate_date_range(start_date, end_date)
         for year, month in date_range:
-            url = generate_time_range_url(
-                year=str(year).zfill(2), month=str(month).zfill(2)
-            )
-            _logger.info(f"Running a backfill for Year: {year}, and Month: {month}")
-            self.extract_data_properties(url=url, conn=conn)
+            for day in [1, 16]:
+                start = day
+                end = day + 15
+                url = generate_time_range_url(
+                    year=str(year).zfill(2),
+                    month=str(month).zfill(2),
+                    start=str(start).zfill(2),
+                    end=str(end).zfill(2),
+                )
+                _logger.info(
+                    f"Running a backfill for Year: {year} Month: {month}, between {start} and {end} "
+                )
+                self.extract_data_properties(url=url, conn=conn)
 
         _logger.info(
             f"Completed the Backfill for {len(date_range)} months!!! Horray :)"
