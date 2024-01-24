@@ -23,6 +23,8 @@ EVENT_DETAIL_URL: str = (
 
 EARTHQUAKE_POST_THRESHOLD = 4.5
 
+REPORTED_SINCE_THRESHOLD = 3600
+
 
 def generate_time_range_url(year: int, month: int, start: int, end: int) -> str:
     """
