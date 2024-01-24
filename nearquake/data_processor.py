@@ -141,14 +141,13 @@ class Earthquake:
 
         date_range = generate_date_range(start_date, end_date)
         for year, month in date_range:
-            for day in [1, 16]:
-                start = day
-                end = day + 15
+            for start in [1, 16]:
+                end = start + 15
                 url = generate_time_range_url(
-                    year=str(year).zfill(2),
-                    month=str(month).zfill(2),
-                    start=str(start).zfill(2),
-                    end=str(end).zfill(2),
+                    year=f"{year:02}",
+                    month=f"{month:02}",
+                    start=f"{start:02}",
+                    end=f"{end:02}",
                 )
                 _logger.info(
                     f"Running a backfill for Year: {year} Month: {month}, between {start} and {end} "
