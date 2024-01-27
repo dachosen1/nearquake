@@ -5,6 +5,7 @@ from datetime import datetime
 import logging
 from random import randint
 
+
 _logger = logging.getLogger(__name__)
 
 load_dotenv()
@@ -19,9 +20,11 @@ EVENT_DETAIL_URL: str = (
     "https://earthquake.usgs.gov/earthquakes/eventpage/{id}/executive"
 )
 
+
 EARTHQUAKE_POST_THRESHOLD = 4.5
 
 REPORTED_SINCE_THRESHOLD = 3600
+
 
 def generate_time_range_url(year: int, month: int, start: int, end: int) -> str:
     """
@@ -100,11 +103,13 @@ class TwitterAuth:
     )
     BEARER_TOKEN: str = field(default_factory=lambda: os.environ.get("BEARER_TOKEN"))
 
+
 TWEET_CONCLUSION = [
     "How do you prepare? Share tips and stay safe! #earthquakePrep. Data provided by #usgs",
     "Were you near the epicenter? Share your experience. #earthquake. Data provided by #usgs",
     "In an #earthquake, use stairs, not elevators! 🚶‍♂️🚶‍♀ #safetyfirst. Data provided by #usgs",
 ]
+
 
 CHAT_PROMPT = [
     "Tell me an interesting fact about earthquakes in 140 characters or less, but come close as possible to the 140 characters. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
