@@ -20,7 +20,6 @@ EVENT_DETAIL_URL: str = (
     "https://earthquake.usgs.gov/earthquakes/eventpage/{id}/executive"
 )
 
-
 EARTHQUAKE_POST_THRESHOLD = 4.5
 
 REPORTED_SINCE_THRESHOLD = 3600
