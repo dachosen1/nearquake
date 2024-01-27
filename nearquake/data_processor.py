@@ -124,9 +124,9 @@ class Earthquake:
         except Exception as e:
             _logger.error(f" Encountereed an unexpected error: {e}")
 
-    def backfill(self, conn, start_date: str, end_date: str) -> None:
+    def backfill(self, conn: Session, start_date: str, end_date: str) -> None:
         """
-         Performs a backfill operation for earthquake data between specified start and end dates.
+        Performs a backfill operation for earthquake data between specified start and end dates.
         It generates URLs for each day within the date range and calls `extract_data_properties`
         to process and store data for each day.
 
@@ -134,7 +134,7 @@ class Earthquake:
 
         Example:
         run = Earthquake()
-        run.backfill(start_date="2023-01-01", end_date="2023-10-01")
+        run.backfill(conn=conn,start_date="2023-01-01", end_date="2023-10-01")
 
         :param start_date: The start date for the backfill operation, in 'YYYY-MM-DD' format.
         :param end_date: The end date for the backfill operation, in 'YYYY-MM-DD' format.
@@ -174,12 +174,14 @@ def process_earthquake_data(
     most_recent_date_quakes = conn.fetch_single(
         model=EventDetails, column="ts_updated_utc", item=most_recent_date
     )
-    eligible_quakes = [i for i in most_recent_date_quakes if i.mag > threshold]
+    eligible_quakes = [
+        i for i in most_recent_date_quakes if i.mag is not None and i.mag > threshold
+    ]
 
     if len(eligible_quakes) > 0:
         for i in eligible_quakes:
             duration = TIMESTAMP_NOW - i.ts_event_utc
-            if i.mag >= threshold and duration < REPORTED_SINCE_THRESHOLD:
+            if i.mag >= threshold and duration.seconds < REPORTED_SINCE_THRESHOLD:
                 TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
                     random.randint(0, len(TWEET_CONCLUSION) - 1)
                 ]
