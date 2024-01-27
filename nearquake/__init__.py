@@ -56,7 +56,7 @@ def setup_logging():
 
     # Create directory path to save logs
     create_dir("logs")
-    
+
     # Console Handler with Standard Formatter
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.addFilter(FilterForHandler("console"))
