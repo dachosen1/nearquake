@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     with conn:
         if args.live:
-            for time in ["hour", "day", "week"]: 
+            for time in ["hour", "day", "week"]:
                 run.extract_data_properties(
                     url=generate_time_period_url(time), conn=conn
                 )
