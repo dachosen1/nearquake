@@ -58,6 +58,7 @@ class Post(Base):
         comment="Post ID",
     )
     post = Column(String(2000), comment="Content of the tweet")
+    id_event = Column(String(50), comment="Earthquake event id")
     ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
 
 
