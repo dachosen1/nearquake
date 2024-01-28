@@ -64,9 +64,9 @@ if __name__ == "__main__":
                 run.extract_data_properties(
                     url=generate_time_period_url(time), conn=conn
                 )
-                process_earthquake_data(
-                    conn, tweet, threshold=EARTHQUAKE_POST_THRESHOLD
-                )
+            process_earthquake_data(
+                conn, tweet, threshold=EARTHQUAKE_POST_THRESHOLD
+            )
 
         if args.daily:
             today = datetime.now().date()
