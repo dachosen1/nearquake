@@ -191,18 +191,28 @@ def process_earthquake_data(
                 item = {
                     "post": text,
                     "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
+                    "id_event": i.id_event,
                 }
 
-                conn.insert(Post(**item))
-                _logger.info(text)
-                try:
-                    tweet.post_tweet(tweet=text)
-                    _logger.info(
-                        "Recorded recent tweet posted in the database  recent into the Database "
-                    )
-                except Exception as e:
-                    _logger.error(f"Encountered an unexpected error: {e}")
-                    pass
+                record_exist = conn.fetch_single(
+                    model=Post, column="id_event", item=i.id_event
+                )
+
+                record_count = sum([1 for _ in record_exist])
+
+                if record_count < 1:
+                    conn.insert(Post(**item))
+                    _logger.info(text)
+                    try:
+                        tweet.post_tweet(tweet=text)
+                        _logger.info(
+                            "Recorded recent tweet posted in the database  recent into the Database "
+                        )
+                    except Exception as e:
+                        _logger.error(f"Encountered an unexpected error: {e}")
+                        pass
+                else:
+                    _logger.info("Tweet already posted")
 
     else:
         _logger.info(
