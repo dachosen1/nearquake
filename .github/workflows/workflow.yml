@@ -35,11 +35,17 @@ jobs:
         with:
           options: "--check --verbose"
 
+  Build-Docker-Image:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: docker build .
+
   Deploy:
-    needs: [Unit_Test, Linter]
+    needs: [Unit_Test, Linter, Build-Docker-Image]
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-      
     steps:
     - uses: actions/checkout@v4
     - name: Build and Deploy
@@ -47,7 +53,6 @@ jobs:
         PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         HOSTNAME: ${{ secrets.IP_ADDRESS }}
         USER_NAME: ${{ secrets.USERNAME }}
-
       run: | 
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
