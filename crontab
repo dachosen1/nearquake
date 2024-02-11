@@ -3,3 +3,4 @@
 0 17 * * 1 /usr/local/bin/python3 /usr/src/app/main.py -w >> /var/log/cron.log 2>&1
 0 16 1 * * /usr/local/bin/python3 /usr/src/app/main.py -m >> /var/log/cron.log 2>&1
 0 15 * * 1,3,5,6 /usr/local/bin/python3 /usr/src/app/main.py -f >> /var/log/cron.log 2>&1
+0 0 * * * /usr/local/bin/sh /usr/src/app/log_management.sh >> /var/log/cron.log 2>&1
