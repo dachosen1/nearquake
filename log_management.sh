@@ -4,6 +4,6 @@
 LOG_DIR="/usr/src/app/logs"
 
 # Delete files older than 30 days
-find "$LOG_DIR" -name "*.log" -mtime +30 -exec rm {} \;
+find "$LOG_DIR" -name "*.log" -mtime +7 -exec rm {} \;
 
-echo "Done. Removed logs older than 30 days"
+echo "Done. Removed logs older than 7 days"
