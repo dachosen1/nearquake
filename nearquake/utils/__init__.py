@@ -257,14 +257,3 @@ def create_dir(path: str):
         raise ValueError
 
     return None
-
-
-if __name__ == "__main__":
-    url = get_earthquake_image_url(
-        "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000kd0n&format=geojson"
-    )
-
-    content = extract_url_content(url=url)
-    extract_image(content)
-
-    save_content(content=content)

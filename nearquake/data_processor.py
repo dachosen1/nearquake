@@ -210,7 +210,6 @@ def process_earthquake_data(
                         )
                     except Exception as e:
                         _logger.error(f"Encountered an unexpected error: {e}")
-                        pass
                 else:
                     _logger.info("Tweet already posted")
 
