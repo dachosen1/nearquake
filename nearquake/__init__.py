@@ -1,7 +1,8 @@
 import logging
-import logging.handlers
 import json
 import sys
+import logging.handlers
+
 
 from nearquake.config import TIMESTAMP_NOW
 from nearquake.utils import create_dir

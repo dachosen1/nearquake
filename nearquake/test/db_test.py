@@ -1,6 +1,8 @@
 import pytest
-from sqlalchemy import create_engine, MetaData
+
 import sqlalchemy.orm
+from sqlalchemy import create_engine, MetaData
+
 from nearquake.app.db import EventDetails, Post
 
 DATABASE_URL = "sqlite:///:memory:"

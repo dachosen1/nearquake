@@ -1,6 +1,8 @@
-import tweepy
 import logging
 from datetime import datetime
+
+import tweepy
+
 from nearquake.config import TwitterAuth
 
 
