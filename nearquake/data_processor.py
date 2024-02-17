@@ -1,8 +1,8 @@
 import logging
 import random
+from typing import List, Type
 
 from sqlalchemy import desc, and_
-from typing import List, Type
 from sqlalchemy.orm import Session, declarative_base
 
 from nearquake.config import (

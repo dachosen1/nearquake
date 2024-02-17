@@ -1,4 +1,6 @@
+import logging
 from typing import List, Optional
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -9,12 +11,9 @@ from sqlalchemy import (
     TIMESTAMP,
     create_engine,
 )
-
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
-
-import logging
 
 _logger = logging.getLogger(__name__)
 

@@ -1,4 +1,6 @@
 import argparse
+from random import randint
+from datetime import datetime, timedelta
 
 from nearquake.data_processor import (
     Earthquake,
@@ -13,9 +15,6 @@ from nearquake.config import (
     EARTHQUAKE_POST_THRESHOLD,
 )
 from nearquake.app.db import EventDetails
-
-from random import randint
-from datetime import datetime, timedelta
 from nearquake.open_ai_client import generate_response
 from nearquake.tweet_processor import TweetOperator
 from nearquake.utils.db_sessions import DbSessionManager
