@@ -141,6 +141,9 @@ class Earthquake:
         """
 
         date_range = generate_date_range(start_date, end_date)
+        _logger.info(
+            f"Backfill process started for the range {start_date} to {end_date}. Running in module {__name__}."
+        )
         for year, month in date_range:
             for start in [1, 16]:
                 end = start + 15

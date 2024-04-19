@@ -50,6 +50,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f", "--fun", action="store_true", help="Tells a fun fact about earthquakes"
     )
+    parser.add_argument(
+        "-b",
+        "--backfill",
+        action="store_true",
+        help="backfill data base using a date range",
+    )
 
     args = parser.parse_args()
 
@@ -138,3 +144,10 @@ if __name__ == "__main__":
                 prompt=CHAT_PROMPT[randint(0, len(CHAT_PROMPT) - 1)]
             )
             tweet.post_tweet(tweet=content)
+
+        if args.backfill:
+            run.backfill(
+                conn=conn,
+                start_date=input("Type Start Date:"),
+                end_date=input("Type End Date:"),
+            )
