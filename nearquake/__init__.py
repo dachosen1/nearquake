@@ -81,6 +81,3 @@ def setup_logging():
 DEBUG_MODE = True  # Set to False in production
 setup_logging()
 logger = logging.getLogger(__name__)
-
-
-from nearquake import config, utils, app
