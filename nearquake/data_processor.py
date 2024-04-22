@@ -10,6 +10,13 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from pycountry import countries
 
+import random
+from typing import List, Type, Tuple
+
+from tqdm import tqdm
+from sqlalchemy import desc, and_, func
+from sqlalchemy.orm import Session, declarative_base
+
 from nearquake.config import (
     generate_time_range_url,
     TIMESTAMP_NOW,
@@ -19,6 +26,11 @@ from nearquake.config import (
 )
 from nearquake.tweet_processor import TweetOperator
 from nearquake.app.db import EventDetails, Post, Base, LocationDetails
+    ConnectionConfig,
+)
+from nearquake.tweet_processor import TweetOperator
+from nearquake.app.db import EventDetails, Post
+from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.utils import (
     fetch_json_data_from_url,
     convert_timestamp_to_utc,
@@ -342,3 +354,28 @@ def get_date_range_summary(
     )
 
     return query.all()
+
+
+def get_daily_earth_quakes() -> Tuple[List[str], List[int], List[float]]:
+
+    conn = DbSessionManager(config=ConnectionConfig())
+
+    with conn:
+        query = (
+            conn.session.query(EventDetails.date, EventDetails.mag, func.count(EventDetails.id_event))
+            .filter(EventDetails.date > "2014-01-01")
+            .group_by(EventDetails.date, EventDetails.mag)
+        )
+
+        results = query.all()
+
+        date = []
+        count = []
+        mag = []
+
+        for a, b, c in results:
+            date.append(a.strftime("%Y-%m-%d"))
+            count.append(b)
+            mag.append(c)
+
+        return date, count, mag 
