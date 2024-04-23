@@ -146,3 +146,16 @@ CHAT_PROMPT = [
     "How do you ensure the safety of children and infants during earthquakes? Share your child safety tips!",
     "How do you stay informed about earthquake risks and updates in your area? Share your favorite resources for earthquake information!",
 ]
+
+COORDINATE_LOOKUP_BASE_URL = "https://nominatim.openstreetmap.org/reverse.php?lat={lat}&lon={long}&zoom=18&format=jsonv2"
+
+
+def generate_coordinate_lookup_detail_ur(lat, long) -> str:
+    """
+    Generate a URL for reverse geocoding using OpenStreetMap's Nominatim API.
+
+    :param lat: Latitude of the location
+    :param long: Longitude of the location
+    :return: str: A fully formatted URL with specified latitude and longitude.
+    """
+    return COORDINATE_LOOKUP_BASE_URL.format(lat=lat, long=long)

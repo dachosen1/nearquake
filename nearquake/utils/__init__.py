@@ -257,3 +257,9 @@ def create_dir(path: str):
         raise ValueError
 
     return None
+
+
+if __name__ == "__main__":
+    fetch_json_data_from_url(
+        "https://nominatim.openstreetmap.org/reverse.php?lat=56.72174&lon=88.59586&zoom=18&format=jsonv2"
+    )

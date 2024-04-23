@@ -10,8 +10,9 @@ from sqlalchemy import (
     String,
     TIMESTAMP,
     create_engine,
+    ForeignKey,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -61,6 +62,45 @@ class Post(Base):
     ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
 
 
+# class LocationDetails(Base):
+#     __tablename__ = "dim__location_details"
+#     __table_args__ = {"schema": "earthquake"}
+
+#     id_location = Column(
+#         String(50),
+#         primary_key=True,
+#         server_default=text("gen_random_uuid()"),
+#         comment="ID",
+#     )
+
+#     id_event = Column(
+#         String(50),
+#         ForeignKey("earthquake.fct__event_details.id_event"),
+#     )
+#     id_place = Column(Integer, comment="Place ID")
+#     category = Column(String(50), comment="General category of the place")
+#     place_rank = Column(Integer, nullable=True, comment="Ranking of the place")
+#     place_importance = Column(
+#         Float, nullable=True, comment="Numerical importance of the place"
+#     )
+#     name = Column(String(300), nullable=True, comment="Name of the place")
+#     display_name = Column(
+#         String(255), nullable=True, comment="Full display name of the place"
+#     )
+#     country = Column(
+#         String(100), nullable=True, comment="Country where the place is located"
+#     )
+#     state = Column(
+#         String(100), nullable=True, comment="State where the place is located"
+#     )
+#     region = Column(
+#         String(100),
+#         nullable=True,
+#         comment="Region or administrative area where the place is located",
+#     )
+#     country_code = Column(String(10), nullable=True, comment="Country code (ISO code)")
+
+
 def create_schema(engine, schema_names):
     connection = engine.connect()
 
@@ -99,3 +139,10 @@ def create_database(url: str, schema: Optional[List[str]] = None):
             return SQLAlchemyError
 
     return engine
+
+
+if __name__ == '__main__':
+    from nearquake.config import ConnectionConfig
+
+    connect = ConnectionConfig()
+    create_database(url=connect.generate_connection_url())
