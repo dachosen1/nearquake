@@ -9,6 +9,7 @@ from sqlalchemy import (
     Integer,
     String,
     TIMESTAMP,
+    Text,
     create_engine,
     ForeignKey,
 )
@@ -62,43 +63,40 @@ class Post(Base):
     ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
 
 
-# class LocationDetails(Base):
-#     __tablename__ = "dim__location_details"
-#     __table_args__ = {"schema": "earthquake"}
+class LocationDetails(Base):
+    __tablename__ = "dim__location_details"
+    __table_args__ = {"schema": "earthquake"}
 
-#     id_location = Column(
-#         String(50),
-#         primary_key=True,
-#         server_default=text("gen_random_uuid()"),
-#         comment="ID",
-#     )
-
-#     id_event = Column(
-#         String(50),
-#         ForeignKey("earthquake.fct__event_details.id_event"),
-#     )
-#     id_place = Column(Integer, comment="Place ID")
-#     category = Column(String(50), comment="General category of the place")
-#     place_rank = Column(Integer, nullable=True, comment="Ranking of the place")
-#     place_importance = Column(
-#         Float, nullable=True, comment="Numerical importance of the place"
-#     )
-#     name = Column(String(300), nullable=True, comment="Name of the place")
-#     display_name = Column(
-#         String(255), nullable=True, comment="Full display name of the place"
-#     )
-#     country = Column(
-#         String(100), nullable=True, comment="Country where the place is located"
-#     )
-#     state = Column(
-#         String(100), nullable=True, comment="State where the place is located"
-#     )
-#     region = Column(
-#         String(100),
-#         nullable=True,
-#         comment="Region or administrative area where the place is located",
-#     )
-#     country_code = Column(String(10), nullable=True, comment="Country code (ISO code)")
+    id_event = Column(
+        String(50),
+        ForeignKey("earthquake.fct__event_details.id_event"),
+        primary_key=True,
+    )
+    id_place = Column(Integer, comment="Place ID")
+    category = Column(String(50), comment="General category of the place")
+    place_rank = Column(Integer, nullable=True, comment="Ranking of the place")
+    place_importance = Column(
+        Float, nullable=True, comment="Numerical importance of the place"
+    )
+    name = Column(String(300), nullable=True, comment="Name of the place")
+    display_name = Column(
+        String(255), nullable=True, comment="Full display name of the place"
+    )
+    address_type = Column(String(255), nullable=True, comment="type of address")
+    country = Column(
+        String(100), nullable=True, comment="Country where the place is located"
+    )
+    state = Column(
+        String(100), nullable=True, comment="State where the place is located"
+    )
+    region = Column(
+        String(100),
+        nullable=True,
+        comment="Region or administrative area where the place is located",
+    )
+    country_code = Column(String(10), nullable=True, comment="Country code (ISO code)")
+    boundingbox = Column(Text, comment="coordinate bounding  box ")
+    event_details = relationship("EventDetails")
 
 
 def create_schema(engine, schema_names):
@@ -141,8 +139,46 @@ def create_database(url: str, schema: Optional[List[str]] = None):
     return engine
 
 
-if __name__ == '__main__':
-    from nearquake.config import ConnectionConfig
+if __name__ == "__main__":
+    from nearquake.config import ConnectionConfig, generate_coordinate_lookup_detail_url
+    from nearquake.utils.db_sessions import DbSessionManager
+    from nearquake.utils import fetch_json_data_from_url
 
-    connect = ConnectionConfig()
-    create_database(url=connect.generate_connection_url())
+    config = ConnectionConfig()
+    create_database(url=config.generate_connection_url())
+    conn = DbSessionManager(config=config)
+
+    with conn:
+        query = conn.session.query(
+            EventDetails.id_event, EventDetails.longitude, EventDetails.latitude
+        ).filter(EventDetails.date > "2010-01-01")
+
+        results = query.all()
+
+        location_details = []
+        for i in results:
+            id_event = i[0]
+            long = i[1]
+            lat = i[2]
+            url = generate_coordinate_lookup_detail_url(lat=lat, long=long)
+            content = fetch_json_data_from_url(url=url)
+
+            if content.get("error") != "Unable to geocode":
+                detail = LocationDetails(
+                    id_event=id_event,
+                    id_place=content.get("place_id"),
+                    category=content.get("category"),
+                    place_rank=content.get("place_rank"),
+                    address_type=content.get("addresstype"),
+                    place_importance=content.get("importance"),
+                    name=content.get("name"),
+                    display_name=content.get("display_name"),
+                    country=content["address"].get("country"),
+                    state=content["address"].get("state"),
+                    region=content["address"].get("region"),
+                    country_code=content["address"].get("country_code").upper(),
+                    boundingbox=content.get("boundingbox"),
+                )
+                location_details.append(detail)
+
+        conn.insert_many(model=location_details)

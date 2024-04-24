@@ -1,7 +1,7 @@
 import os
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, UTC
 
 from dotenv import load_dotenv
 
@@ -9,7 +9,7 @@ _logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-TIMESTAMP_NOW = datetime.utcnow()
+TIMESTAMP_NOW = datetime.now(UTC)
 
 API_BASE_URL: str = (
     "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
@@ -57,11 +57,11 @@ def generate_time_period_url(time_period: int) -> str:
             time_period,
             valid_periods,
         )
-    _logger.info(
-        f"Generated the url to upload earthquake events for the last {time_period}"
-    )
-
-    return API_BASE_URL.format(time_period=time_period)
+    else:
+        _logger.info(
+            f"Generated the url to upload earthquake events for the last {time_period}"
+        )
+        return API_BASE_URL.format(time_period=time_period)
 
 
 @dataclass()
@@ -150,7 +150,7 @@ CHAT_PROMPT = [
 COORDINATE_LOOKUP_BASE_URL = "https://nominatim.openstreetmap.org/reverse.php?lat={lat}&lon={long}&zoom=18&format=jsonv2"
 
 
-def generate_coordinate_lookup_detail_ur(lat, long) -> str:
+def generate_coordinate_lookup_detail_url(lat, long) -> str:
     """
     Generate a URL for reverse geocoding using OpenStreetMap's Nominatim API.
 
