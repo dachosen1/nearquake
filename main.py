@@ -3,7 +3,7 @@ from random import randint
 from datetime import datetime, timedelta
 
 from nearquake.data_processor import (
-    Earthquake,
+    UploadEarthQuakeEvents,
     process_earthquake_data,
     get_date_range_summary,
 )
@@ -61,14 +61,12 @@ if __name__ == "__main__":
 
     tweet = TweetOperator()
     conn = DbSessionManager(config=ConnectionConfig())
-    run = Earthquake()
 
     with conn:
+        run = UploadEarthQuakeEvents(conn=conn)
         if args.live:
             for time in ["hour", "day", "week"]:
-                run.extract_data_properties(
-                    url=generate_time_period_url(time), conn=conn
-                )
+                run.upload(url=generate_time_period_url(time))
             process_earthquake_data(conn, tweet, threshold=EARTHQUAKE_POST_THRESHOLD)
 
         if args.daily:
@@ -91,7 +89,7 @@ if __name__ == "__main__":
             tweet.post_tweet(tweet=message)
 
         if args.weekly:
-            run.extract_data_properties(url=generate_time_period_url("week"), conn=conn)
+            run.upload(url=generate_time_period_url("week"))
 
             end_date = datetime.now().date()
             start_date = end_date - timedelta(days=7)
@@ -112,9 +110,7 @@ if __name__ == "__main__":
             tweet.post_tweet(tweet=message)
 
         if args.monthly:
-            run.extract_data_properties(
-                url=generate_time_period_url("month"), conn=conn
-            )
+            run.upload(url=generate_time_period_url("month"))
 
             end_date = datetime.now().date()
             start_date = end_date - timedelta(days=30)
@@ -147,7 +143,5 @@ if __name__ == "__main__":
 
         if args.backfill:
             run.backfill(
-                conn=conn,
-                start_date=input("Type Start Date:"),
-                end_date=input("Type End Date:"),
+                start_date=input("Type Start Date:"), end_date=input("Type End Date:")
             )
