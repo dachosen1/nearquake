@@ -73,7 +73,9 @@ class LocationDetails(Base):
         primary_key=True,
     )
     id_place = Column(Integer, comment="Place ID")
-    category = Column(String(50), comment="General category of the place")
+    category = Column(
+        String(50), nullable=True, comment="General category of the place"
+    )
     place_rank = Column(Integer, nullable=True, comment="Ranking of the place")
     place_importance = Column(
         Float, nullable=True, comment="Numerical importance of the place"
@@ -95,7 +97,7 @@ class LocationDetails(Base):
         comment="Region or administrative area where the place is located",
     )
     country_code = Column(String(10), nullable=True, comment="Country code (ISO code)")
-    boundingbox = Column(Text, comment="coordinate bounding  box ")
+    boundingbox = Column(Text, nullable=True, comment="coordinate bounding  box ")
     event_details = relationship("EventDetails")
 
 

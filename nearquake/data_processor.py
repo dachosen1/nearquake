@@ -3,9 +3,11 @@ import random
 from typing import List, Type, TypeVar
 from abc import ABC, abstractmethod
 from datetime import datetime
+from collections import Counter
+
 
 from sqlalchemy import desc, and_
-from sqlalchemy.orm import Session, declarative_base
+from sqlalchemy.orm import Session
 
 from nearquake.config import (
     generate_time_range_url,
@@ -13,9 +15,10 @@ from nearquake.config import (
     EVENT_DETAIL_URL,
     TWEET_CONCLUSION,
     REPORTED_SINCE_THRESHOLD,
+    generate_coordinate_lookup_detail_url,
 )
 from nearquake.tweet_processor import TweetOperator
-from nearquake.app.db import EventDetails, Post, Base
+from nearquake.app.db import EventDetails, Post, Base, LocationDetails
 from tqdm import tqdm
 from nearquake.utils import (
     fetch_json_data_from_url,
@@ -35,11 +38,11 @@ class BaseDataUploader(ABC):
         self.TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
 
     @abstractmethod
-    def _extract(self, url: str) -> List:
+    def _extract(self):
         pass
 
     @abstractmethod
-    def upload(self, url):
+    def upload(self):
         pass
 
 
@@ -78,51 +81,51 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             _logger.error(f"Encountered an unexpected error: {e}")
         return new_events
 
+    def _fetch_event_details(self, event) -> EventDetails:
+        id_event = event["id"]
+        properties = event["properties"]
+        coordinates = event["geometry"]["coordinates"]
+        timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
+        time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
+
+        return EventDetails(
+            id_event=id_event,
+            mag=properties.get("mag"),
+            ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+            ts_updated_utc=self.TIMESTAMP_NOW,
+            tz=properties.get("tz"),
+            felt=properties.get("felt"),
+            detail=properties.get("detail"),
+            cdi=properties.get("cdi"),
+            mmi=properties.get("mmi"),
+            status=properties.get("status"),
+            tsunami=properties.get("tsunami"),
+            type=properties.get("type"),
+            title=properties.get("title"),
+            date=time_stamp_date,
+            place=properties.get("place"),
+            longitude=coordinates[0],
+            latitude=coordinates[1],
+        )
+
     def upload(self, url: str) -> None:
         """_summary_
 
         :param url: earthquake.usgs.gov api url
         """
-
-        summary = {}
         new_event = self._extract(url=url)
 
         if len(new_event) > 0:
-            new_event_list = []
-
-            for event_data in tqdm(new_event):
-                id_event = event_data["id"]
-                properties = event_data["properties"]
-                coordinates = event_data["geometry"]["coordinates"]
-                timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
-                time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
-
-                earhquake_event = EventDetails(
-                    id_event=id_event,
-                    mag=properties.get("mag"),
-                    ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                    ts_updated_utc=self.TIMESTAMP_NOW,
-                    tz=properties.get("tz"),
-                    felt=properties.get("felt"),
-                    detail=properties.get("detail"),
-                    cdi=properties.get("cdi"),
-                    mmi=properties.get("mmi"),
-                    status=properties.get("status"),
-                    tsunami=properties.get("tsunami"),
-                    type=properties.get("type"),
-                    title=properties.get("title"),
-                    date=time_stamp_date,
-                    place=properties.get("place"),
-                    longitude=coordinates[0],
-                    latitude=coordinates[1],
-                )
-
-                new_event_list.append(earhquake_event)
-                summary[time_stamp_date] = summary.get(time_stamp_date, 0) + 1
+            new_event_list = [
+                self._fetch_event_details(event=event) for event in new_event
+            ]
 
             self.conn.insert_many(new_event_list)
+            summary = Counter(
+                event.date.strftime("%Y-%m-%d") for event in new_event_list
+            )
             _logger.info(
-                f"Added {len(new_event_list)} records and {len(self.existing_event_ids)} records were already added."
+                f"Added {len(new_event_list)} records and {len(self.existing_event_ids)} records were already added. {dict(summary)}"
             )
         else:
             _logger.info("No new records found")
@@ -164,7 +167,53 @@ class UploadEarthQuakeEvents(BaseDataUploader):
 
 
 class UploadEarthQuakeLocation(BaseDataUploader):
-    pass
+    def _extract(self, date) -> list:
+
+        query = (
+            self.conn.session.query(
+                EventDetails.id_event, EventDetails.latitude, EventDetails.longitude
+            )
+            .join(
+                LocationDetails,
+                LocationDetails.id_event == EventDetails.id_event,
+                isouter=True,
+            )
+            .filter(LocationDetails.id_event == None, EventDetails.date == date)
+        )
+        results = query.all()
+        return results
+
+    def _fetch_location_detail(self, event) -> LocationDetails:
+        id_event, long, lat = event
+        url = generate_coordinate_lookup_detail_url(lat=lat, long=long)
+        content = fetch_json_data_from_url(url=url)
+
+        if content.get("error") != "Unable to geocode":
+            return LocationDetails(
+                id_event=id_event,
+                id_place=content.get("place_id"),
+                category=content.get("category"),
+                place_rank=content.get("place_rank"),
+                address_type=content.get("addresstype"),
+                place_importance=content.get("importance"),
+                name=content.get("name"),
+                display_name=content.get("display_name"),
+                country=content["address"].get("country"),
+                state=content["address"].get("state"),
+                region=content["address"].get("region"),
+                country_code=content["address"].get("country_code").upper(),
+                boundingbox=content.get("boundingbox"),
+            )
+        else:
+            return LocationDetails(id_event=id_event)
+
+    def upload(self, date):
+        new_events = self._extract(date=date)
+        location_details = [
+            self._fetch_location_detail(event=event) for event in new_events
+        ]
+        conn.insert_many(model=location_details)
+        return None
 
 
 class TweetEarthquakeEvents(BaseDataUploader):
@@ -263,9 +312,7 @@ if __name__ == "__main__":
     from nearquake.utils.db_sessions import DbSessionManager
 
     conn = DbSessionManager(config=ConnectionConfig())
-    run = UploadEarthQuakeEvents(conn=conn)
+    run = UploadEarthQuakeLocation(conn=conn)
 
     with conn:
-        run.upload(
-            url="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
-        )
+        run._extract(date="2023-12-01")
