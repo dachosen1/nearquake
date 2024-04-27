@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from nearquake.data_processor import (
     UploadEarthQuakeEvents,
     TweetEarthquakeEvents,
+    UploadEarthQuakeLocation,
     get_date_range_summary,
 )
 from nearquake.config import (
@@ -63,6 +64,7 @@ if __name__ == "__main__":
     with conn:
         run = UploadEarthQuakeEvents(conn=conn)
         tweet = TweetEarthquakeEvents(conn=conn)
+        loc = UploadEarthQuakeLocation(conn=conn)
 
         if args.live:
             for time in ["hour", "day", "week"]:
@@ -85,6 +87,7 @@ if __name__ == "__main__":
             TWEET_CONCLUSION_TEXT = tweet_conclusion_text()
             message = f"Yesterday, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
             tweet.post_tweet(tweet=message)
+            loc.upload(date=today.strftime("%Y-%m-%d"))
 
         if args.weekly:
             run.upload(url=generate_time_period_url("week"))
@@ -135,6 +138,8 @@ if __name__ == "__main__":
             tweet.post_tweet(tweet=content)
 
         if args.backfill:
-            run.backfill(
-                start_date=input("Type Start Date:"), end_date=input("Type End Date:")
-            )
+            start_date = input("Type Start Date:")
+            end_date = input("Type End Date:")
+
+            run.backfill(start_date=start_date, end_date=end_date)
+            loc.backfill(start_date=start_date, end_date=end_date)

@@ -271,5 +271,17 @@ def format_earthquake_alert(
     return item
 
 
-if __name__ == "__main__":
-    generate_date_range("2023-01-01", end_date="2023-12-01", interval=10)
+def convert_datetime(date: datetime, format_type: str = "date") -> str:
+    """
+    Convert a datetime object to a formatted string.
+
+    :param date: The datetime object to format.
+    :param format_type: The type of format to apply. Options are date or timestamp defaults to 'date'
+    :return: The formatted date string.
+    """
+    if format_type == "date":
+        return date.strftime("%Y-%m-%d")
+    elif format_type == "timestamp":
+        return date.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        raise ValueError("Invalid format_type. Only 'date' or 'timestamp' are allowed.")

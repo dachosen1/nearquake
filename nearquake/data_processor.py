@@ -1,13 +1,14 @@
 import logging
 from typing import List, Type, TypeVar
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, UTC
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
 
 from sqlalchemy import desc, and_, func
 from sqlalchemy.orm import Session
+from pycountry import countries
 
 from nearquake.config import (
     generate_time_range_url,
@@ -200,7 +201,9 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                     place_importance=content.get("importance"),
                     name=content.get("name"),
                     display_name=content.get("display_name"),
-                    country=content["address"].get("country"),
+                    country=countries.get(
+                        alpha_2=content["address"].get("country_code").upper()
+                    ).name,
                     state=content["address"].get("state"),
                     region=content["address"].get("region"),
                     country_code=content["address"].get("country_code").upper(),
@@ -215,20 +218,17 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             )
             return None
 
-    def _parallelize_fetch_location_details(self, new_events):
+    def _parallelize_fetch_location_details(self, event):
         with ThreadPoolExecutor() as executor:
-            location_details = list(
-                executor.map(self._fetch_location_detail, new_events)
-            )
+            location_details = list(executor.map(self._fetch_location_detail, event))
         return location_details
 
     def upload(self, date, backfill: bool = False):
         new_events = self._extract(date=date)
         if backfill:
-            location_details = [
-                self._parallelize_fetch_location_details(event=event)
-                for event in new_events
-            ]
+            location_details = self._parallelize_fetch_location_details(
+                event=new_events
+            )
 
         else:
             location_details = [
@@ -242,12 +242,22 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         date_range = generate_date_range(
             start_date=start_date, end_date=end_date, interval=interval
         )
+        _logger.info(
+            f"Backfill for earthquake locations between {start_date} and {end_date}"
+        )
         for start, _ in date_range:
+            start = start.strftime("%Y-%m-%d")
+            start_ts = datetime.now(UTC)
+            _logger.info(f"Starting backfill for earthquake locations on {start}")
             self.upload(date=start, backfill=True)
+            end_ts = datetime.now(UTC)
+            duration = (end_ts - start_ts).total_seconds() / 60
+            _logger.info(
+                f"Backfill for earthquake locations completed for {start}, and took {duration:.0f} minutes"
+            )
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
-
     def _extract(self) -> List:
         query = self.conn.session.query(
             EventDetails.id_event,
@@ -338,4 +348,4 @@ if __name__ == "__main__":
 
     with conn:
         run = UploadEarthQuakeEvents(conn=conn)
-        run.backfill(start_date='2024-01-01', end_date='2024-01-05', interval=5)
+        run.backfill(start_date="2024-01-01", end_date="2024-05-05", interval=5)
