@@ -3,7 +3,8 @@ from typing import List, Type, TypeVar
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone, timedelta, UTC
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
+
 
 from sqlalchemy import desc, and_, func
 from sqlalchemy.orm import Session
@@ -226,26 +227,20 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return location_details
 
     @timer
-    def upload(self, date):
+    def upload(self, date, parralel: bool = False):
         new_events = self._extract(date=date)
+        if parralel:
+            location_details = self._parallelize_fetch_location_details(
+                event=new_events
+            )
 
-        location_details = [
-            self._fetch_location_detail(event=event) for event in new_events
-        ]
+        else:
+            location_details = [
+                self._fetch_location_detail(event=event) for event in new_events
+            ]
 
         self.conn.insert_many(location_details)
         return None
-
-    def _process_date(self, start):
-        start_str = start.strftime("%Y-%m-%d")
-        start_ts = datetime.now(UTC)
-        _logger.info(f"Starting backfill for earthquake locations on {start_str}")
-        self.upload(date=start_str)
-        end_ts = datetime.now(UTC)
-        duration = (end_ts - start_ts).total_seconds() / 60
-        _logger.info(
-            f"Backfill for earthquake locations completed for {start_str}, and took {duration:.0f} minutes"
-        )
 
     @timer
     def backfill(self, start_date: str, end_date: str, interval: int = 1):
@@ -255,18 +250,16 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         _logger.info(
             f"Backfill for earthquake locations between {start_date} and {end_date}"
         )
-
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_url = {
-                executor.submit(self._process_date, _date): _date
-                for _date, _ in date_range
-            }
-            for future in as_completed(future_to_url):
-                url = future_to_url[future]
-                try:
-                    data = future.result()
-                except Exception as exc:
-                    _logger.info("%r generated an exception: %s" % (url, exc))
+        for start, _ in date_range:
+            start = start.strftime("%Y-%m-%d")
+            start_ts = datetime.now(UTC)
+            _logger.info(f"Starting backfill for earthquake locations on {start}")
+            self.upload(date=start, parralel=True)
+            end_ts = datetime.now(UTC)
+            duration = (end_ts - start_ts).total_seconds() / 60
+            _logger.info(
+                f"Backfill for earthquake locations completed for {start}, and took {duration:.0f} minutes"
+            )
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
@@ -364,5 +357,5 @@ if __name__ == "__main__":
     conn = DbSessionManager(config=ConnectionConfig())
 
     with conn:
-        run = UploadEarthQuakeLocation(conn=conn)
-        run.backfill(start_date='2023-06-01', end_date='2023-09-01')
+        run = TweetEarthquakeEvents(conn=conn)
+        run.upload()
