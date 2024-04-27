@@ -2,8 +2,11 @@ import requests
 import json
 import os
 import logging
+import time
+
 from PIL import Image
 from io import BytesIO
+from functools import wraps
 
 from datetime import datetime, timezone, timedelta
 
@@ -285,3 +288,23 @@ def convert_datetime(date: datetime, format_type: str = "date") -> str:
         return date.strftime("%Y-%m-%d %H:%M:%S")
     else:
         raise ValueError("Invalid format_type. Only 'date' or 'timestamp' are allowed.")
+
+
+def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_ts = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_ts = time.perf_counter()
+        duration = end_ts - start_ts
+        if duration < 60:
+            value, period = duration, "seconds"
+        elif duration < 3600:
+            value, period = duration // 60, "minutes"
+        else:
+            value, period = duration // 3600, "minutes"
+
+        _logger.info(f"{func.__name__} completed in {value:.0f} {period}")
+        return result
+
+    return wrapper

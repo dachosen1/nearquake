@@ -26,6 +26,7 @@ from nearquake.utils import (
     convert_timestamp_to_utc,
     generate_date_range,
     format_earthquake_alert,
+    timer,
 )
 
 
@@ -110,6 +111,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             latitude=coordinates[1],
         )
 
+    @timer
     def upload(self, url: str) -> None:
         """_summary_
 
@@ -132,6 +134,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
         else:
             _logger.info("No new records found")
 
+    @timer
     def backfill(self, start_date: str, end_date: str, interval: int = 15) -> None:
         """
         Performs a backfill operation for earthquake data between specified start and end dates.
@@ -159,7 +162,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
                 end=end,
             )
             _logger.info(
-                f"Running a backfill for earthquakes between {start} and {end_date}"
+                f"Running a backfill for earthquakes between {start} and {end}"
             )
             self.upload(url=url)
 
@@ -223,6 +226,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             location_details = list(executor.map(self._fetch_location_detail, event))
         return location_details
 
+    @timer
     def upload(self, date, backfill: bool = False):
         new_events = self._extract(date=date)
         if backfill:
@@ -238,6 +242,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         self.conn.insert_many(location_details)
         return None
 
+    @timer
     def backfill(self, start_date: str, end_date: str, interval: int = 1):
         date_range = generate_date_range(
             start_date=start_date, end_date=end_date, interval=interval
@@ -249,7 +254,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             start = start.strftime("%Y-%m-%d")
             start_ts = datetime.now(UTC)
             _logger.info(f"Starting backfill for earthquake locations on {start}")
-            self.upload(date=start, backfill=True)
+            self.upload(date=start, backfill=False)
             end_ts = datetime.now(UTC)
             duration = (end_ts - start_ts).total_seconds() / 60
             _logger.info(
@@ -258,16 +263,26 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
+
     def _extract(self) -> List:
-        query = self.conn.session.query(
-            EventDetails.id_event,
-            EventDetails.title,
-            EventDetails.ts_event_utc,
-            EventDetails.mag,
-        ).filter(
-            EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
-            TIMESTAMP_NOW - func.timezone("UTC", EventDetails.ts_event_utc)
-            < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
+        query = (
+            self.conn.session.query(
+                EventDetails.id_event,
+                EventDetails.title,
+                EventDetails.ts_event_utc,
+                EventDetails.mag,
+            )
+            .join(
+                Post,
+                Post.id_event == EventDetails.id_event,
+                isouter=True,
+            )
+            .filter(
+                EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
+                TIMESTAMP_NOW - func.timezone("UTC", EventDetails.ts_event_utc)
+                < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
+                Post.id_event == None,
+            )
         )
         return query.all()
 
@@ -280,12 +295,7 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
             )
             return None
 
-        existing_ids = self.conn.session.query(Post.id_event).all()
         for quake in eligible_quakes:
-
-            if quake.id_event in existing_ids:
-                _logger.info("Tweet already posted")
-                continue
 
             duration = TIMESTAMP_NOW - quake.ts_event_utc.replace(tzinfo=timezone.utc)
             earthquake_ts_event = quake.ts_event_utc.strftime("%H:%M:%S")
@@ -298,7 +308,7 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
             )
 
             try:
-                conn.insert(Post(**item))
+                self.conn.insert(Post(**item))
                 _logger.info(item)
                 self.post_tweet(tweet=item.get("post"))
                 _logger.info(
@@ -347,5 +357,5 @@ if __name__ == "__main__":
     conn = DbSessionManager(config=ConnectionConfig())
 
     with conn:
-        run = UploadEarthQuakeEvents(conn=conn)
-        run.backfill(start_date="2024-01-01", end_date="2024-05-05", interval=5)
+        run = TweetEarthquakeEvents(conn=conn)
+        run.upload()
