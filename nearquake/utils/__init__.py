@@ -159,7 +159,7 @@ def fetch_json_data_from_url(url):
 
     """
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=30)
         response.raise_for_status()  # Raise an HTTPError for bad requests (4xx or 5xx)
 
         try:

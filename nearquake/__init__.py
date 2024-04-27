@@ -15,7 +15,6 @@ class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_record = {
             "time": self.formatTime(record, self.datefmt),
-            "module": record.module,
             "level": record.levelname,
             "name": record.name,
             "funcName": record.funcName,

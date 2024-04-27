@@ -227,9 +227,9 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return location_details
 
     @timer
-    def upload(self, date, backfill: bool = False):
+    def upload(self, date, parralel: bool = False):
         new_events = self._extract(date=date)
-        if backfill:
+        if parralel:
             location_details = self._parallelize_fetch_location_details(
                 event=new_events
             )
@@ -254,7 +254,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             start = start.strftime("%Y-%m-%d")
             start_ts = datetime.now(UTC)
             _logger.info(f"Starting backfill for earthquake locations on {start}")
-            self.upload(date=start, backfill=False)
+            self.upload(date=start, parralel=True)
             end_ts = datetime.now(UTC)
             duration = (end_ts - start_ts).total_seconds() / 60
             _logger.info(

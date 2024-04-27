@@ -141,5 +141,5 @@ if __name__ == "__main__":
             start_date = input("Type Start Date:")
             end_date = input("Type End Date:")
 
-            run.backfill(start_date=start_date, end_date=end_date)
+            # run.backfill(start_date=start_date, end_date=end_date)
             loc.backfill(start_date=start_date, end_date=end_date)
