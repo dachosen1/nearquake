@@ -5,8 +5,9 @@ import logging
 from PIL import Image
 from io import BytesIO
 
+from datetime import datetime, timezone, timedelta
 
-from datetime import datetime, timezone
+from nearquake.config import TIMESTAMP_NOW, EVENT_DETAIL_URL, tweet_conclusion_text
 
 _logger = logging.getLogger(__name__)
 
@@ -257,6 +258,31 @@ def create_dir(path: str):
         raise ValueError
 
     return None
+
+
+def format_earthquake_alert(
+    title: str,
+    ts_event: str,
+    duration: timedelta,
+    id_event: str,
+) -> dict:
+    """
+    _summary_
+
+    :param title: _description_
+    :param ts_event: _description_
+    :param duration: _description_
+    :param id_event: _description_
+    :return: _description_
+    """
+
+    item = {
+        "post": f"Recent #Earthquake: {title} reported at {ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
+        "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
+        "id_event": id_event,
+    }
+
+    return item
 
 
 if __name__ == "__main__":

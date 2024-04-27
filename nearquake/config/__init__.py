@@ -1,9 +1,11 @@
 import os
 import logging
+import random
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
 
 from dotenv import load_dotenv
+
 
 _logger = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ EVENT_DETAIL_URL: str = (
 
 EARTHQUAKE_POST_THRESHOLD = 4.5
 
-REPORTED_SINCE_THRESHOLD = 3600
+REPORTED_SINCE_THRESHOLD = 7200
 
 
 def generate_time_range_url(year: int, month: int, start: int, end: int) -> str:
@@ -159,3 +161,12 @@ def generate_coordinate_lookup_detail_url(lat, long) -> str:
     :return: str: A fully formatted URL with specified latitude and longitude.
     """
     return COORDINATE_LOOKUP_BASE_URL.format(lat=lat, long=long)
+
+
+def tweet_conclusion_text():
+    tweet_conclusion_text = random.choice(TWEET_CONCLUSION)
+    return tweet_conclusion_text
+
+
+def chat_prompt():
+    return random.choice(CHAT_PROMPT)

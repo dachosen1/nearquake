@@ -2,11 +2,11 @@ import logging
 import random
 from typing import List, Type, TypeVar
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from collections import Counter
 
 
-from sqlalchemy import desc, and_
+from sqlalchemy import desc, and_, func
 from sqlalchemy.orm import Session
 
 from nearquake.config import (
@@ -15,15 +15,16 @@ from nearquake.config import (
     EVENT_DETAIL_URL,
     TWEET_CONCLUSION,
     REPORTED_SINCE_THRESHOLD,
+    EARTHQUAKE_POST_THRESHOLD,
     generate_coordinate_lookup_detail_url,
 )
 from nearquake.tweet_processor import TweetOperator
 from nearquake.app.db import EventDetails, Post, Base, LocationDetails
-from tqdm import tqdm
 from nearquake.utils import (
     fetch_json_data_from_url,
     convert_timestamp_to_utc,
     generate_date_range,
+    format_earthquake_alert,
 )
 
 
@@ -215,68 +216,63 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         conn.insert_many(model=location_details)
         return None
 
+    def backfill(self, start_date: str, end_date: str):
+        pass
 
-class TweetEarthquakeEvents(BaseDataUploader):
-    pass
 
+class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
 
-def process_earthquake_data(
-    conn: Session, tweet: TweetOperator, threshold: str
-) -> None:
-    most_recent_date = (
-        conn.session.query(EventDetails.ts_updated_utc)
-        .order_by(desc(EventDetails.ts_updated_utc))
-        .first()
-    )
+    def _extract(self) -> List:
+        query = self.conn.session.query(
+            EventDetails.id_event,
+            EventDetails.title,
+            EventDetails.ts_event_utc,
+            EventDetails.mag,
+        ).filter(
+            EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
+            TIMESTAMP_NOW - func.timezone("UTC", EventDetails.ts_event_utc)
+            < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
+        )
+        return query.all()
 
-    most_recent_date = most_recent_date[0].strftime("%Y-%m-%d %H:%M:%S")
-    _logger.info(f"Most recent upload timestamp is {most_recent_date}")
-    most_recent_date_quakes = conn.fetch_single(
-        model=EventDetails, column="ts_updated_utc", item=most_recent_date
-    )
-    eligible_quakes = [
-        i for i in most_recent_date_quakes if i.mag is not None and i.mag > threshold
-    ]
+    def upload(self):
 
-    if len(eligible_quakes) > 0:
-        for i in eligible_quakes:
-            duration = TIMESTAMP_NOW - i.ts_event_utc
-            if i.mag >= threshold and duration.seconds < REPORTED_SINCE_THRESHOLD:
-                TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
-                    random.randint(0, len(TWEET_CONCLUSION) - 1)
-                ]
-                earthquake_ts_event = i.ts_event_utc.strftime("%H:%M:%S")
+        eligible_quakes = self._extract()
+        if not eligible_quakes:
+            _logger.info(
+                f"No recent earthquakes with a magnitude of {EARTHQUAKE_POST_THRESHOLD} or higher were found. Nothing was posted to the database."
+            )
+            return None
 
-                text = f"Recent #Earthquake: {i.title} reported at {earthquake_ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=i.id_event)}. \n {TWEET_CONCLUSION_TEXT}"
-                item = {
-                    "post": text,
-                    "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
-                    "id_event": i.id_event,
-                }
+        existing_ids = self.conn.session.query(Post.id_event).all()
+        for quake in eligible_quakes:
 
-                record_exist = conn.fetch_single(
-                    model=Post, column="id_event", item=i.id_event
+            if quake.id_event in existing_ids:
+                _logger.info("Tweet already posted")
+                continue
+
+            duration = TIMESTAMP_NOW - quake.ts_event_utc.replace(tzinfo=timezone.utc)
+            earthquake_ts_event = quake.ts_event_utc.strftime("%H:%M:%S")
+
+            item = format_earthquake_alert(
+                id_event=quake.id_event,
+                ts_event=earthquake_ts_event,
+                duration=duration,
+                title=quake.title,
+            )
+
+            try:
+                conn.insert(Post(**item))
+                _logger.info(item)
+                self.post_tweet(tweet=item.get("post"))
+                _logger.info(
+                    "Recorded recent tweet posted in the database recent into the Database "
                 )
 
-                record_count = sum([1 for _ in record_exist])
+            except Exception as e:
+                _logger.error(f"Encountered an unexpected error: {e}")
 
-                if record_count < 1:
-                    conn.insert(Post(**item))
-                    _logger.info(text)
-                    try:
-                        tweet.post_tweet(tweet=text)
-                        _logger.info(
-                            "Recorded recent tweet posted in the database  recent into the Database "
-                        )
-                    except Exception as e:
-                        _logger.error(f"Encountered an unexpected error: {e}")
-                else:
-                    _logger.info("Tweet already posted")
-
-    else:
-        _logger.info(
-            f"No recent earthquakes with a magnitude of {threshold} or higher were found. Nothing was posted to the database."
-        )
+        return None
 
 
 def get_date_range_summary(
@@ -312,7 +308,7 @@ if __name__ == "__main__":
     from nearquake.utils.db_sessions import DbSessionManager
 
     conn = DbSessionManager(config=ConnectionConfig())
-    run = UploadEarthQuakeLocation(conn=conn)
 
     with conn:
-        run._extract(date="2023-12-01")
+        run = TweetEarthquakeEvents(conn=conn)
+        run.upload()
