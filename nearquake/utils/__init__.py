@@ -203,42 +203,28 @@ def convert_timestamp_to_utc(timestamp: int):
     return datetime.fromtimestamp(timestamp / 1000, timezone.utc)
 
 
-def generate_date_range(start_date: str, end_date: str):
+def generate_date_range(start_date, end_date, interval) -> tuple:
     """
-    Generates a list of [year, month] pairs between two specified dates.
+    Generates a list of (start_date, end_date) tuples where each tuple represents a range.
+    Each range starts at 'start_date' and ends at the minimum of 'end_date' or 'start_date' + 'interval', incremented by 'interval' days.
 
-    This function creates a range of dates from the start date to the end date, inclusive.
-    It assumes that the provided dates are in 'YYYY-MM' format. The function iterates
-    through each year and month within the specified range and returns a list of [year, month]
-    pairs.
 
-    Example:
-        >>> generate_date_range('2020-01-01', '2020-03-01')
-        [[2020, 1], [2020, 2], [2020, 3]]
-
-    :param start_date: The start date in 'YYYY-MM' format.
-    :param end_date: The end date in 'YYYY-MM' format.
-    :return: list of [int, int]: A list where each element is a list containing two integers, the first being the year and the second the month, for each
-    month in the range from start_date to end_date, inclusive.
-
+    :param start_date: The beginning date of the range (format: 'YYYY-MM-DD').
+    :param end_date: The ending date of the range (format: 'YYYY-MM-DD').
+    :param interval: The number of days to increment each start date within the range.
+    :return: A list of tuples, each containing a start and end date.
     """
 
-    # Parse the start and end dates
-    start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
-    end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-    # Check if the start date is later than the end date
-    if start_datetime > end_datetime:
-        logging.error("Start time cannot be greater than end time")
-        raise ValueError(f"Start time cannot be greater than end time")
-
+    current_start_date = start_date
     date_list = []
 
-    for year in range(start_datetime.year, end_datetime.year + 1):
-        start_month = start_datetime.month if year == start_datetime.year else 1
-        end_month = end_datetime.month if year == end_datetime.year else 12
-        for month in range(start_month, end_month + 1):
-            date_list.append([year, month])
+    while current_start_date < end_date:
+        current_end_date = min(end_date, current_start_date + timedelta(days=interval))
+        date_list.append((current_start_date, current_end_date))
+        current_start_date = current_end_date
 
     return date_list
 
@@ -286,6 +272,4 @@ def format_earthquake_alert(
 
 
 if __name__ == "__main__":
-    fetch_json_data_from_url(
-        "https://nominatim.openstreetmap.org/reverse.php?lat=56.72174&lon=88.59586&zoom=18&format=jsonv2"
-    )
+    generate_date_range("2023-01-01", end_date="2023-12-01", interval=10)

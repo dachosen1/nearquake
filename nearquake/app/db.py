@@ -144,43 +144,7 @@ def create_database(url: str, schema: Optional[List[str]] = None):
 if __name__ == "__main__":
     from nearquake.config import ConnectionConfig, generate_coordinate_lookup_detail_url
     from nearquake.utils.db_sessions import DbSessionManager
-    from nearquake.utils import fetch_json_data_from_url
 
     config = ConnectionConfig()
     create_database(url=config.generate_connection_url())
     conn = DbSessionManager(config=config)
-
-    with conn:
-        query = conn.session.query(
-            EventDetails.id_event, EventDetails.longitude, EventDetails.latitude
-        ).filter(EventDetails.date > "2010-01-01")
-
-        results = query.all()
-
-        location_details = []
-        for i in results:
-            id_event = i[0]
-            long = i[1]
-            lat = i[2]
-            url = generate_coordinate_lookup_detail_url(lat=lat, long=long)
-            content = fetch_json_data_from_url(url=url)
-
-            if content.get("error") != "Unable to geocode":
-                detail = LocationDetails(
-                    id_event=id_event,
-                    id_place=content.get("place_id"),
-                    category=content.get("category"),
-                    place_rank=content.get("place_rank"),
-                    address_type=content.get("addresstype"),
-                    place_importance=content.get("importance"),
-                    name=content.get("name"),
-                    display_name=content.get("display_name"),
-                    country=content["address"].get("country"),
-                    state=content["address"].get("state"),
-                    region=content["address"].get("region"),
-                    country_code=content["address"].get("country_code").upper(),
-                    boundingbox=content.get("boundingbox"),
-                )
-                location_details.append(detail)
-
-        conn.insert_many(model=location_details)

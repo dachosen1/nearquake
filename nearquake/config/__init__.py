@@ -18,7 +18,7 @@ API_BASE_URL: str = (
 )
 
 EARTHQUAKE_URL_TEMPLATE: str = (
-    "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={year}-{month}-{start}%2000:00:00&endtime={year}-{month}-{end}%2023:59:59"
+    "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={start}%2000:00:00&endtime={end}%2023:59:59"
 )
 
 EVENT_DETAIL_URL: str = (
@@ -30,7 +30,7 @@ EARTHQUAKE_POST_THRESHOLD = 4.5
 REPORTED_SINCE_THRESHOLD = 7200
 
 
-def generate_time_range_url(year: int, month: int, start: int, end: int) -> str:
+def generate_time_range_url(start: int, end: int) -> str:
     """
     Generate the URL for extracting earthquakes that occurred during a specific year and month.
 
@@ -41,7 +41,7 @@ def generate_time_range_url(year: int, month: int, start: int, end: int) -> str:
 
     :return: The URL path for the earthquakes that happened during the specified month and year.
     """
-    return EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month, start=start, end=end)
+    return EARTHQUAKE_URL_TEMPLATE.format(start=start, end=end)
 
 
 def generate_time_period_url(time_period: int) -> str:

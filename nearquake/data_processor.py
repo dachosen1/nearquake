@@ -1,9 +1,9 @@
 import logging
-import random
 from typing import List, Type, TypeVar
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone, timedelta
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 
 
 from sqlalchemy import desc, and_, func
@@ -131,12 +131,13 @@ class UploadEarthQuakeEvents(BaseDataUploader):
         else:
             _logger.info("No new records found")
 
-    def backfill(self, start_date: str, end_date: str) -> None:
+    def backfill(self, start_date: str, end_date: str, interval: int = 15) -> None:
         """
         Performs a backfill operation for earthquake data between specified start and end dates.
 
         :param start_date: The start date for the backfill operation, in 'YYYY-MM-DD' format.
         :param end_date: The end date for the backfill operation, in 'YYYY-MM-DD' format.
+        :param interval: The number of days to increment each start date within the range. defaults to 15 days
         """
         try:
             datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -144,23 +145,22 @@ class UploadEarthQuakeEvents(BaseDataUploader):
         except ValueError:
             raise ValueError("Invalid date format. Use YYYY-MM-DD.")
 
-        date_range = generate_date_range(start_date, end_date)
+        date_range = generate_date_range(start_date, end_date, interval=interval)
         _logger.info(
             f"Backfill process started for the range {start_date} to {end_date}. Running in module {__name__}."
         )
-        for year, month in date_range:
-            for start in [1, 16]:
-                end = start + 15
-                url = generate_time_range_url(
-                    year=f"{year:02}",
-                    month=f"{month:02}",
-                    start=f"{start:02}",
-                    end=f"{end:02}",
-                )
-                _logger.info(
-                    f"Running a backfill for Year: {year} Month: {month}, between {start} and {end} "
-                )
-                self.upload(url=url)
+        for start, end in date_range:
+            start = start.strftime("%Y-%m-%d")
+            end = end.strftime("%Y-%m-%d")
+
+            url = generate_time_range_url(
+                start=start,
+                end=end,
+            )
+            _logger.info(
+                f"Running a backfill for earthquakes between {start} and {end_date}"
+            )
+            self.upload(url=url)
 
         _logger.info(
             f"Completed the Backfill for {len(date_range)} months!!! Horray :)"
@@ -185,39 +185,65 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return results
 
     def _fetch_location_detail(self, event) -> LocationDetails:
-        id_event, long, lat = event
+        id_event, lat, long = event
         url = generate_coordinate_lookup_detail_url(lat=lat, long=long)
         content = fetch_json_data_from_url(url=url)
 
-        if content.get("error") != "Unable to geocode":
-            return LocationDetails(
-                id_event=id_event,
-                id_place=content.get("place_id"),
-                category=content.get("category"),
-                place_rank=content.get("place_rank"),
-                address_type=content.get("addresstype"),
-                place_importance=content.get("importance"),
-                name=content.get("name"),
-                display_name=content.get("display_name"),
-                country=content["address"].get("country"),
-                state=content["address"].get("state"),
-                region=content["address"].get("region"),
-                country_code=content["address"].get("country_code").upper(),
-                boundingbox=content.get("boundingbox"),
-            )
-        else:
-            return LocationDetails(id_event=id_event)
+        try:
+            if content.get("error") != "Unable to geocode":
+                return LocationDetails(
+                    id_event=id_event,
+                    id_place=content.get("place_id"),
+                    category=content.get("category"),
+                    place_rank=content.get("place_rank"),
+                    address_type=content.get("addresstype"),
+                    place_importance=content.get("importance"),
+                    name=content.get("name"),
+                    display_name=content.get("display_name"),
+                    country=content["address"].get("country"),
+                    state=content["address"].get("state"),
+                    region=content["address"].get("region"),
+                    country_code=content["address"].get("country_code").upper(),
+                    boundingbox=content.get("boundingbox"),
+                )
+            else:
+                return LocationDetails(id_event=id_event)
 
-    def upload(self, date):
+        except Exception as e:
+            _logger.error(
+                f"Encountered an error while attempting to extract long, and lattiude {e}"
+            )
+            return None
+
+    def _parallelize_fetch_location_details(self, new_events):
+        with ThreadPoolExecutor() as executor:
+            location_details = list(
+                executor.map(self._fetch_location_detail, new_events)
+            )
+        return location_details
+
+    def upload(self, date, backfill: bool = False):
         new_events = self._extract(date=date)
-        location_details = [
-            self._fetch_location_detail(event=event) for event in new_events
-        ]
-        conn.insert_many(model=location_details)
+        if backfill:
+            location_details = [
+                self._parallelize_fetch_location_details(event=event)
+                for event in new_events
+            ]
+
+        else:
+            location_details = [
+                self._fetch_location_detail(event=event) for event in new_events
+            ]
+
+        self.conn.insert_many(location_details)
         return None
 
-    def backfill(self, start_date: str, end_date: str):
-        pass
+    def backfill(self, start_date: str, end_date: str, interval: int = 1):
+        date_range = generate_date_range(
+            start_date=start_date, end_date=end_date, interval=interval
+        )
+        for start, _ in date_range:
+            self.upload(date=start, backfill=True)
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
@@ -270,7 +296,9 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
                 )
 
             except Exception as e:
-                _logger.error(f"Encountered an unexpected error: {e}")
+                _logger.error(
+                    f"Encountered an error while attempting to post tweet. {e}"
+                )
 
         return None
 
@@ -303,12 +331,11 @@ def extract_coordinate_details():
 
 
 if __name__ == "__main__":
-
     from nearquake.config import ConnectionConfig
     from nearquake.utils.db_sessions import DbSessionManager
 
     conn = DbSessionManager(config=ConnectionConfig())
 
     with conn:
-        run = TweetEarthquakeEvents(conn=conn)
-        run.upload()
+        run = UploadEarthQuakeEvents(conn=conn)
+        run.backfill(start_date='2024-01-01', end_date='2024-01-05', interval=5)
