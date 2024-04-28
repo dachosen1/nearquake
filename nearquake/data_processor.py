@@ -1,20 +1,18 @@
 import logging
 from typing import List, Type, TypeVar
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone, timedelta, UTC
+from datetime import datetime, timezone, timedelta
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
 from tqdm import tqdm
-from sqlalchemy import desc, and_, func
+from sqlalchemy import  and_, func
 from sqlalchemy.orm import Session
 from pycountry import countries
 
 from nearquake.config import (
     generate_time_range_url,
     TIMESTAMP_NOW,
-    EVENT_DETAIL_URL,
-    TWEET_CONCLUSION,
     REPORTED_SINCE_THRESHOLD,
     EARTHQUAKE_POST_THRESHOLD,
     generate_coordinate_lookup_detail_url,
@@ -80,9 +78,10 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             ]
         except TypeError:
             new_events = data["features"]
+
         except Exception as e:
             _logger.error(
-                f"Encountered an unexpected error: {e} {event_ids_from_api} {new_events}"
+                f"Encountered an unexpected error: {e} {event_ids_from_api}"
             )
         return new_events
 
