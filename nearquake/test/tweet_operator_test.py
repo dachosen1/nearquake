@@ -15,7 +15,7 @@ def test_post_tweet_failure(mock_logger, mock_client_class, mock_auth_class):
 
     operator = TweetOperator()
 
-    tweet = "Test tweet"
+    tweet = {"post": "Test tweet"}
     mock_create_tweet = MagicMock(side_effect=Exception("Failed to post tweet"))
     mock_client_instance.create_tweet = mock_create_tweet
 
