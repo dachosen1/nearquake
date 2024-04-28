@@ -141,8 +141,8 @@ if __name__ == "__main__":
             start_date = input("Type Start Date:")
             end_date = input("Type End Date:")
 
-            backfill_event = input("True or False")
-            backfill_location = input("True or False")
+            backfill_event = input("Backfill earthquake.fct__event_detail: True or False ")
+            backfill_location = input("Backfill earthquake.dim__event_location: True or False ")
 
             if backfill_event:
                 run.backfill(start_date=start_date, end_date=end_date)
