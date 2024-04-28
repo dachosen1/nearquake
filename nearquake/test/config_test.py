@@ -3,12 +3,10 @@ from nearquake.config import generate_time_range_url, generate_time_period_url
 
 
 def test_generate_time_range_url():
-    year = 2021
-    month = 5
-    start = 1
-    end = 31
-    expected_url = "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime=2021-5-1%2000:00:00&endtime=2021-5-31%2023:59:59"
-    assert generate_time_range_url(year, month, start=start, end=end) == expected_url
+    start = "2021-01-01"
+    end = "2023-01-01"
+    expected_url = "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime=2021-01-01%2000:00:00&endtime=2023-01-01%2023:59:59"
+    assert generate_time_range_url(start=start, end=end) == expected_url
 
 
 def test_generate_time_period_url_day_url():

@@ -1,22 +1,24 @@
 import os
 import logging
+import random
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, UTC
 
 from dotenv import load_dotenv
+
 
 _logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-TIMESTAMP_NOW = datetime.utcnow()
+TIMESTAMP_NOW = datetime.now(UTC)
 
 API_BASE_URL: str = (
     "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
 )
 
 EARTHQUAKE_URL_TEMPLATE: str = (
-    "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={year}-{month}-{start}%2000:00:00&endtime={year}-{month}-{end}%2023:59:59"
+    "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={start}%2000:00:00&endtime={end}%2023:59:59"
 )
 
 EVENT_DETAIL_URL: str = (
@@ -25,10 +27,10 @@ EVENT_DETAIL_URL: str = (
 
 EARTHQUAKE_POST_THRESHOLD = 4.5
 
-REPORTED_SINCE_THRESHOLD = 3600
+REPORTED_SINCE_THRESHOLD = 7200
 
 
-def generate_time_range_url(year: int, month: int, start: int, end: int) -> str:
+def generate_time_range_url(start: int, end: int) -> str:
     """
     Generate the URL for extracting earthquakes that occurred during a specific year and month.
 
@@ -39,7 +41,7 @@ def generate_time_range_url(year: int, month: int, start: int, end: int) -> str:
 
     :return: The URL path for the earthquakes that happened during the specified month and year.
     """
-    return EARTHQUAKE_URL_TEMPLATE.format(year=year, month=month, start=start, end=end)
+    return EARTHQUAKE_URL_TEMPLATE.format(start=start, end=end)
 
 
 def generate_time_period_url(time_period: int) -> str:
@@ -57,11 +59,11 @@ def generate_time_period_url(time_period: int) -> str:
             time_period,
             valid_periods,
         )
-    _logger.info(
-        f"Generated the url to upload earthquake events for the last {time_period}"
-    )
-
-    return API_BASE_URL.format(time_period=time_period)
+    else:
+        _logger.info(
+            f"Generated the url to upload earthquake events for the last {time_period}"
+        )
+        return API_BASE_URL.format(time_period=time_period)
 
 
 @dataclass()
@@ -146,3 +148,25 @@ CHAT_PROMPT = [
     "How do you ensure the safety of children and infants during earthquakes? Share your child safety tips!",
     "How do you stay informed about earthquake risks and updates in your area? Share your favorite resources for earthquake information!",
 ]
+
+COORDINATE_LOOKUP_BASE_URL = "https://nominatim.openstreetmap.org/reverse.php?lat={lat}&lon={long}&zoom=18&format=jsonv2"
+
+
+def generate_coordinate_lookup_detail_url(lat, long) -> str:
+    """
+    Generate a URL for reverse geocoding using OpenStreetMap's Nominatim API.
+
+    :param lat: Latitude of the location
+    :param long: Longitude of the location
+    :return: str: A fully formatted URL with specified latitude and longitude.
+    """
+    return COORDINATE_LOOKUP_BASE_URL.format(lat=lat, long=long)
+
+
+def tweet_conclusion_text():
+    tweet_conclusion_text = random.choice(TWEET_CONCLUSION)
+    return tweet_conclusion_text
+
+
+def chat_prompt():
+    return random.choice(CHAT_PROMPT)

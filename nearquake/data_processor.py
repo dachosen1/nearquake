@@ -1,230 +1,343 @@
 import logging
-import random
-from typing import List, Type
+from typing import List, Type, TypeVar
+from abc import ABC, abstractmethod
+from datetime import datetime, timezone, timedelta
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 
-from sqlalchemy import desc, and_
-from sqlalchemy.orm import Session, declarative_base
+from tqdm import tqdm
+from sqlalchemy import and_, func
+from sqlalchemy.orm import Session
+from pycountry import countries
 
 from nearquake.config import (
     generate_time_range_url,
     TIMESTAMP_NOW,
-    EVENT_DETAIL_URL,
-    TWEET_CONCLUSION,
     REPORTED_SINCE_THRESHOLD,
+    EARTHQUAKE_POST_THRESHOLD,
+    generate_coordinate_lookup_detail_url,
 )
 from nearquake.tweet_processor import TweetOperator
-from nearquake.app.db import EventDetails, Post
-from tqdm import tqdm
+from nearquake.app.db import EventDetails, Post, Base, LocationDetails
 from nearquake.utils import (
     fetch_json_data_from_url,
     convert_timestamp_to_utc,
     generate_date_range,
+    format_earthquake_alert,
+    timer,
 )
 
 
 _logger = logging.getLogger(__name__)
 
-Base = declarative_base()
+ModelType = TypeVar("ModelType", bound=Base)
 
 
-class Earthquake:
+class BaseDataUploader(ABC):
+    def __init__(self, conn: Session):
+        self.conn = conn
+        self.TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
+
+    @abstractmethod
+    def _extract(self):
+        pass
+
+    @abstractmethod
+    def upload(self):
+        pass
+
+
+class UploadEarthQuakeEvents(BaseDataUploader):
     """
-    The Earthquake class is designed to interact with the earthquake.usgs.gov API to
-    retrieve and store earthquake data. It provides functionalities to extract earthquake
+    Designed to interact with the earthquake.usgs.gov API to retrieve and store earthquake data. It provides functionalities to extract earthquake
     event data and perform backfill operations for a specified date range.
     """
 
-    def __init__(self) -> None:
-        self.TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
-
-    def extract_data_properties(self, url: str, conn: Session) -> None:
+    def _extract(self, url) -> List:
         """
-        Extracts earthquake data from a given URL, typically from earthquake.usgs.gov, and
-        uploads key properties of each earthquake event into a database.
+        Extracts earthquake data from earthquake.usgs.gov, and returns a list of events that are not in the current database
 
-        This method iterates through the earthquake data, extracts relevant properties, and
-        inserts them into the database. It also handles duplicate records by skipping insertion
-        if an event with the same ID already exists in the database.
+        Note: this function only works for earthquake.usgs.gov urls , since it's expect the JSON api repsonse to follow a specific format.
 
-        Note: this function only works for a speficific url, since it's expect the JSON api repsonse to follow a specific format.
-
-        Example Usage:
-        run = Earthquake()
-        run.extract_data_properties("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson")
-
-        :param url: The URL to fetch earthquake data from.
+        :param url: earthquake.usgs.gov api url
+        :return: a list of earthquake events
         """
+
         data = fetch_json_data_from_url(url=url)
-
-        summary = {}
-
         try:
-            # Check for all the records in the api
-            event_id_set = {i["id"] for i in data["features"]}
-
-            # Check for records that exists in the database
-            fetched_records = conn.fetch_many(
-                model=EventDetails, column="id_event", items=event_id_set
+            event_ids_from_api = {i["id"] for i in data["features"]}
+            existing_event_records = self.conn.fetch_many(
+                model=EventDetails, column="id_event", items=event_ids_from_api
             )
-
-            # In case where there are no records in the database it returns a type error and we add all the records in the API fetch
-            try:
-                exist_id_events_set = {i.id_event for i in fetched_records}
-                records_to_add_set = event_id_set - exist_id_events_set
-            except TypeError:
-                records_to_add_set = event_id_set
-
-            records_to_add = [
-                i for i in data["features"] if i["id"] in records_to_add_set
+            self.existing_event_ids = [
+                record.id_event for record in existing_event_records
             ]
 
-            if len(records_to_add) > 0:
-                records_to_add_list = []
-                for i in tqdm(records_to_add):
-                    id_event = i["id"]
-                    properties = i["properties"]
-                    coordinates = i["geometry"]["coordinates"]
-
-                    timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
-                    time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
-
-                    quake_entry = EventDetails(
-                        id_event=id_event,
-                        mag=properties.get("mag"),
-                        ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
-                        ts_updated_utc=self.TIMESTAMP_NOW,
-                        tz=properties.get("tz"),
-                        felt=properties.get("felt"),
-                        detail=properties.get("detail"),
-                        cdi=properties.get("cdi"),
-                        mmi=properties.get("mmi"),
-                        status=properties.get("status"),
-                        tsunami=properties.get("tsunami"),
-                        type=properties.get("type"),
-                        title=properties.get("title"),
-                        date=time_stamp_date,
-                        place=properties.get("place"),
-                        longitude=coordinates[0],
-                        latitude=coordinates[1],
-                    )
-
-                    records_to_add_list.append(quake_entry)
-
-                    # Increments the count by one for each date added to the database. If no record exists, initialize the date at 1
-                    summary[time_stamp_date] = summary.get(time_stamp_date, 0) + 1
-
-                conn.insert_many(records_to_add_list)
-                _logger.info(
-                    f"Added {len(records_to_add)} records and {len(exist_id_events_set)} records were already added."
-                )
-
-            else:
-                _logger.info("No new records found")
+            new_events = [
+                i for i in data["features"] if i["id"] not in self.existing_event_ids
+            ]
+        except TypeError:
+            new_events = data["features"]
 
         except Exception as e:
-            _logger.error(f" Encountereed an unexpected error: {e}")
+            _logger.error(f"Encountered an unexpected error: {e} {event_ids_from_api}")
+        return new_events
 
-    def backfill(self, conn: Session, start_date: str, end_date: str) -> None:
+    def _fetch_event_details(self, event) -> EventDetails:
+        id_event = event["id"]
+        properties = event["properties"]
+        coordinates = event["geometry"]["coordinates"]
+        timestamp_utc = convert_timestamp_to_utc(properties.get("time"))
+        time_stamp_date = timestamp_utc.date().strftime("%Y-%m-%d")
+
+        return EventDetails(
+            id_event=id_event,
+            mag=properties.get("mag"),
+            ts_event_utc=timestamp_utc.strftime("%Y-%m-%d %H:%M:%S"),
+            ts_updated_utc=self.TIMESTAMP_NOW,
+            tz=properties.get("tz"),
+            felt=properties.get("felt"),
+            detail=properties.get("detail"),
+            cdi=properties.get("cdi"),
+            mmi=properties.get("mmi"),
+            status=properties.get("status"),
+            tsunami=properties.get("tsunami"),
+            type=properties.get("type"),
+            title=properties.get("title"),
+            date=time_stamp_date,
+            place=properties.get("place"),
+            longitude=coordinates[0],
+            latitude=coordinates[1],
+        )
+
+    @timer
+    def upload(self, url: str) -> None:
+        """_summary_
+
+        :param url: earthquake.usgs.gov api url
+        """
+        new_event = self._extract(url=url)
+
+        if len(new_event) > 0:
+            new_event_list = [
+                self._fetch_event_details(event=event) for event in tqdm(new_event)
+            ]
+
+            self.conn.insert_many(new_event_list)
+            summary = Counter(
+                event.date.strftime("%Y-%m-%d") for event in new_event_list
+            )
+            _logger.info(
+                f"Added {len(new_event_list)} records and {len(self.existing_event_ids)} records were already added. {dict(summary)}"
+            )
+        else:
+            _logger.info("No new records found")
+
+    @timer
+    def backfill(self, start_date: str, end_date: str, interval: int = 15) -> None:
         """
         Performs a backfill operation for earthquake data between specified start and end dates.
-        It generates URLs for each day within the date range and calls `extract_data_properties`
-        to process and store data for each day.
-
-        This is useful for populating the database with historical earthquake data for analysis
-
-        Example:
-        run = Earthquake()
-        run.backfill(conn=conn,start_date="2023-01-01", end_date="2023-10-01")
 
         :param start_date: The start date for the backfill operation, in 'YYYY-MM-DD' format.
         :param end_date: The end date for the backfill operation, in 'YYYY-MM-DD' format.
+        :param interval: The number of days to increment each start date within the range. defaults to 15 days
         """
+        try:
+            datetime.strptime(start_date, "%Y-%m-%d").date()
+            datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise ValueError("Invalid date format. Use YYYY-MM-DD.")
 
-        date_range = generate_date_range(start_date, end_date)
+        date_range = generate_date_range(start_date, end_date, interval=interval)
         _logger.info(
             f"Backfill process started for the range {start_date} to {end_date}. Running in module {__name__}."
         )
-        for year, month in date_range:
-            for start in [1, 16]:
-                end = start + 15
-                url = generate_time_range_url(
-                    year=f"{year:02}",
-                    month=f"{month:02}",
-                    start=f"{start:02}",
-                    end=f"{end:02}",
-                )
-                _logger.info(
-                    f"Running a backfill for Year: {year} Month: {month}, between {start} and {end} "
-                )
-                self.extract_data_properties(url=url, conn=conn)
+        for start, end in date_range:
+            start = start.strftime("%Y-%m-%d")
+            end = end.strftime("%Y-%m-%d")
+
+            url = generate_time_range_url(
+                start=start,
+                end=end,
+            )
+            _logger.info(
+                f"Running a backfill for earthquakes between {start} and {end}"
+            )
+            self.upload(url=url)
 
         _logger.info(
             f"Completed the Backfill for {len(date_range)} months!!! Horray :)"
         )
 
 
-def process_earthquake_data(
-    conn: Session, tweet: TweetOperator, threshold: str
-) -> None:
-    most_recent_date = (
-        conn.session.query(EventDetails.ts_updated_utc)
-        .order_by(desc(EventDetails.ts_updated_utc))
-        .first()
-    )
+class UploadEarthQuakeLocation(BaseDataUploader):
+    def _extract(self, date) -> list:
 
-    most_recent_date = most_recent_date[0].strftime("%Y-%m-%d %H:%M:%S")
-    _logger.info(f"Most recent upload timestamp is {most_recent_date}")
-    most_recent_date_quakes = conn.fetch_single(
-        model=EventDetails, column="ts_updated_utc", item=most_recent_date
-    )
-    eligible_quakes = [
-        i for i in most_recent_date_quakes if i.mag is not None and i.mag > threshold
-    ]
+        query = (
+            self.conn.session.query(
+                EventDetails.id_event, EventDetails.latitude, EventDetails.longitude
+            )
+            .join(
+                LocationDetails,
+                LocationDetails.id_event == EventDetails.id_event,
+                isouter=True,
+            )
+            .filter(LocationDetails.id_event == None, EventDetails.date == date)
+        )
+        results = query.all()
+        return results
 
-    if len(eligible_quakes) > 0:
-        for i in eligible_quakes:
-            duration = TIMESTAMP_NOW - i.ts_event_utc
-            if i.mag >= threshold and duration.seconds < REPORTED_SINCE_THRESHOLD:
-                TWEET_CONCLUSION_TEXT = TWEET_CONCLUSION[
-                    random.randint(0, len(TWEET_CONCLUSION) - 1)
-                ]
-                earthquake_ts_event = i.ts_event_utc.strftime("%H:%M:%S")
+    def _fetch_location_detail(self, event) -> LocationDetails:
+        id_event, lat, long = event
+        url = generate_coordinate_lookup_detail_url(
+            lat=round(lat, 3), long=round(long, 3)
+        )
+        content = fetch_json_data_from_url(url=url)
 
-                text = f"Recent #Earthquake: {i.title} reported at {earthquake_ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=i.id_event)}. \n {TWEET_CONCLUSION_TEXT}"
-                item = {
-                    "post": text,
-                    "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
-                    "id_event": i.id_event,
-                }
+        if content is None:
+            _logger.info(f"Skipping {event}. The url returned none type. url: {url}")
+            return None
 
-                record_exist = conn.fetch_single(
-                    model=Post, column="id_event", item=i.id_event
+        if content.get("error") == "Unable to geocode":
+            _logger.info(f"unable to get geocode for {event} content: {content} ")
+            return dict(id_event=id_event)
+        try:
+            return dict(
+                id_event=id_event,
+                id_place=content.get("place_id"),
+                category=content.get("category"),
+                place_rank=content.get("place_rank"),
+                address_type=content.get("addresstype"),
+                place_importance=content.get("importance"),
+                name=content.get("name"),
+                display_name=content.get("display_name"),
+                country=countries.get(
+                    alpha_2=content["address"].get("country_code").upper()
+                ).name,
+                state=content["address"].get("state"),
+                region=content["address"].get("region"),
+                country_code=content["address"].get("country_code").upper(),
+                boundingbox=content.get("boundingbox"),
+            )
+
+        except Exception as e:
+            _logger.error(
+                f"Encountered an error while attempting to extract long, and lattiude {e} content: {content} event {event}  url: {url}"
+            )
+        return None
+
+    def _parallelize_fetch_location_details(self, event):
+        with ThreadPoolExecutor() as executor:
+            location_details = list(executor.map(self._fetch_location_detail, event))
+        return location_details
+
+    @timer
+    def upload(self, date, parralel: bool = False):
+        new_events = self._extract(date=date)
+        if new_events:
+            if parralel:
+                location_details = self._parallelize_fetch_location_details(
+                    event=new_events
                 )
 
-                record_count = sum([1 for _ in record_exist])
+            else:
+                location_details = [
+                    self._fetch_location_detail(event=event) for event in new_events
+                ]
+                _logger.info(f"Completed the extractions of url content for {date} ")
 
-                if record_count < 1:
-                    conn.insert(Post(**item))
-                    _logger.info(text)
-                    try:
-                        tweet.post_tweet(tweet=text)
-                        _logger.info(
-                            "Recorded recent tweet posted in the database  recent into the Database "
-                        )
-                    except Exception as e:
-                        _logger.error(f"Encountered an unexpected error: {e}")
-                else:
-                    _logger.info("Tweet already posted")
+            for location in tqdm(location_details):
+                try:
+                    LocationDetails(**location)
+                except Exception as e:
+                    _logger.error(
+                        f"Encountered an error while attempting to add location to the database. {location}, {e}"
+                    )
 
-    else:
-        _logger.info(
-            f"No recent earthquakes with a magnitude of {threshold} or higher were found. Nothing was posted to the database."
+            self.conn.insert_many(location_details)
+            _logger.info(f"Added {len(location_details)} location detail for {date}")
+        else:
+            _logger.info(f"No new location records to add for {date}")
+        return None
+
+    @timer
+    def backfill(self, start_date: str, end_date: str, interval: int = 1):
+        date_range = generate_date_range(
+            start_date=start_date, end_date=end_date, interval=interval
         )
+        _logger.info(
+            f"Backfill for earthquake locations between {start_date} and {end_date}"
+        )
+        for start, _ in date_range:
+            _logger.info(f"Starting backfill for earthquake locations on {start}")
+            self.upload(date=start, parralel=True)
+            _logger.info(f"Complete backfill for earthquake locations on {start}")
+
+
+class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
+
+    def _extract(self) -> List:
+        query = (
+            self.conn.session.query(
+                EventDetails.id_event,
+                EventDetails.title,
+                EventDetails.ts_event_utc,
+                EventDetails.mag,
+            )
+            .join(
+                Post,
+                Post.id_event == EventDetails.id_event,
+                isouter=True,
+            )
+            .filter(
+                EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
+                TIMESTAMP_NOW - func.timezone("UTC", EventDetails.ts_event_utc)
+                < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
+                Post.id_event == None,
+            )
+        )
+        return query.all()
+
+    def upload(self):
+
+        eligible_quakes = self._extract()
+        if not eligible_quakes:
+            _logger.info(
+                f"No recent earthquakes with a magnitude of {EARTHQUAKE_POST_THRESHOLD} or higher were found. Nothing was posted to the database."
+            )
+            return None
+
+        for quake in eligible_quakes:
+
+            duration = TIMESTAMP_NOW - quake.ts_event_utc.replace(tzinfo=timezone.utc)
+            earthquake_ts_event = quake.ts_event_utc.strftime("%H:%M:%S")
+
+            item = format_earthquake_alert(
+                id_event=quake.id_event,
+                ts_event=earthquake_ts_event,
+                duration=duration,
+                title=quake.title,
+            )
+
+            try:
+                self.conn.insert(Post(**item))
+                _logger.info(item)
+                self.post_tweet(tweet=item.get("post"))
+                _logger.info(
+                    "Recorded recent tweet posted in the database recent into the Database "
+                )
+
+            except Exception as e:
+                _logger.error(
+                    f"Encountered an error while attempting to post {item}. {e} "
+                )
+
+        return None
 
 
 def get_date_range_summary(
-    conn: Session, model: Type[Base], start_date: str, end_date: str
-) -> List[Base]:
+    conn: Session, model: Type[ModelType], start_date: str, end_date: str
+) -> List[ModelType]:
     """
     Retrieves all records from a specified database model within a given date range.
 

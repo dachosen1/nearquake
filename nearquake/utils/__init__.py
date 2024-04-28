@@ -2,11 +2,15 @@ import requests
 import json
 import os
 import logging
+import time
+
 from PIL import Image
 from io import BytesIO
+from functools import wraps
 
+from datetime import datetime, timezone, timedelta
 
-from datetime import datetime, timezone
+from nearquake.config import TIMESTAMP_NOW, EVENT_DETAIL_URL, tweet_conclusion_text
 
 _logger = logging.getLogger(__name__)
 
@@ -155,7 +159,7 @@ def fetch_json_data_from_url(url):
 
     """
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=30)
         response.raise_for_status()  # Raise an HTTPError for bad requests (4xx or 5xx)
 
         try:
@@ -202,42 +206,28 @@ def convert_timestamp_to_utc(timestamp: int):
     return datetime.fromtimestamp(timestamp / 1000, timezone.utc)
 
 
-def generate_date_range(start_date: str, end_date: str):
+def generate_date_range(start_date, end_date, interval) -> tuple:
     """
-    Generates a list of [year, month] pairs between two specified dates.
+    Generates a list of (start_date, end_date) tuples where each tuple represents a range.
+    Each range starts at 'start_date' and ends at the minimum of 'end_date' or 'start_date' + 'interval', incremented by 'interval' days.
 
-    This function creates a range of dates from the start date to the end date, inclusive.
-    It assumes that the provided dates are in 'YYYY-MM' format. The function iterates
-    through each year and month within the specified range and returns a list of [year, month]
-    pairs.
 
-    Example:
-        >>> generate_date_range('2020-01-01', '2020-03-01')
-        [[2020, 1], [2020, 2], [2020, 3]]
-
-    :param start_date: The start date in 'YYYY-MM' format.
-    :param end_date: The end date in 'YYYY-MM' format.
-    :return: list of [int, int]: A list where each element is a list containing two integers, the first being the year and the second the month, for each
-    month in the range from start_date to end_date, inclusive.
-
+    :param start_date: The beginning date of the range (format: 'YYYY-MM-DD').
+    :param end_date: The ending date of the range (format: 'YYYY-MM-DD').
+    :param interval: The number of days to increment each start date within the range.
+    :return: A list of tuples, each containing a start and end date.
     """
 
-    # Parse the start and end dates
-    start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
-    end_datetime = datetime.strptime(end_date, "%Y-%m-%d")
+    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-    # Check if the start date is later than the end date
-    if start_datetime > end_datetime:
-        logging.error("Start time cannot be greater than end time")
-        raise ValueError(f"Start time cannot be greater than end time")
-
+    current_start_date = start_date
     date_list = []
 
-    for year in range(start_datetime.year, end_datetime.year + 1):
-        start_month = start_datetime.month if year == start_datetime.year else 1
-        end_month = end_datetime.month if year == end_datetime.year else 12
-        for month in range(start_month, end_month + 1):
-            date_list.append([year, month])
+    while current_start_date < end_date:
+        current_end_date = min(end_date, current_start_date + timedelta(days=interval))
+        date_list.append((current_start_date, current_end_date))
+        current_start_date = current_end_date
 
     return date_list
 
@@ -257,3 +247,64 @@ def create_dir(path: str):
         raise ValueError
 
     return None
+
+
+def format_earthquake_alert(
+    title: str,
+    ts_event: str,
+    duration: timedelta,
+    id_event: str,
+) -> dict:
+    """
+    _summary_
+
+    :param title: _description_
+    :param ts_event: _description_
+    :param duration: _description_
+    :param id_event: _description_
+    :return: _description_
+    """
+
+    item = {
+        "post": f"Recent #Earthquake: {title} reported at {ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
+        "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
+        "id_event": id_event,
+    }
+
+    return item
+
+
+def convert_datetime(date: datetime, format_type: str = "date") -> str:
+    """
+    Convert a datetime object to a formatted string.
+
+    :param date: The datetime object to format.
+    :param format_type: The type of format to apply. Options are date or timestamp defaults to 'date'
+    :return: The formatted date string.
+    """
+    if format_type == "date":
+        return date.strftime("%Y-%m-%d")
+    elif format_type == "timestamp":
+        return date.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        raise ValueError("Invalid format_type. Only 'date' or 'timestamp' are allowed.")
+
+
+def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_ts = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_ts = time.perf_counter()
+        duration = end_ts - start_ts
+        if duration < 60:
+            value, period = duration, "seconds"
+        elif duration < 3600:
+            value, period = duration // 60, "minutes"
+        else:
+            value, period = duration // 3600, "minutes"
+
+        _logger.info(f"{func.__name__} completed in {value:.0f} {period}")
+        return result
+
+    return wrapper

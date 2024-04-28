@@ -9,9 +9,11 @@ from sqlalchemy import (
     Integer,
     String,
     TIMESTAMP,
+    Text,
     create_engine,
+    ForeignKey,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -44,6 +46,7 @@ class EventDetails(Base):
     title = Column(String(200), comment="Title of the earthquake event")
     date = Column(Date, comment="Date of the earthquake")
     place = Column(String(200), comment="Place of the event")
+    location = relationship("LocationDetails", back_populates="event_detail")
 
 
 class Post(Base):
@@ -57,8 +60,55 @@ class Post(Base):
         comment="Post ID",
     )
     post = Column(String(2000), comment="Content of the tweet")
-    id_event = Column(String(50), comment="Earthquake event id")
-    ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
+    id_event = Column(
+        String(50),
+        ForeignKey("earthquake.fct__event_details.id_event"),
+        unique=True,
+        comment="Earthquake event id",
+    )
+    post_type = Column(String(50), nullable=True, comment="Type of post event, or fact")
+    prompt = Column(String(50), nullable=True, comment="Generative AI Prompt")
+    ts_upload_utc = Column(
+        TIMESTAMP, nullable=True, comment="Timestamp tweet was posted "
+    )
+
+
+class LocationDetails(Base):
+    __tablename__ = "dim__location_details"
+    __table_args__ = {"schema": "earthquake"}
+
+    id_event = Column(
+        String(50),
+        ForeignKey("earthquake.fct__event_details.id_event"),
+        primary_key=True,
+    )
+    id_place = Column(Integer, comment="Place ID")
+    category = Column(
+        String(50), nullable=True, comment="General category of the place"
+    )
+    place_rank = Column(Integer, nullable=True, comment="Ranking of the place")
+    place_importance = Column(
+        Float, nullable=True, comment="Numerical importance of the place"
+    )
+    name = Column(String(300), nullable=True, comment="Name of the place")
+    display_name = Column(
+        String(255), nullable=True, comment="Full display name of the place"
+    )
+    address_type = Column(String(255), nullable=True, comment="type of address")
+    country = Column(
+        String(100), nullable=True, comment="Country where the place is located"
+    )
+    state = Column(
+        String(100), nullable=True, comment="State where the place is located"
+    )
+    region = Column(
+        String(100),
+        nullable=True,
+        comment="Region or administrative area where the place is located",
+    )
+    country_code = Column(String(10), nullable=True, comment="Country code (ISO code)")
+    boundingbox = Column(Text, nullable=True, comment="coordinate bounding  box ")
+    event_detail = relationship("EventDetails", back_populates="location")
 
 
 def create_schema(engine, schema_names):

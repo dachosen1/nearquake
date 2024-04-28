@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
+import datetime
 import requests
 
 from nearquake.utils import (
@@ -12,18 +13,16 @@ from nearquake.utils import (
 
 
 def test_generate_date_range():
-    assert generate_date_range(start_date="2023-01-01", end_date="2023-02-01") == [
-        [2023, 1],
-        [2023, 2],
-    ]
-    assert generate_date_range(start_date="2010-01-01", end_date="2010-01-01") == [
-        [2010, 1],
-    ]
+    assert generate_date_range(
+        start_date="2023-01-01", end_date="2023-02-01", interval=31
+    ) == [(datetime.datetime(2023, 1, 1, 0, 0), datetime.datetime(2023, 2, 1, 0, 0))]
 
 
-def test_generate_date_range_value_error():
-    with pytest.raises(ValueError):
-        generate_date_range(start_date="2023-01-01", end_date="2022-01-01")
+def test_generate_date_range_negative():
+
+    generate_date_range(
+        start_date="2023-01-01", end_date="2022-01-01", interval=15
+    ) == []
 
 
 def test_convert_time_to_utc():

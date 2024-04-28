@@ -2,6 +2,7 @@ black==24.4.0
 openai==1.23.2
 pillow==10.2.0
 psycopg2-binary==2.9.9
+pycountry==23.12.11
 python-dotenv==1.0.0
 requests==2.31.0
 SQLAlchemy==2.0.24
