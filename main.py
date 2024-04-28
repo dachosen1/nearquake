@@ -171,7 +171,7 @@ if __name__ == "__main__":
                 "Backfill earthquake.dim__event_location: True or Blank "
             )
 
-            if backfill_event == 'True':
+            if backfill_event == "True":
                 run.backfill(start_date=start_date, end_date=end_date)
 
             if backfill_location == "True":
