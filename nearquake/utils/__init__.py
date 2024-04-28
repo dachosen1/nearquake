@@ -116,20 +116,20 @@ def extract_image(image_data: bytes) -> Image.Image:
     return image
 
 
-def save_content(content: bytes, id: str, directory: str = "image"):
+def save_content(content: bytes, content_id: str, directory: str = "image"):
     """
     save byte content into a specified directory.
 
-    :param id_: Identifier to be used in the image file name.
+    :param content_id: Identifier to be used in the image file name.
     :param directory: Directory where the image will be saved. Defaults to 'image'.
     :return: None
     """
 
     os.makedirs(directory, exist_ok=True)
-    file_path = os.path.join(directory, f"{id}.jpg")
+    file_path = os.path.join(directory, f"{content_id}.jpg")
 
     try:
-        with open(os.path.join(directory, f"{id}.jpg"), "wb") as f:
+        with open(os.path.join(directory, f"{content_id}.jpg"), "wb") as f:
             f.write(content)
             _logger.info(f"Image downloaded and saved to {file_path}")
 

@@ -1,6 +1,8 @@
 FROM python:3.12.3-slim
 
-RUN apt-get update && apt-get -y install cron
+RUN apt-get update && apt-get -y install cron \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 

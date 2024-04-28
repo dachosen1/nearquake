@@ -95,7 +95,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            tweet.post_tweet(tweet=item, conn=conn)
+            tweet.post_tweet(item=item, conn=conn)
             loc.upload(date=today.strftime("%Y-%m-%d"))
 
         if args.weekly:
