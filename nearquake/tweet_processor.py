@@ -52,7 +52,7 @@ class TweetOperator:
         client = self._connect()
 
         try:
-            # client.create_tweet(text=item.get("post"))
+            client.create_tweet(text=item.get("post"))
             conn.insert(Post(**item))
             _logger.info(f"Latest post to twitter {item}")
         except Exception as e:
