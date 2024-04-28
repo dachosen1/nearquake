@@ -204,23 +204,23 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             )
 
         try:
-            return dict(
-                id_event=id_event,
-                id_place=content.get("place_id"),
-                category=content.get("category"),
-                place_rank=content.get("place_rank"),
-                address_type=content.get("addresstype"),
-                place_importance=content.get("importance"),
-                name=content.get("name"),
-                display_name=content.get("display_name"),
-                country=countries.get(
+            return {
+                "id_event": id_event,
+                "id_place": content.get("place_id"),
+                "category": content.get("category"),
+                "place_rank": content.get("place_rank"),
+                "address_type": content.get("addresstype"),
+                "place_importance": content.get("importance"),
+                "name": content.get("name"),
+                "display_name": content.get("display_name"),
+                "country": countries.get(
                     alpha_2=content["address"].get("country_code").upper()
                 ).name,
-                state=content["address"].get("state"),
-                region=content["address"].get("region"),
-                country_code=content["address"].get("country_code").upper(),
-                boundingbox=content.get("boundingbox"),
-            )
+                "state": content["address"].get("state"),
+                "region": content["address"].get("region"),
+                "country_code": content["address"].get("country_code").upper(),
+                "boundingbox": content.get("boundingbox"),
+            }
 
         except Exception as e:
             _logger.error(
