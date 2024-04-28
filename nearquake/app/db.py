@@ -46,6 +46,7 @@ class EventDetails(Base):
     title = Column(String(200), comment="Title of the earthquake event")
     date = Column(Date, comment="Date of the earthquake")
     place = Column(String(200), comment="Place of the event")
+    location = relationship("LocationDetails", back_populates="event_detail")
 
 
 class Post(Base):
@@ -59,8 +60,17 @@ class Post(Base):
         comment="Post ID",
     )
     post = Column(String(2000), comment="Content of the tweet")
-    id_event = Column(String(50), comment="Earthquake event id")
-    ts_upload_utc = Column(TIMESTAMP, comment="Timestamp tweet was posted ")
+    id_event = Column(
+        String(50),
+        ForeignKey("earthquake.fct__event_details.id_event"),
+        unique=True,
+        comment="Earthquake event id",
+    )
+    post_type = Column(String(50), nullable=True, comment="Type of post event, or fact")
+    prompt = Column(String(50), nullable=True, comment="Generative AI Prompt")
+    ts_upload_utc = Column(
+        TIMESTAMP, nullable=True, comment="Timestamp tweet was posted "
+    )
 
 
 class LocationDetails(Base):
@@ -98,7 +108,7 @@ class LocationDetails(Base):
     )
     country_code = Column(String(10), nullable=True, comment="Country code (ISO code)")
     boundingbox = Column(Text, nullable=True, comment="coordinate bounding  box ")
-    event_details = relationship("EventDetails")
+    event_detail = relationship("EventDetails", back_populates="location")
 
 
 def create_schema(engine, schema_names):

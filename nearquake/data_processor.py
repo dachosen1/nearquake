@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta, UTC
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
-
+from tqdm import tqdm
 from sqlalchemy import desc, and_, func
 from sqlalchemy.orm import Session
 from pycountry import countries
@@ -81,7 +81,9 @@ class UploadEarthQuakeEvents(BaseDataUploader):
         except TypeError:
             new_events = data["features"]
         except Exception as e:
-            _logger.error(f"Encountered an unexpected error: {e}")
+            _logger.error(
+                f"Encountered an unexpected error: {e} {event_ids_from_api} {new_events}"
+            )
         return new_events
 
     def _fetch_event_details(self, event) -> EventDetails:
@@ -121,7 +123,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
 
         if len(new_event) > 0:
             new_event_list = [
-                self._fetch_event_details(event=event) for event in new_event
+                self._fetch_event_details(event=event) for event in tqdm(new_event)
             ]
 
             self.conn.insert_many(new_event_list)
@@ -190,36 +192,42 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
     def _fetch_location_detail(self, event) -> LocationDetails:
         id_event, lat, long = event
-        url = generate_coordinate_lookup_detail_url(lat=lat, long=long)
+        url = generate_coordinate_lookup_detail_url(
+            lat=round(lat, 3), long=round(long, 3)
+        )
         content = fetch_json_data_from_url(url=url)
 
+        if content is None:
+            _logger.info(f"Skipping {event}. The url returned none type. url: {url}")
+            return None
+
+        if content.get("error") == "Unable to geocode":
+            _logger.info(f"unable to get geocode for {event} content: {content} ")
+            return dict(id_event=id_event)
         try:
-            if content.get("error") != "Unable to geocode":
-                return LocationDetails(
-                    id_event=id_event,
-                    id_place=content.get("place_id"),
-                    category=content.get("category"),
-                    place_rank=content.get("place_rank"),
-                    address_type=content.get("addresstype"),
-                    place_importance=content.get("importance"),
-                    name=content.get("name"),
-                    display_name=content.get("display_name"),
-                    country=countries.get(
-                        alpha_2=content["address"].get("country_code").upper()
-                    ).name,
-                    state=content["address"].get("state"),
-                    region=content["address"].get("region"),
-                    country_code=content["address"].get("country_code").upper(),
-                    boundingbox=content.get("boundingbox"),
-                )
-            else:
-                return LocationDetails(id_event=id_event)
+            return dict(
+                id_event=id_event,
+                id_place=content.get("place_id"),
+                category=content.get("category"),
+                place_rank=content.get("place_rank"),
+                address_type=content.get("addresstype"),
+                place_importance=content.get("importance"),
+                name=content.get("name"),
+                display_name=content.get("display_name"),
+                country=countries.get(
+                    alpha_2=content["address"].get("country_code").upper()
+                ).name,
+                state=content["address"].get("state"),
+                region=content["address"].get("region"),
+                country_code=content["address"].get("country_code").upper(),
+                boundingbox=content.get("boundingbox"),
+            )
 
         except Exception as e:
             _logger.error(
-                f"Encountered an error while attempting to extract long, and lattiude {e}"
+                f"Encountered an error while attempting to extract long, and lattiude {e} content: {content} event {event}  url: {url}"
             )
-            return None
+        return None
 
     def _parallelize_fetch_location_details(self, event):
         with ThreadPoolExecutor() as executor:
@@ -229,17 +237,30 @@ class UploadEarthQuakeLocation(BaseDataUploader):
     @timer
     def upload(self, date, parralel: bool = False):
         new_events = self._extract(date=date)
-        if parralel:
-            location_details = self._parallelize_fetch_location_details(
-                event=new_events
-            )
+        if new_events:
+            if parralel:
+                location_details = self._parallelize_fetch_location_details(
+                    event=new_events
+                )
 
+            else:
+                location_details = [
+                    self._fetch_location_detail(event=event) for event in new_events
+                ]
+                _logger.info(f"Completed the extractions of url content for {date} ")
+
+            for location in tqdm(location_details):
+                try:
+                    LocationDetails(**location)
+                except Exception as e:
+                    _logger.error(
+                        f"Encountered an error while attempting to add location to the database. {location}, {e}"
+                    )
+
+            self.conn.insert_many(location_details)
+            _logger.info(f"Added {len(location_details)} location detail for {date}")
         else:
-            location_details = [
-                self._fetch_location_detail(event=event) for event in new_events
-            ]
-
-        self.conn.insert_many(location_details)
+            _logger.info(f"No new location records to add for {date}")
         return None
 
     @timer
@@ -251,15 +272,9 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             f"Backfill for earthquake locations between {start_date} and {end_date}"
         )
         for start, _ in date_range:
-            start = start.strftime("%Y-%m-%d")
-            start_ts = datetime.now(UTC)
             _logger.info(f"Starting backfill for earthquake locations on {start}")
             self.upload(date=start, parralel=True)
-            end_ts = datetime.now(UTC)
-            duration = (end_ts - start_ts).total_seconds() / 60
-            _logger.info(
-                f"Backfill for earthquake locations completed for {start}, and took {duration:.0f} minutes"
-            )
+            _logger.info(f"Complete backfill for earthquake locations on {start}")
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
@@ -317,7 +332,7 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
 
             except Exception as e:
                 _logger.error(
-                    f"Encountered an error while attempting to post tweet. {e}"
+                    f"Encountered an error while attempting to post {item}. {e} "
                 )
 
         return None
