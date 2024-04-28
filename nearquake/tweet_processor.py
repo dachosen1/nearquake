@@ -2,7 +2,7 @@ import logging
 
 import tweepy
 
-from nearquake.config import TWITER_AUTHENTICATION
+from nearquake.config import TWITTER_AUTHENTICATION
 from nearquake.app.db import Post
 
 
@@ -23,11 +23,11 @@ class TweetOperator:
         """
 
         client = tweepy.Client(
-            bearer_token=TWITER_AUTHENTICATION["BEARER_TOKEN"],
-            consumer_key=TWITER_AUTHENTICATION["CONSUMER_KEY"],
-            consumer_secret=TWITER_AUTHENTICATION["CONSUMER_SECRET"],
-            access_token=TWITER_AUTHENTICATION["ACCESS_TOKEN"],
-            access_token_secret=TWITER_AUTHENTICATION["ACCESS_TOKEN_SECRET"],
+            bearer_token=TWITTER_AUTHENTICATION["BEARER_TOKEN"],
+            consumer_key=TWITTER_AUTHENTICATION["CONSUMER_KEY"],
+            consumer_secret=TWITTER_AUTHENTICATION["CONSUMER_SECRET"],
+            access_token=TWITTER_AUTHENTICATION["ACCESS_TOKEN"],
+            access_token_secret=TWITTER_AUTHENTICATION["ACCESS_TOKEN_SECRET"],
         )
 
         return client
