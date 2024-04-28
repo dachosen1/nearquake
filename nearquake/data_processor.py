@@ -198,9 +198,11 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             _logger.info(f"Skipping {event}. The url returned none type. url: {url}")
             return None
 
-        if content.get("error") == "Unable to geocode":
-            _logger.info(f"unable to get geocode for {event} content: {content} ")
-            return dict(id_event=id_event)
+        if content.get("error") is not None:
+            _logger.error(
+                f"unable to get geocode for {event} content: {content} due to {content.get('error')} error "
+            )
+
         try:
             return dict(
                 id_event=id_event,
