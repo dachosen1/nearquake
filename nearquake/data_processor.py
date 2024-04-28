@@ -321,7 +321,7 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
             )
 
             try:
-                self.post_tweet(item=item)
+                self.post_tweet(item=item, conn=self.conn)
                 _logger.info(
                     "Recorded recent tweet posted in the database recent into the Database "
                 )

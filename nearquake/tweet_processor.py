@@ -16,9 +16,6 @@ class TweetOperator:
     Class to perform operations on Twitter such as posting tweets.
     """
 
-    def __init__(self, conn) -> None:
-        self.conn = conn
-
     def _auth(self) -> TwitterAuth:
         """
         Authenticate with Twitter API credentials.
@@ -47,7 +44,7 @@ class TweetOperator:
 
         return client
 
-    def post_tweet(self, item: dict) -> None:
+    def post_tweet(self, item: dict, conn=None) -> None:
         """
         Post a tweet to twitter
         :param tweet: The content of the tweet to be posted.
@@ -55,8 +52,8 @@ class TweetOperator:
         client = self._connect()
 
         try:
-            client.create_tweet(text=item.get("post"))
-            self.conn.insert(Post(**item))
+            # client.create_tweet(text=item.get("post"))
+            conn.insert(Post(**item))
             _logger.info(f"Latest post to twitter {item}")
         except Exception as e:
             _logger.info(f"Did not post {item}.")

@@ -93,7 +93,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            tweet.post_tweet(tweet=item)
+            tweet.post_tweet(tweet=item, conn=conn)
             loc.upload(date=today.strftime("%Y-%m-%d"))
 
         if args.weekly:
@@ -118,7 +118,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            tweet.post_tweet(item=item)
+            tweet.post_tweet(item=item, conn=conn)
 
         if args.monthly:
             run.upload(url=generate_time_period_url("month"))
@@ -142,7 +142,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            tweet.post_tweet(item=item)
+            tweet.post_tweet(item=item, conn=conn)
 
         if args.initialize:
             url = ConnectionConfig()
@@ -158,7 +158,7 @@ if __name__ == "__main__":
                 post_type="fact", message=message, prompt=prompt
             )
 
-            tweet.post_tweet(item=item)
+            tweet.post_tweet(item=item, conn=conn)
 
         if args.backfill:
             start_date = input("Type Start Date:")
