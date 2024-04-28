@@ -21,7 +21,7 @@ class DbSessionManager:
     """
 
     def __init__(self, url) -> None:
-        self.config = url
+        self.url = url
 
     def create_engine(self):
         return create_engine(url=self.url)
