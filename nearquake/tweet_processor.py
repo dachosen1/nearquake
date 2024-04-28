@@ -2,7 +2,7 @@ import logging
 
 import tweepy
 
-from nearquake.config import TwitterAuth
+from nearquake.config import TWITER_AUTHENTICATION
 from nearquake.app.db import Post
 
 
@@ -14,16 +14,6 @@ class TweetOperator:
     Class to perform operations on Twitter such as posting tweets.
     """
 
-    def _auth(self) -> TwitterAuth:
-        """
-        Authenticate with Twitter API credentials.
-
-        Returns:
-            TwitterAuth: An object containing the authentication credentials.
-        """
-        auth = TwitterAuth()
-        return auth
-
     def _connect(self) -> tweepy.client:
         """
         Create a Tweepy client using authenticated credentials.
@@ -31,13 +21,13 @@ class TweetOperator:
         Returns:
             tweepy.Client: A Tweepy client object for interacting with Twitter API.
         """
-        auth = self._auth()
+
         client = tweepy.Client(
-            bearer_token=auth.BEARER_TOKEN,
-            consumer_key=auth.CONSUMER_KEY,
-            consumer_secret=auth.CONSUMER_SECRET,
-            access_token=auth.ACCESS_TOKEN,
-            access_token_secret=auth.ACCESS_TOKEN_SECRET,
+            bearer_token=TWITER_AUTHENTICATION["BEARER_TOKEN"],
+            consumer_key=TWITER_AUTHENTICATION["CONSUMER_KEY"],
+            consumer_secret=TWITER_AUTHENTICATION["CONSUMER_SECRET"],
+            access_token=TWITER_AUTHENTICATION["ACCESS_TOKEN"],
+            access_token_secret=TWITER_AUTHENTICATION["ACCESS_TOKEN_SECRET"],
         )
 
         return client

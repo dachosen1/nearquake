@@ -1,7 +1,6 @@
 import os
 import logging
 import random
-from dataclasses import dataclass, field
 from datetime import datetime, UTC
 
 from dotenv import load_dotenv
@@ -66,47 +65,25 @@ def generate_time_period_url(time_period: int) -> str:
         return API_BASE_URL.format(time_period=time_period)
 
 
-@dataclass()
-class ConnectionConfig:
-    user: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_USERNAME"))
-    host: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_HOST"))
-    dbname: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_DATABASE"))
-    port: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_PORT"))
-    password: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_PASSWORD"))
-    sqlengine: str = field(default_factory=lambda: os.environ.get("NEARQUAKE_ENGINE"))
+DB_AUTHENTICATION = {
+    "user": os.environ.get("NEARQUAKE_USERNAME"),
+    "host": os.environ.get("NEARQUAKE_HOST"),
+    "dbname": os.environ.get("NEARQUAKE_DATABASE"),
+    "port": os.environ.get("NEARQUAKE_PORT"),
+    "password": os.environ.get("NEARQUAKE_PASSWORD"),
+    "sqlengine": os.environ.get("NEARQUAKE_ENGINE"),
+}
 
-    def __post_init__(self):
-        missing = [
-            attr
-            for attr in ["user", "host", "dbname", "port", "password", "sqlengine"]
-            if getattr(self, attr) is None
-        ]
-        if missing:
-            error_message = (
-                f"The following attributes are not specified: {', '.join(missing)}"
-            )
-            _logger.error(error_message)
-            raise ValueError(error_message)
-
-    def generate_connection_url(self) -> str:
-        _logger.info(
-            f"Successfully generated the URL to connect to the {self.dbname} database using the {self.sqlengine} engine."
-        )
-        return f"{self.sqlengine}://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}"
+POSTGRES_CONNECTION_URL = f"{DB_AUTHENTICATION['sqlengine']}://{DB_AUTHENTICATION['user']}:{DB_AUTHENTICATION['password']}@{DB_AUTHENTICATION['host']}:{DB_AUTHENTICATION['port']}/{DB_AUTHENTICATION['dbname']}"
 
 
-@dataclass()
-class TwitterAuth:
-    CONSUMER_KEY: str = field(default_factory=lambda: os.environ.get("CONSUMER_KEY"))
-    CONSUMER_SECRET: str = field(
-        default_factory=lambda: os.environ.get("CONSUMER_SECRET")
-    )
-    ACCESS_TOKEN: str = field(default_factory=lambda: os.environ.get("ACCESS_TOKEN"))
-    ACCESS_TOKEN_SECRET: str = field(
-        default_factory=lambda: os.environ.get("ACCESS_TOKEN_SECRET")
-    )
-    BEARER_TOKEN: str = field(default_factory=lambda: os.environ.get("BEARER_TOKEN"))
-
+TWITER_AUTHENTICATION = {
+    "CONSUMER_KEY": os.environ.get("CONSUMER_KEY"),
+    "CONSUMER_SECRET": os.environ.get("CONSUMER_SECRET"),
+    "ACCESS_TOKEN": os.environ.get("ACCESS_TOKEN"),
+    "ACCESS_TOKEN_SECRET": os.environ.get("ACCESS_TOKEN_SECRET"),
+    "BEARER_TOKEN": os.environ.get("BEARER_TOKEN"),
+}
 
 TWEET_CONCLUSION = [
     "How do you prepare? Share tips and stay safe! #earthquakePrep. Data provided by #usgs",
@@ -166,7 +143,3 @@ def generate_coordinate_lookup_detail_url(lat, long) -> str:
 def tweet_conclusion_text():
     tweet_conclusion_text = random.choice(TWEET_CONCLUSION)
     return tweet_conclusion_text
-
-
-def chat_prompt():
-    return random.choice(CHAT_PROMPT)

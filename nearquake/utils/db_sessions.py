@@ -12,7 +12,7 @@ class DbSessionManager:
 
     Example usage:
 
-    conn = DbSessionManager(config=ConnectionConfig())
+    conn = DbSessionManager(url=url))
 
     with conn :
         item = {"id_event": 'c-jjerh', "longitude": 982.28, "latitude": 129.827}
@@ -20,20 +20,19 @@ class DbSessionManager:
         conn.insert(row)
     """
 
-    def __init__(self, config) -> None:
-        self.config = config
-        _logger.info("DbSessionManager initialized with given configuration.")
+    def __init__(self, url) -> None:
+        self.config = url
 
     def create_engine(self):
-        return create_engine(url=self.config.generate_connection_url())
+        return create_engine(url=self.url)
 
     def connect(self):
         """Establishes a connection to the database using the provided configuration."""
         try:
             self.engine = self.create_engine()
-            _logger.info("Successfully established connection to the database.")
             Session = sessionmaker(bind=self.engine)
             self.session = Session()
+            _logger.info("Successfully established connection to the database.")
 
         except Exception as e:
             _logger.error("Failed to connect to the database: %s", e, exc_info=True)

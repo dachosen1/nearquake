@@ -11,7 +11,7 @@ from nearquake.data_processor import (
 from nearquake.config import (
     generate_time_period_url,
     tweet_conclusion_text,
-    ConnectionConfig,
+    POSTGRES_CONNECTION_URL,
     CHAT_PROMPT,
     EARTHQUAKE_POST_THRESHOLD,
 )
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    conn = DbSessionManager(config=ConnectionConfig())
+    conn = DbSessionManager(url=POSTGRES_CONNECTION_URL)
 
     with conn:
         run = UploadEarthQuakeEvents(conn=conn)
@@ -147,10 +147,7 @@ if __name__ == "__main__":
             tweet.post_tweet(item=item, conn=conn)
 
         if args.initialize:
-            url = ConnectionConfig()
-            create_database(
-                url.generate_connection_url(), schema=["earthquake", "tweet"]
-            )
+            create_database(url=POSTGRES_CONNECTION_URL, schema=["earthquake", "tweet"])
 
         if args.fun:
             prompt = random.choice(CHAT_PROMPT)
