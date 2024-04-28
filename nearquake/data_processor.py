@@ -6,7 +6,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
 from tqdm import tqdm
-from sqlalchemy import  and_, func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from pycountry import countries
 
@@ -80,9 +80,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             new_events = data["features"]
 
         except Exception as e:
-            _logger.error(
-                f"Encountered an unexpected error: {e} {event_ids_from_api}"
-            )
+            _logger.error(f"Encountered an unexpected error: {e} {event_ids_from_api}")
         return new_events
 
     def _fetch_event_details(self, event) -> EventDetails:
