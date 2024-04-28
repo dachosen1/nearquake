@@ -20,7 +20,8 @@ from nearquake.open_ai_client import generate_response
 from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.app.db import create_database
 
-from nearquake.utils import format_earthquake_alert
+from nearquake.utils import format_earthquake_alert, convert_datetime
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Nearquake Data Processor")
@@ -72,6 +73,7 @@ if __name__ == "__main__":
             for time in ["hour", "day", "week"]:
                 run.upload(url=generate_time_period_url(time))
                 tweet.upload()
+                loc.upload(date=convert_datetime(datetime.now().date()))
 
         if args.daily:
             today = datetime.now().date()
