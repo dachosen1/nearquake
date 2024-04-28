@@ -20,6 +20,8 @@ from nearquake.open_ai_client import generate_response
 from nearquake.utils.db_sessions import DbSessionManager
 from nearquake.app.db import create_database
 
+from nearquake.utils import format_earthquake_alert
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Nearquake Data Processor")
 
@@ -86,7 +88,12 @@ if __name__ == "__main__":
             )
             TWEET_CONCLUSION_TEXT = tweet_conclusion_text()
             message = f"Yesterday, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
-            tweet.post_tweet(tweet=message)
+
+            item = format_earthquake_alert(
+                post_type="fact",
+                message=message,
+            )
+            tweet.post_tweet(tweet=item)
             loc.upload(date=today.strftime("%Y-%m-%d"))
 
         if args.weekly:
@@ -106,7 +113,12 @@ if __name__ == "__main__":
             TWEET_CONCLUSION_TEXT = tweet_conclusion_text()
 
             message = f"During the past week, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
-            tweet.post_tweet(tweet=message)
+
+            item = format_earthquake_alert(
+                post_type="fact",
+                message=message,
+            )
+            tweet.post_tweet(item=item)
 
         if args.monthly:
             run.upload(url=generate_time_period_url("month"))
@@ -125,7 +137,12 @@ if __name__ == "__main__":
             TWEET_CONCLUSION_TEXT = tweet_conclusion_text()
 
             message = f"During the past month, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
-            tweet.post_tweet(tweet=message)
+
+            item = format_earthquake_alert(
+                post_type="fact",
+                message=message,
+            )
+            tweet.post_tweet(item=item)
 
         if args.initialize:
             url = ConnectionConfig()
@@ -134,8 +151,14 @@ if __name__ == "__main__":
             )
 
         if args.fun:
-            content = generate_response(prompt=random.choice(CHAT_PROMPT))
-            tweet.post_tweet(tweet=content)
+            prompt = random.choice(CHAT_PROMPT)
+            message = generate_response(prompt=prompt)
+
+            item = format_earthquake_alert(
+                post_type="fact", message=message, prompt=prompt
+            )
+
+            tweet.post_tweet(item=item)
 
         if args.backfill:
             start_date = input("Type Start Date:")

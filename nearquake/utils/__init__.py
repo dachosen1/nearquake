@@ -250,26 +250,45 @@ def create_dir(path: str):
 
 
 def format_earthquake_alert(
-    title: str, ts_event: str, duration: timedelta, id_event: str, post_type: str
+    post_type: str,
+    title: str = None,
+    ts_event: str = None,
+    duration: timedelta = None,
+    id_event: str = None,
+    message: str = None,
+    prompt: str = None,
 ) -> dict:
     """
-    _summary_
+    Formats an alert for an earthquake event or fact.
 
-    :param title: _description_
-    :param ts_event: _description_
-    :param duration: _description_
-    :param id_event: _description_
-    :return: _description_
+    :param ts_event: Timestamp of the earthquake occurrence in UTC.
+    :param duration: Duration since the earthquake event occurred.
+    :param id_event: Unique identifier for the earthquake event.
+    :param post_type: Type of post, either 'event' or 'fact'.
+    :param message: Message content for fact-type posts.
+    :param prompt: Optional prompt for additional user interaction in fact-type posts.
+    :return: A dictionary formatted as an alert or fact post.
     """
 
-    item = {
-        "post": f"Recent #Earthquake: {title} reported at {ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
-        "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
-        "id_event": id_event,
-        "post_type": post_type,
-    }
+    ts_upload_utc = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
 
-    return item
+    if post_type == "event":
+        return {
+            "post": f"Recent #Earthquake: {message} reported at {ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
+            "ts_upload_utc": ts_upload_utc,
+            "id_event": id_event,
+            "post_type": post_type,
+        }
+    elif post_type == "fact":
+        return {
+            "post": message,
+            "ts_upload_utc": ts_upload_utc,
+            "id_event": None,
+            "prompt": prompt,
+            "post_type": post_type,
+        }
+    else:
+        raise ValueError("Invalid post type. Please choose 'event' or 'fact'.")
 
 
 def convert_datetime(date: datetime, format_type: str = "date") -> str:

@@ -4,6 +4,8 @@ from datetime import datetime
 import tweepy
 
 from nearquake.config import TwitterAuth
+from nearquake.utils import format_earthquake_alert
+from nearquake.app.db import Post
 
 
 _logger = logging.getLogger(__name__)
@@ -13,6 +15,9 @@ class TweetOperator:
     """
     Class to perform operations on Twitter such as posting tweets.
     """
+
+    def __init__(self, conn) -> None:
+        self.conn = conn
 
     def _auth(self) -> TwitterAuth:
         """
@@ -42,7 +47,7 @@ class TweetOperator:
 
         return client
 
-    def post_tweet(self, tweet: str) -> None:
+    def post_tweet(self, item: dict) -> None:
         """
         Post a tweet to twitter
         :param tweet: The content of the tweet to be posted.
@@ -50,8 +55,9 @@ class TweetOperator:
         client = self._connect()
 
         try:
-            client.create_tweet(text=tweet)
-            _logger.info(f"Poster {tweet} to twitter at {datetime.now()}")
+            client.create_tweet(text=item.get("post"))
+            self.conn.insert(Post(**item))
+            _logger.info(f"Latest post to twitter {item}")
         except Exception as e:
-            _logger.info(f"Did not post {tweet}.")
+            _logger.info(f"Did not post {item}.")
             return f"Error {e}"
