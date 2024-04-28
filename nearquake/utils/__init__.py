@@ -250,10 +250,7 @@ def create_dir(path: str):
 
 
 def format_earthquake_alert(
-    title: str,
-    ts_event: str,
-    duration: timedelta,
-    id_event: str,
+    title: str, ts_event: str, duration: timedelta, id_event: str, post_type: str
 ) -> dict:
     """
     _summary_
@@ -269,6 +266,7 @@ def format_earthquake_alert(
         "post": f"Recent #Earthquake: {title} reported at {ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
         "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
         "id_event": id_event,
+        "post_type": post_type,
     }
 
     return item
