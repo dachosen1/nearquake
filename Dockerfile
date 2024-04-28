@@ -1,6 +1,7 @@
 FROM python:3.12.3-slim
 
-RUN apt-get update && apt-get -y install cron=3.0pl1-162 \
+RUN apt-get update \
+    && apt-get -y install cron=3.0pl1-162 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
