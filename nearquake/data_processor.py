@@ -23,11 +23,10 @@ from nearquake.config import (
     REPORTED_SINCE_THRESHOLD,
     EARTHQUAKE_POST_THRESHOLD,
     generate_coordinate_lookup_detail_url,
+    ConnectionConfig,
 )
 from nearquake.tweet_processor import TweetOperator
 from nearquake.app.db import EventDetails, Post, Base, LocationDetails
-    ConnectionConfig,
-)
 from nearquake.tweet_processor import TweetOperator
 from nearquake.app.db import EventDetails, Post
 from nearquake.utils.db_sessions import DbSessionManager
@@ -362,20 +361,25 @@ def get_daily_earth_quakes() -> Tuple[List[str], List[int], List[float]]:
 
     with conn:
         query = (
-            conn.session.query(EventDetails.date, EventDetails.mag, func.count(EventDetails.id_event))
-            .filter(EventDetails.date > "2014-01-01")
+            conn.session.query(
+                EventDetails.date, EventDetails.mag, func.count(EventDetails.id_event)
+            )
+            .filter(EventDetails.date > "2010-01-01")
             .group_by(EventDetails.date, EventDetails.mag)
         )
 
         results = query.all()
 
-        date = []
-        count = []
-        mag = []
+        all_date, all_count, all_mag = [], [], []
 
-        for a, b, c in results:
-            date.append(a.strftime("%Y-%m-%d"))
-            count.append(b)
-            mag.append(c)
+        try:
+            for date, count, mag in results:
+                all_date.append(date.strftime("%Y-%m-%d"))
+                all_count.append(count)
+                all_mag.append(mag)
+        except Exception as e:
+            _logger.error(
+                f"Unexpected error occured after trying to add to results. {e}, {date}, {count} {mag}"
+            )
 
-        return date, count, mag 
+        return all_date, all_count, all_mag
