@@ -1,10 +1,8 @@
 import logging
-from datetime import datetime
 
 import tweepy
 
 from nearquake.config import TwitterAuth
-from nearquake.utils import format_earthquake_alert
 from nearquake.app.db import Post
 
 

@@ -23,7 +23,7 @@ def generate_response(
 
     if role not in valid_roles:
         _logger.error(f"Invalid role: {role}. Valid options are 'role' and 'user'.")
-        return f"Error: Invalid role. Please choose 'role' or 'user'."
+        raise ValueError("Error: Invalid role. Please choose 'role' or 'user'.")
 
     try:
         completion = client.chat.completions.create(
