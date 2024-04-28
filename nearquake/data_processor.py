@@ -344,18 +344,3 @@ def get_date_range_summary(
     )
 
     return query.all()
-
-
-def extract_coordinate_details():
-    pass
-
-
-if __name__ == "__main__":
-    from nearquake.config import ConnectionConfig
-    from nearquake.utils.db_sessions import DbSessionManager
-
-    conn = DbSessionManager(config=ConnectionConfig())
-
-    with conn:
-        run = TweetEarthquakeEvents(conn=conn)
-        run.upload()

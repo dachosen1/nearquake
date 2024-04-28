@@ -139,12 +139,3 @@ def create_database(url: str, schema: Optional[List[str]] = None):
             return SQLAlchemyError
 
     return engine
-
-
-if __name__ == "__main__":
-    from nearquake.config import ConnectionConfig, generate_coordinate_lookup_detail_url
-    from nearquake.utils.db_sessions import DbSessionManager
-
-    config = ConnectionConfig()
-    create_database(url=config.generate_connection_url())
-    conn = DbSessionManager(config=config)
