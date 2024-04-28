@@ -317,6 +317,7 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
                 ts_event=earthquake_ts_event,
                 duration=duration,
                 title=quake.title,
+                post_type="event",
             )
 
             try:
