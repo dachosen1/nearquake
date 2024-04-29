@@ -126,10 +126,11 @@ CHAT_PROMPT = [
     "How do you stay informed about earthquake risks and updates in your area? Share your favorite resources for earthquake information!",
 ]
 
-COORDINATE_LOOKUP_BASE_URL = "https://nominatim.openstreetmap.org/reverse.php?lat={lat}&lon={long}&zoom=18&format=jsonv2"
+
+COORDINATE_LOOKUP_BASE_URL = "{BASE_URL}?latitude={latitude}&longitude={longitude}&localityLanguage=en&key={API_KEY}"
 
 
-def generate_coordinate_lookup_detail_url(lat, long) -> str:
+def generate_coordinate_lookup_detail_url(latitude, longitude) -> str:
     """
     Generate a URL for reverse geocoding using OpenStreetMap's Nominatim API.
 
@@ -137,7 +138,12 @@ def generate_coordinate_lookup_detail_url(lat, long) -> str:
     :param long: Longitude of the location
     :return: str: A fully formatted URL with specified latitude and longitude.
     """
-    return COORDINATE_LOOKUP_BASE_URL.format(lat=lat, long=long)
+    return COORDINATE_LOOKUP_BASE_URL.format(
+        BASE_URL=os.environ.get("GEO_REVERSE_LOOKUP_BASE_URL"),
+        latitude=latitude,
+        longitude=longitude,
+        API_KEY=os.environ.get("GEO_API_KEY"),
+    )
 
 
 def tweet_conclusion_text():

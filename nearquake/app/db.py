@@ -82,32 +82,20 @@ class LocationDetails(Base):
         ForeignKey("earthquake.fct__event_details.id_event"),
         primary_key=True,
     )
-    id_place = Column(Integer, comment="Place ID")
-    category = Column(
-        String(50), nullable=True, comment="General category of the place"
+    continent = Column(String(50), comment="The continent where the event occurred")
+    continentCode = Column(String(10), comment="The code representing the continent")
+    countryName = Column(
+        String(100), comment="The name of the country where the event occurred"
     )
-    place_rank = Column(Integer, nullable=True, comment="Ranking of the place")
-    place_importance = Column(
-        Float, nullable=True, comment="Numerical importance of the place"
-    )
-    name = Column(String(300), nullable=True, comment="Name of the place")
-    display_name = Column(
-        String(255), nullable=True, comment="Full display name of the place"
-    )
-    address_type = Column(String(255), nullable=True, comment="type of address")
-    country = Column(
-        String(100), nullable=True, comment="Country where the place is located"
-    )
-    state = Column(
-        String(100), nullable=True, comment="State where the place is located"
-    )
-    region = Column(
+    countryCode = Column(String(10), comment="The ISO country code")
+    principalSubdivision = Column(
         String(100),
-        nullable=True,
-        comment="Region or administrative area where the place is located",
+        comment="The principal subdivision (e.g., state or province) where the event occurred",
     )
-    country_code = Column(String(10), nullable=True, comment="Country code (ISO code)")
-    boundingbox = Column(Text, nullable=True, comment="coordinate bounding  box ")
+    principalSubdivisionCode = Column(
+        String(10), comment="The code for the principal subdivision"
+    )
+    city = Column(String(100), comment="The city where the event occurred")
     event_detail = relationship("EventDetails", back_populates="location")
 
 
