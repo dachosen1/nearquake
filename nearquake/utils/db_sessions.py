@@ -1,8 +1,9 @@
 import logging
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from nearquake.utils import timer
 _logger = logging.getLogger(__name__)
 
 
@@ -88,6 +89,7 @@ class DbSessionManager:
         except Exception as e:
             _logger.error("Failed to execute insert query: %s", e, exc_info=True)
 
+    @timer
     def insert_many(self, models):
         """
         Inserts multiple instances of an SQLAlchemy ORM model into the database.

@@ -10,7 +10,6 @@ from functools import lru_cache
 from tqdm import tqdm
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
-from pycountry import countries
 
 
 from nearquake.config import (
@@ -19,7 +18,7 @@ from nearquake.config import (
     REPORTED_SINCE_THRESHOLD,
     EARTHQUAKE_POST_THRESHOLD,
     generate_coordinate_lookup_detail_url,
-    ConnectionConfig,
+    POSTGRES_CONNECTION_URL
 )
 from nearquake.tweet_processor import TweetOperator
 from nearquake.app.db import EventDetails, Post, Base, LocationDetails
@@ -351,11 +350,10 @@ def get_date_range_summary(
     return query.all()
 
 
-
 @lru_cache(maxsize=1)
 def get_daily_earth_quakes() -> Tuple[List[str], List[int], List[float]]:
 
-    conn = DbSessionManager(config=ConnectionConfig())
+    conn = DbSessionManager(url=POSTGRES_CONNECTION_URL)
 
     with conn:
         query = (
