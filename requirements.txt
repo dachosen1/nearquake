@@ -6,3 +6,4 @@ requests==2.31.0
 SQLAlchemy==2.0.24
 tqdm==4.66.2
 tweepy==4.14.0
+python-dotenv==1.0.1
