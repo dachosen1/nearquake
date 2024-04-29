@@ -18,16 +18,16 @@ data = data[data["Magnitude"] >= min_mag]
 
 if period == "Year":
     period_filter = "YE"
-    title = 'Yearly'
+    title = "Yearly"
 elif period == "Month":
     period_filter = "ME"
-    title = 'Monthly'
+    title = "Monthly"
 elif period == "Week":
     period_filter = "W"
-    title = 'Weekly'
+    title = "Weekly"
 elif period == "Day":
     period_filter = "d"
-    title = 'Daily'
+    title = "Daily"
 
 
 data = (
@@ -48,7 +48,11 @@ st.write(
 )
 
 # Display the number using st.metric
-st.metric(label="Big Number", value=f"{len(data):,}", delta="1.2%")
+st.metric(
+    label="Big Number",
+    value=f"{round(sum(data['Earthquake Count'].values)):,}",
+    delta="1.2%",
+)
 
 st.write(
     f"""

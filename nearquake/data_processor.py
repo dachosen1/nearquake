@@ -4,18 +4,14 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone, timedelta
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from typing import List, Type, Tuple
+from functools import lru_cache
 
 from tqdm import tqdm
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 from pycountry import countries
 
-import random
-from typing import List, Type, Tuple
-
-from tqdm import tqdm
-from sqlalchemy import desc, and_, func
-from sqlalchemy.orm import Session, declarative_base
 
 from nearquake.config import (
     generate_time_range_url,
@@ -355,6 +351,8 @@ def get_date_range_summary(
     return query.all()
 
 
+
+@lru_cache(maxsize=1)
 def get_daily_earth_quakes() -> Tuple[List[str], List[int], List[float]]:
 
     conn = DbSessionManager(config=ConnectionConfig())
