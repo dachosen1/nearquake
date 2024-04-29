@@ -1,10 +1,11 @@
 import logging
+import os
 
 from openai import OpenAI
 
 _logger = logging.getLogger(__name__)
 
-client = OpenAI()
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
 def generate_response(
