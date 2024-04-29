@@ -149,12 +149,3 @@ def generate_coordinate_lookup_detail_url(latitude, longitude) -> str:
 def tweet_conclusion_text():
     tweet_conclusion_text = random.choice(TWEET_CONCLUSION)
     return tweet_conclusion_text
-
-
-if __name__ == "__main__":
-
-    print(
-        generate_coordinate_lookup_detail_url(
-            longitude="-34.93129", latitude="138.59669"
-        )
-    )
