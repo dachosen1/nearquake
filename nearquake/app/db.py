@@ -9,7 +9,6 @@ from sqlalchemy import (
     Integer,
     String,
     TIMESTAMP,
-    Text,
     create_engine,
     ForeignKey,
 )
