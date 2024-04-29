@@ -188,9 +188,9 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return results
 
     def _fetch_location_detail(self, event) -> LocationDetails:
-        id_event, lat, long = event
+        id_event, latitude, longitude = event
         url = generate_coordinate_lookup_detail_url(
-            lat=round(lat, 3), long=round(long, 3)
+            latitude=latitude, longitude=longitude
         )
         content = fetch_json_data_from_url(url=url)
 
@@ -204,23 +204,16 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             )
 
         try:
-            return {
-                "id_event": id_event,
-                "id_place": content.get("place_id"),
-                "category": content.get("category"),
-                "place_rank": content.get("place_rank"),
-                "address_type": content.get("addresstype"),
-                "place_importance": content.get("importance"),
-                "name": content.get("name"),
-                "display_name": content.get("display_name"),
-                "country": countries.get(
-                    alpha_2=content["address"].get("country_code").upper()
-                ).name,
-                "state": content["address"].get("state"),
-                "region": content["address"].get("region"),
-                "country_code": content["address"].get("country_code").upper(),
-                "boundingbox": content.get("boundingbox"),
-            }
+            return LocationDetails(
+                id_event=id_event,
+                continent=content.get("continent"),
+                continentCode=content.get("continentCode"),
+                countryName=content.get("countryName"),
+                countryCode=content.get("countryCode"),
+                principalSubdivision=content.get("principalSubdivision"),
+                principalSubdivisionCode=content.get("principalSubdivisionCode"),
+                city=content.get("city"),
+            )
 
         except Exception as e:
             _logger.error(
@@ -247,14 +240,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                     self._fetch_location_detail(event=event) for event in new_events
                 ]
                 _logger.info(f"Completed the extractions of url content for {date} ")
-
-            for location in tqdm(location_details):
-                try:
-                    LocationDetails(**location)
-                except Exception as e:
-                    _logger.error(
-                        f"Encountered an error while attempting to add location to the database. {location}, {e}"
-                    )
 
             self.conn.insert_many(location_details)
             _logger.info(f"Added {len(location_details)} location detail for {date}")
