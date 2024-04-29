@@ -343,4 +343,3 @@ def get_date_range_summary(
     )
 
     return query.all()
-
