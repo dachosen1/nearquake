@@ -3,12 +3,8 @@ import logging
 import random
 from datetime import datetime, UTC
 
-from dotenv import load_dotenv
-
-
 _logger = logging.getLogger(__name__)
 
-load_dotenv()
 
 TIMESTAMP_NOW = datetime.now(UTC)
 

@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
-from pycountry import countries
 
 from nearquake.config import (
     generate_time_range_url,
