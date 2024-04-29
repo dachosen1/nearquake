@@ -96,7 +96,6 @@ class LocationDetails(Base):
         String(10), comment="The code for the principal subdivision"
     )
     city = Column(String(100), comment="The city where the event occurred")
-    locality = Column(String(100), comment="The specific locality within the city")
     event_detail = relationship("EventDetails", back_populates="location")
 
 

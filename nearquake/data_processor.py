@@ -213,7 +213,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 principalSubdivision=content.get("principalSubdivision"),
                 principalSubdivisionCode=content.get("principalSubdivisionCode"),
                 city=content.get("city"),
-                locality=content.get("principalSubdivisionCode"),
             )
 
         except Exception as e:
