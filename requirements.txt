@@ -1,5 +1,5 @@
 alembic==1.13.1
-black==24.4.0
+black==24.4.2
 openai==1.23.2
 pillow==10.2.0
 psycopg2-binary==2.9.9
