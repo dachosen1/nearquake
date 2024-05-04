@@ -255,9 +255,8 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             f"Backfill for earthquake locations between {start_date} and {end_date}"
         )
         for start, _ in date_range:
-            _logger.info(f"Starting backfill for earthquake locations on {start}")
+            _logger.info(f"Starting upload for earthquake locations on {start}")
             self.upload(date=start, parralel=True)
-            _logger.info(f"Complete backfill for earthquake locations on {start}")
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
