@@ -75,6 +75,13 @@ if __name__ == "__main__":
                 tweet.upload()
                 loc.upload(date=convert_datetime(datetime.now().date()))
 
+            start_date = datetime.now().date() - timedelta(days=30)
+            end_date = datetime.now().date()
+            loc.backfill(
+                start_date=convert_datetime(start_date, format_type="date"),
+                end_date=convert_datetime(end_date, format_type="date"),
+            )
+
         if args.daily:
             today = datetime.now().date()
             yesterday = today - timedelta(days=1)
