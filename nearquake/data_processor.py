@@ -186,6 +186,25 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         results = query.all()
         return results
 
+    def _extract_between(self, start_date, end_date) -> list:
+
+        query = (
+            self.conn.session.query(
+                EventDetails.id_event, EventDetails.latitude, EventDetails.longitude
+            )
+            .join(
+                LocationDetails,
+                LocationDetails.id_event == EventDetails.id_event,
+                isouter=True,
+            )
+            .filter(
+                LocationDetails.id_event == None,
+                EventDetails.date.between(start_date, end_date),
+            )
+        )
+        results = query.all()
+        return results
+
     def _fetch_location_detail(self, event) -> LocationDetails:
         id_event, latitude, longitude = event
         url = generate_coordinate_lookup_detail_url(
@@ -220,43 +239,60 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             )
         return None
 
-    def _parallelize_fetch_location_details(self, event):
-        with ThreadPoolExecutor() as executor:
-            location_details = list(executor.map(self._fetch_location_detail, event))
-        return location_details
-
     @timer
-    def upload(self, date, parralel: bool = False):
-        new_events = self._extract(date=date)
-        if new_events:
-            if parralel:
-                location_details = self._parallelize_fetch_location_details(
-                    event=new_events
-                )
+    def upload(self, start_date: str, upload_type: str, end_date: str = None):
 
-            else:
-                location_details = [
-                    self._fetch_location_detail(event=event) for event in new_events
-                ]
-                _logger.info(f"Completed the extractions of url content for {date} ")
+        if upload_type not in {"single", "batch"}:
+            _logger.error(
+                f"Invalid upload type '{upload_type}'. Supported types are 'single' or 'batch'."
+            )
+            raise ValueError(
+                f"Invalid upload type '{upload_type}'. Supported types are 'single' or 'batch'."
+            )
+
+        if upload_type == "single":
+            new_events = self._extract(date=start_date)
+            extraction_period = f"for {start_date}"
+
+        elif upload_type == "batch":
+            new_events = self._extract_between(start_date=start_date, end_date=end_date)
+            extraction_period = f"from {start_date} to {end_date}"
+
+        if new_events:
+            location_details = [
+                self._fetch_location_detail(event=event) for event in new_events
+            ]
+            _logger.info(f"Completed the extractions of url content for {start_date} ")
 
             self.conn.insert_many(location_details)
-            _logger.info(f"Added {len(location_details)} location detail for {date}")
+            _logger.info(
+                f"Added {len(location_details)} location details {extraction_period}"
+            )
         else:
-            _logger.info(f"No new location records to add for {date}")
+            _logger.info(f"No new location records to add {extraction_period}")
         return None
 
     @timer
-    def backfill(self, start_date: str, end_date: str, interval: int = 1):
-        date_range = generate_date_range(
-            start_date=start_date, end_date=end_date, interval=interval
-        )
-        _logger.info(
-            f"Backfill for earthquake locations between {start_date} and {end_date}"
-        )
-        for start, _ in date_range:
-            _logger.info(f"Starting upload for earthquake locations on {start}")
-            self.upload(date=start, parralel=True)
+    def backfill(
+        self, start_date: str, upload_type: str, end_date: str = None, interval: int = 1
+    ):
+
+        if upload_type == "single":
+            date_range = generate_date_range(
+                start_date=start_date, end_date=end_date, interval=interval
+            )
+            _logger.info(
+                f"Backfill for earthquake locations between {start_date} and {end_date}"
+            )
+            for start, _ in date_range:
+                _logger.info(f"Starting upload for earthquake locations on {start}")
+                self.upload(start_date=start, upload_type="single")
+
+        elif upload_type == "batch":
+            self.upload(start_date=start_date, end_date=end_date, upload_type="batch")
+
+        else:
+            raise ValueError("upload type must be either single or batch")
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):

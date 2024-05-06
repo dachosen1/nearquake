@@ -73,13 +73,17 @@ if __name__ == "__main__":
             for time in ["hour", "day", "week"]:
                 run.upload(url=generate_time_period_url(time))
                 tweet.upload()
-                loc.upload(date=convert_datetime(datetime.now().date()))
+                loc.upload(
+                    start_date=convert_datetime(datetime.now().date()),
+                    upload_type="single",
+                )
 
             start_date = datetime.now().date() - timedelta(days=30)
             end_date = datetime.now().date()
             loc.backfill(
                 start_date=convert_datetime(start_date, format_type="date"),
                 end_date=convert_datetime(end_date, format_type="date"),
+                upload_type="batch",
             )
 
         if args.daily:
@@ -181,4 +185,6 @@ if __name__ == "__main__":
                 run.backfill(start_date=start_date, end_date=end_date)
 
             if backfill_location == "True":
-                loc.backfill(start_date=start_date, end_date=end_date)
+                loc.backfill(
+                    start_date=start_date, end_date=end_date, upload_type="batch"
+                )
