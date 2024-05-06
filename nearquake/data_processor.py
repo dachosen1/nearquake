@@ -269,12 +269,12 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 f"Added {len(location_details)} location details {extraction_period}"
             )
         else:
-            _logger.info(f"No new location records to add for {start_date}")
+            _logger.info(f"No new location records to add {extraction_period}")
         return None
 
     @timer
     def backfill(
-        self, start_date: str, upload_type: str, end_date: str = None,  interval: int = 1
+        self, start_date: str, upload_type: str, end_date: str = None, interval: int = 1
     ):
 
         if upload_type == "single":
