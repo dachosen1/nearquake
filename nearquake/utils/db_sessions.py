@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 _logger = logging.getLogger(__name__)
 
@@ -23,15 +23,9 @@ class DbSessionManager:
     def __init__(self, url) -> None:
         self.url = url
 
-    def create_engine(self):
-        return create_engine(url=self.url)
-
-    def connect(self):
-        """Establishes a connection to the database using the provided configuration."""
         try:
-            self.engine = self.create_engine()
-            Session = sessionmaker(bind=self.engine)
-            self.session = Session()
+            self.engine = create_engine(url)
+            self.Session = scoped_session(sessionmaker(bind=self.engine))
             _logger.info("Successfully established connection to the database.")
 
         except Exception as e:
@@ -117,8 +111,8 @@ class DbSessionManager:
             )
 
     def __enter__(self):
-        self.connect()
-        return self
+        self.session = self.Session()
+        return self.session
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Exits the runtime context and closes the database session."""
