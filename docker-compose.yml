@@ -18,7 +18,7 @@ services:
       - nearquake-network
 
   postgres:
-    image: postgres:13
+    image: postgres:16
     environment:
       POSTGRES_USER: ${NEARQUAKE_USERNAME}
       POSTGRES_PASSWORD: ${NEARQUAKE_PASSWORD}
