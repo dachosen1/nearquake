@@ -8,3 +8,4 @@ SQLAlchemy==2.0.24
 tqdm==4.66.4
 tweepy==4.14.0
 python-dotenv==1.0.1
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
