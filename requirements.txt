@@ -1,10 +1,11 @@
 alembic==1.13.1
 black==24.4.2
-openai==1.23.2
+openai==1.30.3
 pillow==10.2.0
 psycopg2-binary==2.9.9
-requests==2.31.0
+requests==2.32.2
 SQLAlchemy==2.0.24
-tqdm==4.66.3
+tqdm==4.66.4
 tweepy==4.14.0
 python-dotenv==1.0.1
+urllib3>=2.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
