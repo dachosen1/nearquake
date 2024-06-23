@@ -28,10 +28,6 @@ services:
     ports:
       - 5432:5432
     env_file: .env
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "airflow" ]
-      interval: 5s
-      retries: 5
     restart: always
     networks:
       - nearquake-network
