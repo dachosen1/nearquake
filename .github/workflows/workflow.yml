@@ -59,6 +59,5 @@ jobs:
           cd .. && cd /home/nearquake && 
           git pull origin master && 
           sudo docker compose up -d --build && 
-          sudo docker image prune -f && 
-          find /var/log/nearquake -name "*.log" -type f -mtime +30 -exec rm {} \;
+          sudo docker image prune -f;
           '
