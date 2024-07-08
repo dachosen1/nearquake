@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   earthquake_usgs:
     image: earthquake_usgs_cron:1.3.0
