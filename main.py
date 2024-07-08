@@ -107,7 +107,6 @@ if __name__ == "__main__":
                 message=message,
             )
             tweet.post_tweet(item=item, conn=conn)
-            loc.upload(date=today.strftime("%Y-%m-%d"))
 
         if args.weekly:
             run.upload(url=generate_time_period_url("week"))
