@@ -1,7 +1,6 @@
 import pytest
-
 import sqlalchemy.orm
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import MetaData, create_engine
 
 from nearquake.app.db import EventDetails, Post
 

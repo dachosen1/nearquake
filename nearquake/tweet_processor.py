@@ -2,9 +2,8 @@ import logging
 
 import tweepy
 
-from nearquake.config import TWITTER_AUTHENTICATION
 from nearquake.app.db import Post
-
+from nearquake.config import TWITTER_AUTHENTICATION
 
 _logger = logging.getLogger(__name__)
 

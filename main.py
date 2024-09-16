@@ -2,26 +2,23 @@ import argparse
 import random
 from datetime import datetime, timedelta
 
+from nearquake.app.db import EventDetails, create_database
+from nearquake.config import (
+    CHAT_PROMPT,
+    EARTHQUAKE_POST_THRESHOLD,
+    POSTGRES_CONNECTION_URL,
+    generate_time_period_url,
+    tweet_conclusion_text,
+)
 from nearquake.data_processor import (
-    UploadEarthQuakeEvents,
     TweetEarthquakeEvents,
+    UploadEarthQuakeEvents,
     UploadEarthQuakeLocation,
     get_date_range_summary,
 )
-from nearquake.config import (
-    generate_time_period_url,
-    tweet_conclusion_text,
-    POSTGRES_CONNECTION_URL,
-    CHAT_PROMPT,
-    EARTHQUAKE_POST_THRESHOLD,
-)
-from nearquake.app.db import EventDetails
 from nearquake.open_ai_client import generate_response
+from nearquake.utils import convert_datetime, format_earthquake_alert
 from nearquake.utils.db_sessions import DbSessionManager
-from nearquake.app.db import create_database
-
-from nearquake.utils import format_earthquake_alert, convert_datetime
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Nearquake Data Processor")

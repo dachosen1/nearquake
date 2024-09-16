@@ -1,12 +1,10 @@
-import logging
 import json
-import sys
+import logging
 import logging.handlers
-
+import sys
 
 from nearquake.config import TIMESTAMP_NOW
 from nearquake.utils import create_dir
-
 
 TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y%m%d")
 

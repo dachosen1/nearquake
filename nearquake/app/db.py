@@ -2,19 +2,19 @@ import logging
 from typing import List, Optional
 
 from sqlalchemy import (
+    TIMESTAMP,
     Boolean,
     Column,
     Date,
     Float,
+    ForeignKey,
     Integer,
     String,
-    TIMESTAMP,
     create_engine,
-    ForeignKey,
 )
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import text
-from sqlalchemy.exc import SQLAlchemyError
 
 _logger = logging.getLogger(__name__)
 

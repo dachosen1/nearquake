@@ -1,31 +1,30 @@
 import logging
-from typing import List, Type, TypeVar
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone, timedelta
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
+from typing import List, Type, TypeVar
 
-from tqdm import tqdm
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
+from tqdm import tqdm
 
+from nearquake.app.db import Base, EventDetails, LocationDetails, Post
 from nearquake.config import (
-    generate_time_range_url,
-    TIMESTAMP_NOW,
-    REPORTED_SINCE_THRESHOLD,
     EARTHQUAKE_POST_THRESHOLD,
+    REPORTED_SINCE_THRESHOLD,
+    TIMESTAMP_NOW,
     generate_coordinate_lookup_detail_url,
+    generate_time_range_url,
 )
 from nearquake.tweet_processor import TweetOperator
-from nearquake.app.db import EventDetails, Post, Base, LocationDetails
 from nearquake.utils import (
-    fetch_json_data_from_url,
     convert_timestamp_to_utc,
-    generate_date_range,
+    fetch_json_data_from_url,
     format_earthquake_alert,
+    generate_date_range,
     timer,
 )
-
 
 _logger = logging.getLogger(__name__)
 

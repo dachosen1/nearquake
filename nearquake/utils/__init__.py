@@ -1,16 +1,15 @@
-import requests
 import json
-import os
 import logging
+import os
 import time
-
-from PIL import Image
-from io import BytesIO
+from datetime import datetime, timedelta, timezone
 from functools import wraps
+from io import BytesIO
 
-from datetime import datetime, timezone, timedelta
+import requests
+from PIL import Image
 
-from nearquake.config import TIMESTAMP_NOW, EVENT_DETAIL_URL, tweet_conclusion_text
+from nearquake.config import EVENT_DETAIL_URL, TIMESTAMP_NOW, tweet_conclusion_text
 
 _logger = logging.getLogger(__name__)
 

@@ -1,14 +1,14 @@
-import pytest
-from unittest.mock import patch, MagicMock
-
 import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 import requests
 
 from nearquake.utils import (
-    generate_date_range,
     convert_timestamp_to_utc,
     create_dir,
     fetch_json_data_from_url,
+    generate_date_range,
 )
 
 
