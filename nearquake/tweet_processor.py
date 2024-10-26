@@ -29,6 +29,9 @@ class TweetOperator:
 
         self.client = client
 
+    def __init__(self) -> None:
+        self._tweepy_connect()
+
     def post_tweet(self, tweet_text: dict) -> None:
         """
         Post a tweet to twitter
@@ -61,5 +64,6 @@ class TweetOperator:
         :param tweet_text: A dictionary containing the tweet data to be posted and saved.
         :param conn: A database connection object used to insert the tweet data into the database.
         """
+        self._tweepy_connect()
         self.post_tweet(tweet_text=tweet_text)
         self.save_tweet_to_db(tweet_text=tweet_text, conn=conn)
