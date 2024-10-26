@@ -332,7 +332,7 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
             duration = TIMESTAMP_NOW - quake.ts_event_utc.replace(tzinfo=timezone.utc)
             earthquake_ts_event = quake.ts_event_utc.strftime("%H:%M:%S")
 
-            item = format_earthquake_alert(
+            tweet_text = format_earthquake_alert(
                 id_event=quake.id_event,
                 ts_event=earthquake_ts_event,
                 duration=duration,
@@ -341,14 +341,14 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
             )
 
             try:
-                self.post_tweet(item=item, conn=self.conn)
+                self.post_tweet(tweet_text=tweet_text, conn=self.conn)
                 _logger.info(
                     "Recorded recent tweet posted in the database recent into the Database "
                 )
 
             except Exception as e:
                 _logger.error(
-                    f"Encountered an error while attempting to post {item}. {e} "
+                    f"Encountered an error while attempting to post {tweet_text}. {e} "
                 )
 
         return None
