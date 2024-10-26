@@ -99,11 +99,11 @@ if __name__ == "__main__":
             TWEET_CONCLUSION_TEXT = tweet_conclusion_text()
             message = f"Yesterday, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
 
-            item = format_earthquake_alert(
+            tweet_text = format_earthquake_alert(
                 post_type="fact",
                 message=message,
             )
-            tweet.post_tweet(item=item, conn=conn)
+            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
 
         if args.weekly:
             run.upload(url=generate_time_period_url("week"))
@@ -123,11 +123,11 @@ if __name__ == "__main__":
 
             message = f"During the past week, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
 
-            item = format_earthquake_alert(
+            tweet_text = format_earthquake_alert(
                 post_type="fact",
                 message=message,
             )
-            tweet.post_tweet(item=item, conn=conn)
+            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
 
         if args.monthly:
             run.upload(url=generate_time_period_url("month"))
@@ -147,11 +147,11 @@ if __name__ == "__main__":
 
             message = f"During the past month, there were {len(content):,} #earthquakes globally, with {GREATER_THAN_5} of them registering a magnitude of 5.0 or higher. {TWEET_CONCLUSION_TEXT}"
 
-            item = format_earthquake_alert(
+            tweet_text = format_earthquake_alert(
                 post_type="fact",
                 message=message,
             )
-            tweet.post_tweet(item=item, conn=conn)
+            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
 
         if args.initialize:
             create_database(url=POSTGRES_CONNECTION_URL, schema=["earthquake", "tweet"])
@@ -160,11 +160,11 @@ if __name__ == "__main__":
             prompt = random.choice(CHAT_PROMPT)
             message = generate_response(prompt=prompt)
 
-            item = format_earthquake_alert(
+            tweet_text = format_earthquake_alert(
                 post_type="fact", message=message, prompt=prompt
             )
 
-            tweet.post_tweet(item=item, conn=conn)
+            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
 
         if args.backfill:
             start_date = input("Type Start Date:")

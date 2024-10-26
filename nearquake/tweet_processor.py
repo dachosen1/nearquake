@@ -13,12 +13,10 @@ class TweetOperator:
     Class to perform operations on Twitter such as posting tweets.
     """
 
-    def _connect(self) -> tweepy.client:
+    def _tweepy_connect(self) -> tweepy.client:
         """
-        Create a Tweepy client using authenticated credentials.
+        Initialize a Tweepy client using authenticated credentials.
 
-        Returns:
-            tweepy.Client: A Tweepy client object for interacting with Twitter API.
         """
 
         client = tweepy.Client(
@@ -29,19 +27,39 @@ class TweetOperator:
             access_token_secret=TWITTER_AUTHENTICATION["ACCESS_TOKEN_SECRET"],
         )
 
-        return client
+        self.client = client
 
-    def post_tweet(self, item: dict, conn=None) -> None:
+    def post_tweet(self, tweet_text: dict) -> None:
         """
         Post a tweet to twitter
-        :param tweet: The content of the tweet to be posted.
+        :param tweet_text: The content of the tweet to be posted.
         """
-        client = self._connect()
 
         try:
-            client.create_tweet(text=item.get("post"))
-            conn.insert(Post(**item))
-            _logger.info(f"Latest post to twitter {item}")
+            self.client.create_tweet(text=tweet_text.get("post"))
+            _logger.info(f"Latest post to twitter {tweet_text}")
         except Exception as e:
-            _logger.info(f"Did not post {item}.")
-            return f"Error {e}"
+            _logger.error(f"Did not post {tweet_text}. {e} ")
+
+    def save_tweet_to_db(self, tweet_text: dict, conn) -> None:
+        """
+        Save the posted tweet data into the database.
+        :param tweet_data: The content of the tweet to be saved.
+        :param conn: Database connection object.
+        """
+        try:
+            conn.insert(Post(**tweet_text))
+            _logger.info(f"Tweet saved to database: {tweet_text}")
+        except Exception as e:
+            _logger.error(f"Failed to save tweet to database {tweet_text}. Error: {e}")
+            raise
+
+    def run_tweet_operator(self, tweet_text: dict, conn) -> None:
+        """
+        Execute the tweet posting and saving operation.
+
+        :param tweet_text: A dictionary containing the tweet data to be posted and saved.
+        :param conn: A database connection object used to insert the tweet data into the database.
+        """
+        self.post_tweet(tweet_text=tweet_text)
+        self.save_tweet_to_db(tweet_text=tweet_text, conn=conn)
