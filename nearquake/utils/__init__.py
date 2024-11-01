@@ -240,12 +240,18 @@ def backfill_valid_date_range(start_date, end_date, interval: int) -> tuple:
     :param end_date: The end date in "YYYY-MM-DD" format.
     :param interval: The interval in days between each date in the range
 
-    :return: A list or iterable of dates from start_date to end_date with the specified interval.
+    :return: A tuple of date ranges from start_date to end_date with the specified interval
     """
 
     try:
-        datetime.strptime(start_date, "%Y-%m-%d").date()
-        datetime.strptime(end_date, "%Y-%m-%d").date()
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        if start >= end:
+            raise ValueError("start_date must be before end_date")
+        if interval <= 0:
+            raise ValueError("interval must be positive")
+
     except ValueError:
         raise ValueError("Invalid date format. Use YYYY-MM-DD.")
 
