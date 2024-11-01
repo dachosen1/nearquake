@@ -254,8 +254,8 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 _logger.info(
                     f"Added {len(location_details)} location details {extraction_period}"
                 )
-        else:
-            _logger.info(f"No new location records to add {extraction_period}")
+            else:
+                _logger.info(f"No new location records to add {extraction_period}")
         return None
 
     @timer
