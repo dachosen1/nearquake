@@ -231,6 +231,38 @@ def generate_date_range(start_date, end_date, interval) -> tuple:
     return date_list
 
 
+def backfill_valid_date_range(start_date, end_date, interval: int) -> tuple:
+    """
+    Validates the date format of start and end dates, generates a range of dates
+    within the specified interval, and logs the backfill process.
+
+    :param start_date: The start date in "YYYY-MM-DD" format.
+    :param end_date: The end date in "YYYY-MM-DD" format.
+    :param interval: The interval in days between each date in the range
+
+    :return: A tuple of date ranges from start_date to end_date with the specified interval
+    """
+
+    try:
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        if start >= end:
+            raise ValueError("start_date must be before end_date")
+        if interval <= 0:
+            raise ValueError("interval must be positive")
+
+    except ValueError as err:
+        raise ValueError("Invalid date format. Use YYYY-MM-DD.") from err
+
+    date_range = generate_date_range(start_date, end_date, interval=interval)
+
+    _logger.info(
+        f"Backfill process started for the range {start_date} to {end_date}. Running in module {__name__}."
+    )
+    return date_range
+
+
 def create_dir(path: str):
     """
     Creates a directory if it doesn't exist.

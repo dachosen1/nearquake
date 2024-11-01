@@ -1,8 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from typing import List, Type, TypeVar
 
 from sqlalchemy import and_, func
@@ -22,7 +21,7 @@ from nearquake.utils import (
     convert_timestamp_to_utc,
     fetch_json_data_from_url,
     format_earthquake_alert,
-    generate_date_range,
+    backfill_valid_date_range,
     timer,
 )
 
@@ -140,16 +139,9 @@ class UploadEarthQuakeEvents(BaseDataUploader):
         :param end_date: The end date for the backfill operation, in 'YYYY-MM-DD' format.
         :param interval: The number of days to increment each start date within the range. defaults to 15 days
         """
-        try:
-            datetime.strptime(start_date, "%Y-%m-%d").date()
-            datetime.strptime(end_date, "%Y-%m-%d").date()
-        except ValueError:
-            raise ValueError("Invalid date format. Use YYYY-MM-DD.")
 
-        date_range = generate_date_range(start_date, end_date, interval=interval)
-        _logger.info(
-            f"Backfill process started for the range {start_date} to {end_date}. Running in module {__name__}."
-        )
+        date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
+
         for start, end in date_range:
             start = start.strftime("%Y-%m-%d")
             end = end.strftime("%Y-%m-%d")
@@ -183,6 +175,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             .filter(LocationDetails.id_event == None, EventDetails.date == date)
         )
         results = query.all()
+        _logger.info(f"Extracted {len(results)} quake events on {date}")
         return results
 
     def _extract_between(self, start_date, end_date) -> list:
@@ -202,6 +195,9 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             )
         )
         results = query.all()
+        _logger.info(
+            f"Successfully extracted {len(results)} earthquake events from {start_date} to {end_date}."
+        )
         return results
 
     def _fetch_location_detail(self, event) -> LocationDetails:
@@ -239,59 +235,41 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return None
 
     @timer
-    def upload(self, start_date: str, upload_type: str, end_date: str = None):
+    def upload(self, start_date: str, end_date: str = None, interval: int = 15):
 
-        if upload_type not in {"single", "batch"}:
-            _logger.error(
-                f"Invalid upload type '{upload_type}'. Supported types are 'single' or 'batch'."
-            )
-            raise ValueError(
-                f"Invalid upload type '{upload_type}'. Supported types are 'single' or 'batch'."
-            )
+        date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
 
-        if upload_type == "single":
-            new_events = self._extract(date=start_date)
-            extraction_period = f"for {start_date}"
+        for start, end in date_range:
+            start_date = start.strftime("%Y-%m-%d")
+            end_date = end.strftime("%Y-%m-%d")
 
-        elif upload_type == "batch":
             new_events = self._extract_between(start_date=start_date, end_date=end_date)
             extraction_period = f"from {start_date} to {end_date}"
 
-        if new_events:
-            location_details = [
-                self._fetch_location_detail(event=event) for event in new_events
-            ]
-            _logger.info(f"Completed the extractions of url content for {start_date} ")
-
-            self.conn.insert_many(location_details)
-            _logger.info(
-                f"Added {len(location_details)} location details {extraction_period}"
-            )
-        else:
-            _logger.info(f"No new location records to add {extraction_period}")
+            if new_events:
+                location_details = [
+                    self._fetch_location_detail(event=event) for event in new_events
+                ]
+                self.conn.insert_many(location_details)
+                _logger.info(
+                    f"Added {len(location_details)} location details {extraction_period}"
+                )
+            else:
+                _logger.info(f"No new location records to add {extraction_period}")
         return None
 
     @timer
     def backfill(
-        self, start_date: str, upload_type: str, end_date: str = None, interval: int = 1
+        self,
+        start_date: str,
+        end_date: str = None,
+        interval: int = 15,
     ):
 
-        if upload_type == "single":
-            date_range = generate_date_range(
-                start_date=start_date, end_date=end_date, interval=interval
-            )
-            _logger.info(
-                f"Backfill for earthquake locations between {start_date} and {end_date}"
-            )
-            for start, _ in date_range:
-                _logger.info(f"Starting upload for earthquake locations on {start}")
-                self.upload(start_date=start, upload_type="single")
-
-        elif upload_type == "batch":
-            self.upload(start_date=start_date, end_date=end_date, upload_type="batch")
-
-        else:
-            raise ValueError("upload type must be either single or batch")
+        self.upload(start_date=start_date, end_date=end_date, interval=interval)
+        _logger.info(
+            f"Backfill for earthquake locations between {start_date} and {end_date}"
+        )
 
 
 class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):

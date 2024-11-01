@@ -181,6 +181,4 @@ if __name__ == "__main__":
                 run.backfill(start_date=start_date, end_date=end_date)
 
             if backfill_location == "True":
-                loc.backfill(
-                    start_date=start_date, end_date=end_date, upload_type="batch"
-                )
+                loc.backfill(start_date=start_date, end_date=end_date)
