@@ -1,8 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from typing import List, Type, TypeVar
 
 from sqlalchemy import and_, func
@@ -22,7 +21,7 @@ from nearquake.utils import (
     convert_timestamp_to_utc,
     fetch_json_data_from_url,
     format_earthquake_alert,
-    generate_date_range,
+    backfill_valid_date_range,
     timer,
 )
 
@@ -140,16 +139,9 @@ class UploadEarthQuakeEvents(BaseDataUploader):
         :param end_date: The end date for the backfill operation, in 'YYYY-MM-DD' format.
         :param interval: The number of days to increment each start date within the range. defaults to 15 days
         """
-        try:
-            datetime.strptime(start_date, "%Y-%m-%d").date()
-            datetime.strptime(end_date, "%Y-%m-%d").date()
-        except ValueError:
-            raise ValueError("Invalid date format. Use YYYY-MM-DD.")
 
-        date_range = generate_date_range(start_date, end_date, interval=interval)
-        _logger.info(
-            f"Backfill process started for the range {start_date} to {end_date}. Running in module {__name__}."
-        )
+        date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
+
         for start, end in date_range:
             start = start.strftime("%Y-%m-%d")
             end = end.strftime("%Y-%m-%d")
@@ -245,13 +237,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
     @timer
     def upload(self, start_date: str, end_date: str = None, interval: int = 15):
 
-        try:
-            datetime.strptime(start_date, "%Y-%m-%d").date()
-            datetime.strptime(end_date, "%Y-%m-%d").date()
-        except ValueError:
-            raise ValueError("Invalid date format. Use YYYY-MM-DD.")
-
-        date_range = generate_date_range(start_date, end_date, interval=interval)
+        date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
 
         for start, end in date_range:
             start_date = start.strftime("%Y-%m-%d")
