@@ -252,8 +252,8 @@ def backfill_valid_date_range(start_date, end_date, interval: int) -> tuple:
         if interval <= 0:
             raise ValueError("interval must be positive")
 
-    except ValueError:
-        raise ValueError("Invalid date format. Use YYYY-MM-DD.")
+    except ValueError as err:
+        raise ValueError("Invalid date format. Use YYYY-MM-DD.") from err
 
     date_range = generate_date_range(start_date, end_date, interval=interval)
 
