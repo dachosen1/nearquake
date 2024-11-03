@@ -75,7 +75,7 @@ if __name__ == "__main__":
             end_date = datetime.now().date()
             loc.backfill(
                 start_date=convert_datetime(start_date, format_type="date"),
-                end_date=convert_datetime(end_date, format_type="date")
+                end_date=convert_datetime(end_date, format_type="date"),
             )
 
         if args.daily:
