@@ -84,6 +84,9 @@ TWITTER_AUTHENTICATION = {
     "BEARER_TOKEN": os.environ.get("BEARER_TOKEN"),
 }
 
+BLUESKY_USER_NAME = os.environ.get("BLUESKY_USER_NAME")
+BLUESKY_PASSWORD = os.environ.get("BLUESKY_PASSWORD")
+
 TWEET_CONCLUSION = [
     "How do you prepare? Share tips and stay safe! #earthquakePrep. Data provided by #usgs",
     "Were you near the epicenter? Share your experience. #earthquake. Data provided by #usgs",
