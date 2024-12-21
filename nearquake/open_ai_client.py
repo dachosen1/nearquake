@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
-def generate_response(prompt: str, role: str = "user", model: str = "gpt-4") -> str:
+def generate_response(prompt: str, role: str = "user", model: str = "gpt-3.5") -> str:
     """
     Generates a response from the open ai model based on the given role and prompt.
 
