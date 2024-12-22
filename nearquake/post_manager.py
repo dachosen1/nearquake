@@ -2,6 +2,8 @@ import logging
 from abc import ABC, abstractmethod
 import tweepy
 from atproto import Client
+
+from nearquake.app.db import Post
 from nearquake.config import TWITTER_AUTHENTICATION, BLUESKY_PASSWORD, BLUESKY_USER_NAME
 
 _logger = logging.getLogger(__name__)
@@ -51,6 +53,21 @@ class BlueSkyPost(PlatformPoster):
         except Exception as e:
             _logger.error(f"Failed to post to BlueSky: {post_text}. Error: {e}")
             return False
+
+
+def save_tweet_to_db(tweet_text: dict, conn) -> bool:
+    """
+    Save the posted tweet data into the database.
+    :param tweet_data: The content of the tweet to be saved.
+    :param conn: Database connection object.
+    """
+    try:
+        conn.insert(Post(**tweet_text))
+        _logger.info(f"Tweet saved to database: {tweet_text}")
+        return True
+    except Exception as e:
+        _logger.error(f"Failed to save tweet to database {tweet_text}. Error: {e}")
+        return False
 
 
 def post_to_all_platforms(post_text: str) -> dict:

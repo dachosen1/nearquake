@@ -287,7 +287,6 @@ def format_earthquake_alert(
     duration: timedelta = None,
     id_event: str = None,
     message: str = None,
-    prompt: str = None,
 ) -> dict:
     """
     Formats an alert for an earthquake event or fact.
@@ -297,7 +296,6 @@ def format_earthquake_alert(
     :param id_event: Unique identifier for the earthquake event.
     :param post_type: Type of post, either 'event' or 'fact'.
     :param message: Message content for fact-type posts.
-    :param prompt: Optional prompt for additional user interaction in fact-type posts.
     :return: A dictionary formatted as an alert or fact post.
     """
 
@@ -315,7 +313,6 @@ def format_earthquake_alert(
             "post": message,
             "ts_upload_utc": ts_upload_utc,
             "id_event": None,
-            "prompt": prompt,
             "post_type": post_type,
         }
     else:
