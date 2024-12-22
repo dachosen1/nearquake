@@ -16,7 +16,7 @@ from nearquake.config import (
     generate_coordinate_lookup_detail_url,
     generate_time_range_url,
 )
-from nearquake.tweet_processor import TweetOperator
+from nearquake.post_manager import post_to_all_platforms
 from nearquake.utils import (
     convert_timestamp_to_utc,
     fetch_json_data_from_url,
@@ -272,7 +272,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         )
 
 
-class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
+class TweetEarthquakeEvents(BaseDataUploader):
 
     def _extract(self) -> List:
         query = (
@@ -319,10 +319,7 @@ class TweetEarthquakeEvents(BaseDataUploader, TweetOperator):
             )
 
             try:
-                self.run_tweet_operator(tweet_text=tweet_text, conn=self.conn)
-                _logger.info(
-                    "Recorded recent tweet posted in the database recent into the Database "
-                )
+                post_to_all_platforms(post_text=tweet_text)
 
             except Exception as e:
                 _logger.error(

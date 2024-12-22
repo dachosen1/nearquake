@@ -16,6 +16,7 @@ from nearquake.data_processor import (
     UploadEarthQuakeLocation,
     get_date_range_summary,
 )
+from nearquake.post_manager import post_to_all_platforms
 from nearquake.open_ai_client import generate_response
 from nearquake.utils import convert_datetime, format_earthquake_alert
 from nearquake.utils.db_sessions import DbSessionManager
@@ -98,7 +99,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
+            post_to_all_platforms(tweet_text)
 
         if args.weekly:
             run.upload(url=generate_time_period_url("week"))
@@ -122,7 +123,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
+            post_to_all_platforms(tweet_text)
 
         if args.monthly:
             run.upload(url=generate_time_period_url("month"))
@@ -146,7 +147,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
+            post_to_all_platforms(tweet_text)
 
         if args.initialize:
             create_database(url=POSTGRES_CONNECTION_URL, schema=["earthquake", "tweet"])
@@ -159,7 +160,7 @@ if __name__ == "__main__":
                 post_type="fact", message=message, prompt=prompt
             )
 
-            tweet.run_tweet_operator(tweet_text=tweet_text, conn=conn)
+            post_to_all_platforms(tweet_text)
 
         if args.backfill:
             start_date = input("Type Start Date:")
