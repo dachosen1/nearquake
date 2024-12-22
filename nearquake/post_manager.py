@@ -1,17 +1,13 @@
 import logging
 from abc import ABC, abstractmethod
-
-
 import tweepy
 from atproto import Client
-
 from nearquake.config import TWITTER_AUTHENTICATION, BLUESKY_PASSWORD, BLUESKY_USER_NAME
 
 _logger = logging.getLogger(__name__)
 
 
 class PlatformPoster(ABC):
-
     def __init__(self):
         self.client = None
 
@@ -29,15 +25,15 @@ class TwitterPost(PlatformPoster):
             access_token=TWITTER_AUTHENTICATION["ACCESS_TOKEN"],
             access_token_secret=TWITTER_AUTHENTICATION["ACCESS_TOKEN_SECRET"],
         )
+        _logger.info("Successfully authenticated with Twitter")
 
     def post(self, post_text: str) -> bool:
         try:
             self.client.create_tweet(text=post_text)
-            _logger.info(f"Successfully posted {post_text}")
+            _logger.info(f"Successfully posted to Twitter: {post_text}")
             return True
-
         except Exception as e:
-            _logger.error(f"Failed to post {post_text}. Error: {e}")
+            _logger.error(f"Failed to post to Twitter: {post_text}. Error: {e}")
             return False
 
 
@@ -45,23 +41,19 @@ class BlueSkyPost(PlatformPoster):
     def __init__(self):
         self.client = Client()
         self.client.login(BLUESKY_USER_NAME, BLUESKY_PASSWORD)
+        _logger.info("Successfully authenticated with BlueSky")
 
     def post(self, post_text: str) -> bool:
         try:
-            self.client.create_tweet(text=post_text)
+            self.client.send_post(text=post_text)
+            _logger.info(f"Successfully posted to BlueSky: {post_text}")
             return True
-
         except Exception as e:
-            _logger.error(f"Failed to post {post_text}. Error: {e}")
+            _logger.error(f"Failed to post to BlueSky: {post_text}. Error: {e}")
             return False
 
 
 def post_to_all_platforms(post_text: str) -> dict:
-
     platforms = [TwitterPost(), BlueSkyPost()]
     for platform in platforms:
-        platform.post(post_text)
-
-
-if __name__ == "__main__":
-    post_to_all_platforms("Hello World")
+        platform.post(post_text.get("post"))
