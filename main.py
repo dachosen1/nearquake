@@ -16,6 +16,7 @@ from nearquake.data_processor import (
     UploadEarthQuakeLocation,
     get_date_range_summary,
 )
+
 from nearquake.post_manager import post_to_all_platforms, save_tweet_to_db
 from nearquake.open_ai_client import generate_response
 from nearquake.utils import convert_datetime, format_earthquake_alert

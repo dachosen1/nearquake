@@ -54,7 +54,6 @@ class BlueSkyPost(PlatformPoster):
             _logger.error(f"Failed to post to BlueSky: {post_text}. Error: {e}")
             return False
 
-
 def save_tweet_to_db(tweet_text: dict, conn) -> bool:
     """
     Save the posted tweet data into the database.
@@ -68,7 +67,6 @@ def save_tweet_to_db(tweet_text: dict, conn) -> bool:
     except Exception as e:
         _logger.error(f"Failed to save tweet to database {tweet_text}. Error: {e}")
         return False
-
 
 def post_to_all_platforms(post_text: str) -> dict:
     platforms = [TwitterPost(), BlueSkyPost()]
