@@ -100,7 +100,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            post_to_all_platforms(tweet_text)
+            post_to_all_platforms(tweet_text=tweet_text.get("post"))
             save_tweet_to_db(tweet_text, conn)
 
         if args.weekly:
@@ -125,7 +125,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            post_to_all_platforms(tweet_text)
+            post_to_all_platforms(tweet_text=tweet_text.get("post"))
             save_tweet_to_db(tweet_text, conn)
 
         if args.monthly:
@@ -150,7 +150,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            post_to_all_platforms(tweet_text)
+            post_to_all_platforms(tweet_text=tweet_text.get("post"))
             save_tweet_to_db(tweet_text, conn)
 
         if args.initialize:
@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
             tweet_text = format_earthquake_alert(post_type="fact", message=message)
 
-            post_to_all_platforms(tweet_text)
+            post_to_all_platforms(tweet_text=tweet_text.get("post"))
             save_tweet_to_db(tweet_text, conn)
 
         if args.backfill:
