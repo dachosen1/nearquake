@@ -16,7 +16,7 @@ from nearquake.config import (
     generate_coordinate_lookup_detail_url,
     generate_time_range_url,
 )
-from nearquake.post_manager import post_to_all_platforms
+from nearquake.post_manager import post_to_all_platforms, save_tweet_to_db
 from nearquake.utils import (
     convert_timestamp_to_utc,
     fetch_json_data_from_url,
@@ -319,7 +319,8 @@ class TweetEarthquakeEvents(BaseDataUploader):
             )
 
             try:
-                post_to_all_platforms(post_text=tweet_text)
+                post_to_all_platforms(text=tweet_text.get("post"))
+                save_tweet_to_db(tweet_text, self.conn)
 
             except Exception as e:
                 _logger.error(
