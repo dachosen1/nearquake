@@ -70,7 +70,20 @@ def save_tweet_to_db(tweet_text: dict, conn) -> bool:
         return False
 
 
-def post_to_all_platforms(post_text: str) -> dict:
-    platforms = [TwitterPost(), BlueSkyPost()]
-    for platform in platforms:
-        platform.post(post_text)
+_PLATFORM = [TwitterPost(), BlueSkyPost()]
+
+
+def post_to_all_platforms(text: str) -> dict:
+    for platform in _PLATFORM:
+        platform.post(text)
+
+
+def post_and_save_tweet(text: dict, conn) -> None:
+    """
+    Post tweet to all platforms and save to database
+
+    :param tweet_text: Tweet content
+    :param conn:  Database connection
+    """
+    post_to_all_platforms(text=text.get("post"))
+    save_tweet_to_db(text, conn)
