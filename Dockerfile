@@ -1,4 +1,4 @@
-FROM python:3.12.4-slim
+FROM python:3.14.0a3-slim
 
 RUN apt-get update \
     && apt-get -y install cron=3.0pl1-162 \
