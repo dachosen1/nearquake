@@ -99,7 +99,7 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            if tweet_text: 
+            if tweet_text:
                 post_and_save_tweet(tweet_text, conn)
 
         if args.weekly:
