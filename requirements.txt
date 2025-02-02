@@ -1,5 +1,5 @@
 alembic==1.14.0
-atproto==0.0.56
+atproto==0.0.58
 black==24.10.0
 openai==1.58.1
 pillow==10.2.0
