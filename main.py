@@ -99,7 +99,8 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            post_and_save_tweet(tweet_text, conn)
+            if tweet_text:
+                post_and_save_tweet(tweet_text, conn)
 
         if args.weekly:
             run.upload(url=generate_time_period_url("week"))
@@ -123,7 +124,8 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            post_and_save_tweet(tweet_text, conn)
+            if tweet_text:
+                post_and_save_tweet(tweet_text, conn)
 
         if args.monthly:
             run.upload(url=generate_time_period_url("month"))
@@ -147,7 +149,8 @@ if __name__ == "__main__":
                 post_type="fact",
                 message=message,
             )
-            post_and_save_tweet(tweet_text, conn)
+            if tweet_text:
+                post_and_save_tweet(tweet_text, conn)
 
         if args.initialize:
             create_database(url=POSTGRES_CONNECTION_URL, schema=["earthquake", "tweet"])
