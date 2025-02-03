@@ -6,10 +6,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - /var/log/nearquake:/usr/src/app/logs
-    healthcheck:
-      test: [ "CMD", "python", "main.py" ]
-      interval: 600s
-      retries: 5
     restart: always
     env_file: .env
     networks:
