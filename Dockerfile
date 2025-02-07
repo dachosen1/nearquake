@@ -1,9 +1,8 @@
 FROM python:3.12.4-slim
 
-RUN apt-get update \
-    && apt-get -y --no-install-recommends cron=3.0pl1-162 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends cron && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
