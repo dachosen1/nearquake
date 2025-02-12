@@ -7,4 +7,3 @@ __pycache__/
 /test
 *.log
 .DS_Store
-*.sql
