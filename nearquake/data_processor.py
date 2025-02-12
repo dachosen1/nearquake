@@ -50,7 +50,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
     event data and perform backfill operations for a specified date range.
     """
 
-    def _extract(self, url) -> List:
+    def _extract(self, url: str) -> List[dict]:
         """
         Extracts earthquake data from earthquake.usgs.gov, and returns a list of events that are not in the current database
 
@@ -66,13 +66,12 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             existing_event_records = self.conn.fetch_many(
                 model=EventDetails, column="id_event", items=event_ids_from_api
             )
-            self.existing_event_ids = [
-                record.id_event for record in existing_event_records
-            ]
+            existing_event_ids = [record.id_event for record in existing_event_records]
 
             new_events = [
-                i for i in data["features"] if i["id"] not in self.existing_event_ids
+                i for i in data["features"] if i["id"] not in existing_event_ids
             ]
+            self.existing_event_ids_count = len(existing_event_ids)
         except TypeError:
             new_events = data["features"]
 
@@ -80,7 +79,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             _logger.error(f"Encountered an unexpected error: {e} {event_ids_from_api}")
         return new_events
 
-    def _fetch_event_details(self, event) -> EventDetails:
+    def _fetch_event_details(self, event: dict) -> EventDetails:
         id_event = event["id"]
         properties = event["properties"]
         coordinates = event["geometry"]["coordinates"]
@@ -125,7 +124,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
                 event.date.strftime("%Y-%m-%d") for event in new_event_list
             )
             _logger.info(
-                f"Added {len(new_event_list)} records and {len(self.existing_event_ids)} records were already added. {dict(summary)}"
+                f"Added {len(new_event_list)} records and {len(self.existing_event_ids_count)} records were already added. {dict(summary)}"
             )
         else:
             _logger.info("No new records found")
@@ -161,7 +160,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
 
 
 class UploadEarthQuakeLocation(BaseDataUploader):
-    def _extract(self, date) -> list:
+    def _extract(self, date: str) -> list:
 
         query = (
             self.conn.session.query(
@@ -190,7 +189,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 isouter=True,
             )
             .filter(
-                LocationDetails.id_event == None,
+                LocationDetails.id_event.is_(None),
                 EventDetails.date.between(start_date, end_date),
             )
         )
@@ -200,7 +199,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         )
         return results
 
-    def _fetch_location_detail(self, event) -> LocationDetails:
+    def _fetch_location_detail(self, event: str) -> LocationDetails:
         id_event, latitude, longitude = event
         url = generate_coordinate_lookup_detail_url(
             latitude=latitude, longitude=longitude
@@ -235,7 +234,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return None
 
     @timer
-    def upload(self, start_date: str, end_date: str = None, interval: int = 15):
+    def upload(self, start_date: str, end_date: str = None, interval: int = 15) -> None:
 
         date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
 
@@ -289,9 +288,15 @@ class TweetEarthquakeEvents(BaseDataUploader):
             )
             .filter(
                 EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
-                TIMESTAMP_NOW - func.timezone("UTC", EventDetails.ts_event_utc)
+                func.now() - EventDetails.ts_event_utc
                 < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
                 Post.id_event == None,
+            )
+            .filter(
+                EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
+                func.now() - EventDetails.ts_event_utc
+                < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
+                Post.id_event.is_(None),
             )
         )
         return query.all()
