@@ -124,7 +124,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
                 event.date.strftime("%Y-%m-%d") for event in new_event_list
             )
             _logger.info(
-                f"Added {len(new_event_list)} records and {len(self.existing_event_ids_count)} records were already added. {dict(summary)}"
+                f"Added {len(new_event_list)} records and {self.existing_event_ids_count} records were already added. {dict(summary)}"
             )
         else:
             _logger.info("No new records found")
