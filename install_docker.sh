@@ -7,6 +7,8 @@ echo "Updating packages..."
 apt-get update -y
 apt-get upgrade -y
 
+apt install make
+
 echo "Installing dependencies..."
 apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 
