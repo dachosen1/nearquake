@@ -18,10 +18,10 @@ from nearquake.config import (
 )
 from nearquake.post_manager import post_and_save_tweet
 from nearquake.utils import (
+    backfill_valid_date_range,
     convert_timestamp_to_utc,
     fetch_json_data_from_url,
     format_earthquake_alert,
-    backfill_valid_date_range,
     timer,
 )
 
@@ -161,7 +161,6 @@ class UploadEarthQuakeEvents(BaseDataUploader):
 
 class UploadEarthQuakeLocation(BaseDataUploader):
     def _extract(self, date: str) -> list:
-
         query = (
             self.conn.session.query(
                 EventDetails.id_event, EventDetails.latitude, EventDetails.longitude
@@ -171,14 +170,13 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 LocationDetails.id_event == EventDetails.id_event,
                 isouter=True,
             )
-            .filter(LocationDetails.id_event == None, EventDetails.date == date)
+            .filter(LocationDetails.id_event is None, EventDetails.date == date)
         )
         results = query.all()
         _logger.info(f"Extracted {len(results)} quake events on {date}")
         return results
 
     def _extract_between(self, start_date, end_date) -> list:
-
         query = (
             self.conn.session.query(
                 EventDetails.id_event, EventDetails.latitude, EventDetails.longitude
@@ -235,7 +233,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
     @timer
     def upload(self, start_date: str, end_date: str = None, interval: int = 15) -> None:
-
         date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
 
         for start, end in date_range:
@@ -264,7 +261,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         end_date: str = None,
         interval: int = 15,
     ):
-
         self.upload(start_date=start_date, end_date=end_date, interval=interval)
         _logger.info(
             f"Backfill for earthquake locations between {start_date} and {end_date}"
@@ -272,7 +268,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
 
 class TweetEarthquakeEvents(BaseDataUploader):
-
     def _extract(self) -> List:
         query = (
             self.conn.session.query(
@@ -290,7 +285,7 @@ class TweetEarthquakeEvents(BaseDataUploader):
                 EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
                 func.now() - EventDetails.ts_event_utc
                 < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
-                Post.id_event == None,
+                Post.id_event is None,
             )
             .filter(
                 EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
@@ -302,7 +297,6 @@ class TweetEarthquakeEvents(BaseDataUploader):
         return query.all()
 
     def upload(self):
-
         eligible_quakes = self._extract()
         if not eligible_quakes:
             _logger.info(
@@ -311,7 +305,6 @@ class TweetEarthquakeEvents(BaseDataUploader):
             return None
 
         for quake in eligible_quakes:
-
             duration = TIMESTAMP_NOW - quake.ts_event_utc.replace(tzinfo=timezone.utc)
             earthquake_ts_event = quake.ts_event_utc.strftime("%H:%M:%S")
 
