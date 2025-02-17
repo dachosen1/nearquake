@@ -11,13 +11,9 @@ load_dotenv()
 
 TIMESTAMP_NOW = datetime.now(UTC)
 
-API_BASE_URL: str = (
-    "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
-)
+API_BASE_URL: str = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
 
-EARTHQUAKE_URL_TEMPLATE: str = (
-    "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={start}%2000:00:00&endtime={end}%2023:59:59"
-)
+EARTHQUAKE_URL_TEMPLATE: str = "https://earthquake.usgs.gov/fdsnws/event/1/query.geojson?starttime={start}%2000:00:00&endtime={end}%2023:59:59"
 
 EVENT_DETAIL_URL: str = (
     "https://earthquake.usgs.gov/earthquakes/eventpage/{id}/executive"

@@ -170,7 +170,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 LocationDetails.id_event == EventDetails.id_event,
                 isouter=True,
             )
-            .filter(LocationDetails.id_event == None, EventDetails.date == date)
+            .filter(LocationDetails.id_event is None, EventDetails.date == date)
         )
         results = query.all()
         _logger.info(f"Extracted {len(results)} quake events on {date}")
@@ -285,7 +285,7 @@ class TweetEarthquakeEvents(BaseDataUploader):
                 EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
                 func.now() - EventDetails.ts_event_utc
                 < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
-                Post.id_event == None,
+                Post.id_event is None,
             )
             .filter(
                 EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
