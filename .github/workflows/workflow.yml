@@ -48,8 +48,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Install Make
-      run: sudo apt update && sudo apt install -y make
     - name: Build and Deploy
       env:
         PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -57,6 +55,7 @@ jobs:
         USER_NAME: ${{ secrets.USERNAME }}
       run: | 
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          sudo apt update && sudo apt install -y make
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           cd .. && cd /home/nearquake && 
           git pull origin master && 
