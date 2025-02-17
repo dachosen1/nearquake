@@ -1,10 +1,10 @@
 alembic==1.14.0
 atproto==0.0.56
-black==25.1.0
 openai==1.58.1
 pillow==10.2.0
 psycopg2-binary==2.9.10
 requests==2.32.2
+ruff==0.9.6
 SQLAlchemy==2.0.24
 tqdm==4.67.1
 tweepy==4.15.0

@@ -31,9 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@stable
-        with:
-          options: "--check --verbose"
+      - uses: astral-sh/ruff-action@v3
 
   Build-Docker-Image:
     runs-on: ubuntu-latest
