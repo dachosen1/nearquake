@@ -68,9 +68,8 @@ if __name__ == "__main__":
         loc = UploadEarthQuakeLocation(conn=conn)
 
         if args.live:
-            for time in ["hour", "day", "week"]:
-                run.upload(url=generate_time_period_url(time))
-                tweet.upload()
+            run.upload(url=generate_time_period_url("hour"))
+            tweet.upload()
 
             start_date = datetime.now().date() - timedelta(days=30)
             end_date = datetime.now().date()
@@ -80,9 +79,11 @@ if __name__ == "__main__":
             )
 
         if args.daily:
+            run.upload(url=generate_time_period_url("day"))
             today = datetime.now().date()
             yesterday = today - timedelta(days=1)
             start_date = yesterday - timedelta(days=1)
+
             content = get_date_range_summary(
                 conn=conn, model=EventDetails, start_date=start_date, end_date=yesterday
             )
