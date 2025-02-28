@@ -303,7 +303,7 @@ def format_earthquake_alert(
 
     if post_type == "event":
         return {
-            "post": f"Recent #Earthquake: {message} reported at {ts_event} UTC ({duration.seconds / 60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
+            "post": f"Recent #Earthquake: {message} reported at {ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
             "ts_upload_utc": ts_upload_utc,
             "id_event": id_event,
             "post_type": post_type,

@@ -31,9 +31,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/ruff-action@v3
-      - run: ruff check --fix
-      - run: ruff format
+      - uses: psf/black@stable
+        with:
+          options: "--check --verbose"
 
   Build-Docker-Image:
     runs-on: ubuntu-latest
@@ -59,6 +59,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           cd .. && cd /home/nearquake && 
           git pull origin master && 
-          make up  && 
-          make prune;
+          sudo docker compose up -d --build && 
+          sudo docker image prune -f;
           '

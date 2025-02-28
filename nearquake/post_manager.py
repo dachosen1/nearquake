@@ -1,11 +1,10 @@
 import logging
 from abc import ABC, abstractmethod
-
 import tweepy
 from atproto import Client
 
 from nearquake.app.db import Post
-from nearquake.config import BLUESKY_PASSWORD, BLUESKY_USER_NAME, TWITTER_AUTHENTICATION
+from nearquake.config import TWITTER_AUTHENTICATION, BLUESKY_PASSWORD, BLUESKY_USER_NAME
 
 _logger = logging.getLogger(__name__)
 
