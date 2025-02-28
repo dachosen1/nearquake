@@ -18,10 +18,10 @@ from nearquake.config import (
 )
 from nearquake.post_manager import post_and_save_tweet
 from nearquake.utils import (
+    backfill_valid_date_range,
     convert_timestamp_to_utc,
     fetch_json_data_from_url,
     format_earthquake_alert,
-    backfill_valid_date_range,
     timer,
 )
 
