@@ -76,7 +76,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             new_events = data["features"]
 
         except Exception as e:
-            _logger.error(f"Encountered an unexpected error: {e} {event_ids_from_api}")
+            _logger.error(f"Encountered an unexpected error: {e} ")
         return new_events
 
     def _fetch_event_details(self, event: dict) -> EventDetails:
