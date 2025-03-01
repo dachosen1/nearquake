@@ -211,9 +211,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             return None
 
         if content.get("error") is not None:
-            _logger.error(
-                f"unable to get geocode for {event} content: {content} due to {content.get('error')} error "
-            )
+            _logger.error("Unable to get geocode due to an error.")
 
         try:
             return LocationDetails(
