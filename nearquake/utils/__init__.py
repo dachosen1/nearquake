@@ -166,22 +166,23 @@ def fetch_json_data_from_url(url):
 
         except json.JSONDecodeError:
             _logger.error("Failed to decode JSON from the response.")
+
             return None
 
     except requests.exceptions.HTTPError as e:
-        _logger.error(f"HTTP error occurred while fetching data from {url}: {e}")
+        _logger.error(f"HTTP error occurred while fetching data: {e}")
         return None
 
     except requests.exceptions.ConnectionError as e:
-        _logger.error(f"Connection error occurred while fetching data from {url}: {e}")
+        _logger.error(f"Connection error occurred while fetching data: {e}")
         return None
 
     except requests.exceptions.Timeout as e:
-        _logger.error(f"Timeout error occurred while fetching data from {url}: {e}")
+        _logger.error(f"Timeout error occurred while fetching data: {e}")
         return None
 
     except requests.exceptions.RequestException as e:
-        _logger.error(f"An error occurred while fetching data from {url}: {e}")
+        _logger.error(f"An error occurred while fetching data: {e}")
         return None
 
 
