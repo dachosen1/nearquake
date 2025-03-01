@@ -71,7 +71,7 @@ def save_tweet_to_db(tweet_text: dict, conn) -> bool:
         return False
 
 
-_PLATFORM = [TwitterPost()]
+_PLATFORM = [TwitterPost(), BlueSkyPost()]
 
 
 def post_to_all_platforms(text: str) -> dict:
