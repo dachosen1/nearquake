@@ -2,13 +2,14 @@ import random
 from abc import ABC, abstractmethod
 from datetime import timedelta
 
-from nearquake.app.db import EventDetails
+from nearquake.app.db import EventDetails, create_database
 from nearquake.config import (
     CHAT_PROMPT,
     EARTHQUAKE_POST_THRESHOLD,
+    POSTGRES_CONNECTION_URL,
+    TIMESTAMP_NOW,
     generate_time_period_url,
     tweet_conclusion_text,
-    TIMESTAMP_NOW,
 )
 from nearquake.data_processor import (
     TweetEarthquakeEvents,
@@ -158,3 +159,12 @@ class CommandHandlerFactory:
         if handler_class:
             return handler_class()
         return None
+
+
+class InitializeCommandHandler(CommandHandler):
+    """Handles database initialization."""
+
+    def execute(self, db_session):
+        create_database(
+            url=POSTGRES_CONNECTION_URL, schema=["earthquake", "tweet", "testing"]
+        )

@@ -4,6 +4,7 @@ from nearquake.cli.command_handlers import (
     CommandHandlerFactory,
     DailyCommandHandler,
     FunFactCommandHandler,
+    InitializeCommandHandler,
     LiveCommandHandler,
     MonthlyCommandHandler,
     WeeklyCommandHandler,
@@ -24,6 +25,7 @@ def main():
     factory.register("monthly", MonthlyCommandHandler)
     factory.register("fun", FunFactCommandHandler)
     factory.register("backfill", BackfillCommandHandler)
+    factory.register("initialize", InitializeCommandHandler)
 
     # Create DB session manager
     db_session = DbSessionManager(url=POSTGRES_CONNECTION_URL)
