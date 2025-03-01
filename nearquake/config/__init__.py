@@ -59,7 +59,7 @@ def generate_time_period_url(time_period: int) -> str:
         )
     else:
         _logger.info(
-            f"Generated the url to upload earthquake events for the last {time_period}"
+            f"Uplading the recent earthquake events for the last {time_period}......"
         )
         return API_BASE_URL.format(time_period=time_period)
 

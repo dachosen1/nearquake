@@ -306,7 +306,7 @@ class TweetEarthquakeEvents(BaseDataUploader):
         eligible_quakes = self._extract()
         if not eligible_quakes:
             _logger.info(
-                f"No recent earthquakes with a magnitude of {EARTHQUAKE_POST_THRESHOLD} or higher were found. Nothing was posted to twiter"
+                f"No recent earthquakes with a magnitude of {EARTHQUAKE_POST_THRESHOLD} or higher were found."
             )
             return None
 
