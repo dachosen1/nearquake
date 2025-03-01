@@ -16,6 +16,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import text
 
+from nearquake.app import DatabaseCreationError
+
 _logger = logging.getLogger(__name__)
 
 Base = declarative_base()
@@ -99,14 +101,11 @@ class LocationDetails(Base):
 
 
 def create_schema(engine, schema_names):
-    connection = engine.connect()
-
-    for schema_name in schema_names:
-        create_schema_sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
-        connection.execute(create_schema_sql)
-        _logger.info(
-            f"Successfuly created a new schema with the name: {schema_name} in the datase"
-        )
+    with engine.begin() as connection:
+        for schema_name in schema_names:
+            sql = text(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
+            connection.execute(sql)
+            _logger.info(f"Created a new schema: {schema_name}")
 
 
 def create_database(url: str, schema: Optional[List[str]] = None):
@@ -122,17 +121,10 @@ def create_database(url: str, schema: Optional[List[str]] = None):
     engine = create_engine(url)
 
     try:
+        if schema:
+            create_schema(engine, schema)
         Base.metadata.create_all(engine)
-
-    except SQLAlchemyError as e:
-        if "InvalidSchemaName" in str(e):
-            if schema:
-                create_schema(engine, schema)
-                Base.metadata.create_all(engine)
-
-            else:
-                raise ValueError("Schema name not provided")
-        else:
-            return SQLAlchemyError
-
-    return engine
+        return engine
+    except Exception as e:
+        # Handle potential errors during database/schema creation
+        raise DatabaseCreationError(f"Failed to create database: {str(e)}") from e
