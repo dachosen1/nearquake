@@ -1,6 +1,7 @@
 alembic==1.14.0
 atproto==0.0.56
 black==25.1.0
+logtail-python==0.3.3
 openai==1.58.1
 pillow>=10.3.0
 psycopg2-binary==2.9.10
