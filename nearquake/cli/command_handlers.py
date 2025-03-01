@@ -1,14 +1,14 @@
 import random
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from nearquake.app.db import EventDetails
-from nearquake.cli import parse_arguments
 from nearquake.config import (
     CHAT_PROMPT,
     EARTHQUAKE_POST_THRESHOLD,
     generate_time_period_url,
     tweet_conclusion_text,
+    TIMESTAMP_NOW,
 )
 from nearquake.data_processor import (
     TweetEarthquakeEvents,
@@ -47,22 +47,20 @@ class SummaryCommandHandler(CommandHandler):
     def __init__(self):
         self._uploader = None
         self._period_name = None
-        self._days = None
+        self._days = 0
+        self._today = TIMESTAMP_NOW.date()
+        self._start_date = self._today - timedelta(days=self._days)
 
     def execute(self, db_session):
-        # Upload data
+
         run = UploadEarthQuakeEvents(conn=db_session)
         run.upload(url=generate_time_period_url(self._period_name))
-
-        # Generate summary
-        end_date = datetime.now().date()
-        start_date = self._calculate_start_date(end_date)
 
         content = get_date_range_summary(
             conn=db_session,
             model=EventDetails,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=self._start_date,
+            end_date=self._today,
         )
 
         # Format and post message
@@ -72,10 +70,6 @@ class SummaryCommandHandler(CommandHandler):
         if tweet_text:
             post_and_save_tweet(tweet_text, db_session)
 
-    def _calculate_start_date(self, end_date):
-        """Calculate the start date based on the period."""
-        return end_date - timedelta(days=self._days)
-
     def _generate_message(self, content):
         """Generate the summary message."""
         greater_than_5 = sum(
@@ -83,9 +77,10 @@ class SummaryCommandHandler(CommandHandler):
             for i in content
             if i.mag is not None and i.mag >= EARTHQUAKE_POST_THRESHOLD
         )
-        conclusion_text = tweet_conclusion_text()
-
-        return f"During the past {self._period_name}, there were {len(content):,} #earthquakes globally, with {greater_than_5} of them registering a magnitude of 5.0 or higher. {conclusion_text}"
+        if self._period_name == "day":
+            return f"Yesterday, there were {len(content):,} #earthquakes globally, with {greater_than_5} of them registering a magnitude of 5.0 or higher. {tweet_conclusion_text()}"
+        else:
+            return f"During the past {self._period_name}, there were {len(content):,} #earthquakes globally, with {greater_than_5} of them registering a magnitude of 5.0 or higher. {tweet_conclusion_text()}"
 
 
 class DailyCommandHandler(SummaryCommandHandler):
@@ -95,23 +90,6 @@ class DailyCommandHandler(SummaryCommandHandler):
         super().__init__()
         self._period_name = "day"
         self._days = 1
-
-    def _calculate_start_date(self):
-        """Adjust calculation for daily report."""
-        today = datetime.now().date()
-        yesterday = today - timedelta(days=1)
-        return yesterday - timedelta(days=1)
-
-    def _generate_message(self, content):
-        """Customize message for daily report."""
-        greater_than_5 = sum(
-            1
-            for i in content
-            if i.mag is not None and i.mag >= EARTHQUAKE_POST_THRESHOLD
-        )
-        conclusion_text = tweet_conclusion_text()
-
-        return f"Yesterday, there were {len(content):,} #earthquakes globally, with {greater_than_5} of them registering a magnitude of 5.0 or higher. {conclusion_text}"
 
 
 class WeeklyCommandHandler(SummaryCommandHandler):

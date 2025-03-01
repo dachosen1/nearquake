@@ -26,14 +26,14 @@ def main():
     factory.register("backfill", BackfillCommandHandler)
 
     # Create DB session manager
-    db_session_manager = DbSessionManager(url=POSTGRES_CONNECTION_URL)
+    db_session = DbSessionManager(url=POSTGRES_CONNECTION_URL)
 
-    with db_session_manager as session:
+    with db_session:
         for command_name, enabled in vars(args).items():
             if enabled:
                 handler = factory.create(command_name)
                 if handler:
-                    handler.execute(session)
+                    handler.execute(db_session)
 
 
 if __name__ == "__main__":
