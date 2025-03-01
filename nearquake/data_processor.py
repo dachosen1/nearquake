@@ -207,7 +207,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         content = fetch_json_data_from_url(url=url)
 
         if content is None:
-            _logger.info(f"Skipping {event}. The url returned none type. url: {url}")
+            _logger.info("Skipping event. The URL returned None type.")
             return None
 
         if content.get("error") is not None:
