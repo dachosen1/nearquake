@@ -165,7 +165,8 @@ def fetch_json_data_from_url(url):
             return json.loads(response.text)
 
         except json.JSONDecodeError:
-            _logger.error("Failed to decode JSON from response")
+            _logger.error("Failed to decode JSON from the response.")
+
             return None
 
     except requests.exceptions.HTTPError as e:
