@@ -212,7 +212,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
         if content.get("error") is not None:
             _logger.error(
-                f"unable to get geocode for {event} content: {content} due to {content.get('error')} error "
+                f"Unable to get geocode due to {content.get('error')} error."
             )
 
         try:
@@ -229,7 +229,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
         except Exception as e:
             _logger.error(
-                f"Encountered an error while attempting to extract long, and lattiude {e} content: {content} event {event}  url: {url}"
+                f"Encountered an error while attempting to extract location details: {e}"
             )
         return None
 
