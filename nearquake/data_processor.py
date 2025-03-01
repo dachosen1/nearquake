@@ -212,7 +212,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
         if content.get("error") is not None:
             _logger.error(
-                f"Unable to get geocode due to {content.get('error')} error."
+                "Unable to get geocode due to an error."
             )
 
         try:
