@@ -1,9 +1,11 @@
 import json
 import logging
 import logging.handlers
-from logtail import LogtailHandler
+import os
 import sys
-import os 
+
+from logtail import LogtailHandler
+
 from nearquake.config import TIMESTAMP_NOW
 from nearquake.utils import create_dir
 
@@ -53,13 +55,11 @@ def setup_logging():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
 
-
     # Console Handler with Standard Formatter
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.addFilter(FilterForHandler("console"))
     console_handler.setFormatter(CustomFormatter())
     logger.addHandler(console_handler)
-
 
     handler = LogtailHandler(
         source_token=os.environ.get("LOGS_SOURCE_TOKEN"),
