@@ -229,7 +229,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
 
         except Exception as e:
             _logger.error(
-                f"Encountered an error while attempting to extract long, and lattiude {e} content: {content} event {event}  url: {url}"
+                f"Encountered an error while attempting to extract location details: {e}"
             )
         return None
 
