@@ -1,7 +1,10 @@
 import json
 import logging
 import logging.handlers
+import os
 import sys
+
+from logtail import LogtailHandler
 
 from nearquake.config import TIMESTAMP_NOW
 from nearquake.utils import create_dir
@@ -52,29 +55,25 @@ def setup_logging():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
 
-    # Create directory path to save logs
-    create_dir("logs")
-
     # Console Handler with Standard Formatter
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.addFilter(FilterForHandler("console"))
     console_handler.setFormatter(CustomFormatter())
     logger.addHandler(console_handler)
 
-    # File Handler with Log Rotation and JSON Formatter
-    file_handler = logging.handlers.RotatingFileHandler(
-        f"logs/{TIMESTAMP_NOW}-nearquake.log", maxBytes=1048576, backupCount=5
+    handler = LogtailHandler(
+        source_token=os.environ.get("LOGS_SOURCE_TOKEN"),
+        host=os.environ.get("LOGS_SOURCE_HOST"),
     )
-
-    file_handler.addFilter(FilterForHandler("file"))
-    file_handler.setFormatter(CustomFormatter())
-    file_handler.setLevel(logging.DEBUG)
-    logger.addHandler(file_handler)
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    logger.handlers = []
+    logger.addHandler(handler)
 
     logger.propagate = False
 
 
 # Initialize logging
-DEBUG_MODE = True  # Set to False in production
+DEBUG_MODE = False  # Set to False in production
 setup_logging()
 logger = logging.getLogger(__name__)
