@@ -91,6 +91,7 @@ class DailyCommandHandler(SummaryCommandHandler):
         super().__init__()
         self._period_name = "day"
         self._days = 1
+        self._start_date = self._today - timedelta(days=self._days)
 
 
 class WeeklyCommandHandler(SummaryCommandHandler):
@@ -100,6 +101,7 @@ class WeeklyCommandHandler(SummaryCommandHandler):
         super().__init__()
         self._period_name = "week"
         self._days = 7
+        self._start_date = self._today - timedelta(days=self._days)
 
 
 class MonthlyCommandHandler(SummaryCommandHandler):
@@ -109,6 +111,7 @@ class MonthlyCommandHandler(SummaryCommandHandler):
         super().__init__()
         self._period_name = "month"
         self._days = 30
+        self._start_date = self._today - timedelta(days=self._days)
 
 
 class FunFactCommandHandler(CommandHandler):
