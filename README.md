@@ -5,13 +5,21 @@
 [![codecov](https://codecov.io/gh/dachosen1/nearquake/branch/master/graph/badge.svg)](https://codecov.io/gh/dachosen1/nearquake)
 [![Twitter Follow](https://img.shields.io/badge/%20-@__quakebot_-black?color=14171A&labelColor=00acee&logo=twitter&logoColor=ffffff)](https://twitter.com/quakebot_)
 
-Quakebot is designed to tweet earthquakes greater than 4.0 around the world, and provides a historical snapshot of earthquakes and also generates fun facts and key tips about eartquakes.
+Quakebot is designed to tweet earthquakes greater than 4.0 around the world, provides a historical snapshot of earthquakes, and generates fun facts and key tips about earthquakes.
 
-### Tweet Schedule:
+## Features
 
-- Earthquakes with a magnitude greater than 4.5
-- Recap on the number of tweets that was recorded in the last day, month and week.
+- **Real-time Earthquake Alerts**: Tweets earthquakes with a magnitude greater than 4.5 as they occur
+- **Periodic Summaries**: Provides daily, weekly, and monthly recaps of earthquake activity
+- **Fun Facts**: Shares interesting earthquake facts and safety tips
+- **Historical Data**: Maintains a database of past earthquake events for analysis
 
-### Source
+## Tweet Schedule
 
-Data is provided by [USGS](https://earthquake.usgs.gov)
+- Real-time alerts for earthquakes with a magnitude greater than 4.5
+- Daily, weekly, and monthly summaries of recorded earthquake activity
+
+## Data Source
+
+Earthquake data is provided by the [United States Geological Survey (USGS)](https://earthquake.usgs.gov)
+
