@@ -3,14 +3,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from nearquake.utils.logging_utils import (
-    get_logger,
-    log_db_operation,
-    log_error,
-    log_info,
-)
-
-_logger = get_logger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class DbSessionManager:
@@ -33,10 +26,10 @@ class DbSessionManager:
         try:
             self.engine = create_engine(url)
             self.Session = scoped_session(sessionmaker(bind=self.engine))
-            log_info(_logger, "Successfully established connection to the database.")
+            _logger.info("Successfully established connection to the database.")
 
         except Exception as e:
-            log_error(_logger, "Failed to connect to the database", exc=e)
+            _logger.error("Failed to connect to the database: %s", e, exc_info=True)
 
     def fetch_single(self, model, column, item):
         """
@@ -47,24 +40,13 @@ class DbSessionManager:
         :param item: The value to filter by
         """
         try:
-            log_db_operation(
-                _logger,
-                operation="SELECT",
-                table=model.__tablename__,
-                details=f"Fetching single record where {column}={item}",
-            )
-
             result = (
                 self.session.query(model).filter(getattr(model, column) == item).all()
             )
             return result
 
         except Exception as e:
-            log_error(
-                _logger,
-                f"Failed to execute fetch query on {model.__tablename__}",
-                exc=e,
-            )
+            _logger.error("Failed to execute fetch query: %s", e, exc_info=True)
             return None
 
     def fetch_many(self, model, column, items):
@@ -76,13 +58,6 @@ class DbSessionManager:
         :param item: The value to filter by
         """
         try:
-            log_db_operation(
-                _logger,
-                operation="SELECT",
-                table=model.__tablename__,
-                details=f"Fetching multiple records where {column} in list of {len(items)} items",
-            )
-
             result = (
                 self.session.query(model)
                 .filter(getattr(model, column).in_(items))
@@ -91,11 +66,7 @@ class DbSessionManager:
             return result
 
         except Exception as e:
-            log_error(
-                _logger,
-                f"Failed to execute fetch_many query on {model.__tablename__}",
-                exc=e,
-            )
+            _logger.error("Failed to execute fetch query: %s", e, exc_info=True)
             return None
 
     def insert(self, model):
@@ -105,22 +76,11 @@ class DbSessionManager:
         :param model: An instance of an SQLAlchemy ORM model to be inserted into the database.
         """
         try:
-            log_db_operation(
-                _logger,
-                operation="INSERT",
-                table=model.__tablename__,
-                details=f"Inserting single record",
-            )
-
             self.session.add(model)
             self.session.commit()
 
         except Exception as e:
-            log_error(
-                _logger,
-                f"Failed to execute insert query on {model.__tablename__}",
-                exc=e,
-            )
+            _logger.error("Failed to execute insert query: %s", e, exc_info=True)
 
     def insert_many(self, models):
         """
@@ -128,35 +88,26 @@ class DbSessionManager:
 
         :param models: A list of model instances to be inserted into the database.
         """
-        if not models:
-            return
-
         try:
-            table_name = models[0].__tablename__
-            log_db_operation(
-                _logger,
-                operation="INSERT",
-                table=table_name,
-                details=f"Inserting {len(models)} records",
-            )
-
             for model in models:
                 self.session.add(model)
             self.session.commit()
 
         except Exception as e:
-            log_error(_logger, f"Failed to execute insert_many query", exc=e)
+            _logger.error("Failed to execute insert_many query: %s", e, exc_info=True)
             self.session.rollback()
 
     def close(self):
         """Closes the database session."""
         try:
             self.session.close()
-            log_info(_logger, "Database session closed")
+            _logger.info("Database session closed !!!")
 
         except Exception as e:
-            log_error(
-                _logger, "Error occurred while closing the database session", exc=e
+            _logger.error(
+                "Error occurred while closing the database session: %s",
+                e,
+                exc_info=True,
             )
 
     def __enter__(self):
