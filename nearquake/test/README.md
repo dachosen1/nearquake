@@ -40,19 +40,19 @@ The test suite includes coverage reporting to measure how much of the codebase i
 
 ### Coverage by Module
 
-| Module                        | Coverage |
-|-------------------------------|----------|
-| nearquake/__init__.py         | 100%     |
-| nearquake/app/__init__.py     | 100%     |
-| nearquake/app/db.py           | 80%      |
-| nearquake/cli/__init__.py     | 18%      |
-| nearquake/cli/command_handlers.py | 99%  |
-| nearquake/config/__init__.py  | 100%     |
-| nearquake/data_processor.py   | 77%      |
-| nearquake/open_ai_client.py   | 35%      |
-| nearquake/post_manager.py     | 49%      |
-| nearquake/utils/__init__.py   | 49%      |
-| nearquake/utils/db_sessions.py| 81%      |
+| Module                            | Coverage |
+| --------------------------------- | -------- |
+| nearquake/**init**.py             | 100%     |
+| nearquake/app/**init**.py         | 100%     |
+| nearquake/app/db.py               | 80%      |
+| nearquake/cli/**init**.py         | 18%      |
+| nearquake/cli/command_handlers.py | 99%      |
+| nearquake/config/**init**.py      | 100%     |
+| nearquake/data_processor.py       | 77%      |
+| nearquake/open_ai_client.py       | 35%      |
+| nearquake/post_manager.py         | 49%      |
+| nearquake/utils/**init**.py       | 49%      |
+| nearquake/utils/db_sessions.py    | 81%      |
 
 ### Running Coverage Tests
 
@@ -81,7 +81,7 @@ The coverage information in this README is manually updated based on the output 
 
 ### Coverage Report
 
-![Coverage Report](../htmlcov/index.html)
+To view the detailed coverage report, open `../htmlcov/index.html` in your browser after running the coverage tests.
 
 ## Test Configuration
 
@@ -104,4 +104,4 @@ When adding new tests:
 3. Use appropriate mocking to isolate the component being tested
 4. Ensure tests are independent and don't rely on external services
 5. Add documentation for new test files in this README
-6. Run coverage tests to ensure your tests adequately cover the code 
+6. Run coverage tests to ensure your tests adequately cover the code
