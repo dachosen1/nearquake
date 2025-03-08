@@ -1,10 +1,9 @@
 import datetime
 import json
 import os
-import time
-from datetime import timedelta, timezone
+from datetime import timedelta
 from io import BytesIO
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
@@ -98,9 +97,6 @@ def test_fetch_json_data_from_url_json_decode_error(mock_get):
     json_data = fetch_json_data_from_url(url)
 
     assert json_data is None
-
-
-# New tests below
 
 
 def test_extract_properties():
