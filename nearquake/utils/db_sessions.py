@@ -47,10 +47,11 @@ class DbSessionManager:
         :param item: The value to filter by
         """
         try:
+            table_name = getattr(model, "__tablename__", model.__name__)
             log_db_operation(
                 _logger,
                 operation="SELECT",
-                table=model.__tablename__,
+                table=table_name,
                 details=f"Fetching single record where {column}={item}",
             )
 
@@ -62,7 +63,7 @@ class DbSessionManager:
         except Exception as e:
             log_error(
                 _logger,
-                f"Failed to execute fetch query on {model.__tablename__}",
+                f"Failed to execute fetch query on {getattr(model, '__tablename__', model.__name__)}",
                 exc=e,
             )
             return None
@@ -76,10 +77,11 @@ class DbSessionManager:
         :param item: The value to filter by
         """
         try:
+            table_name = getattr(model, "__tablename__", model.__name__)
             log_db_operation(
                 _logger,
                 operation="SELECT",
-                table=model.__tablename__,
+                table=table_name,
                 details=f"Fetching multiple records where {column} in list of {len(items)} items",
             )
 
@@ -93,7 +95,7 @@ class DbSessionManager:
         except Exception as e:
             log_error(
                 _logger,
-                f"Failed to execute fetch_many query on {model.__tablename__}",
+                f"Failed to execute fetch_many query on {getattr(model, '__tablename__', model.__name__)}",
                 exc=e,
             )
             return None
@@ -105,10 +107,11 @@ class DbSessionManager:
         :param model: An instance of an SQLAlchemy ORM model to be inserted into the database.
         """
         try:
+            table_name = getattr(model, "__tablename__", model.__class__.__name__)
             log_db_operation(
                 _logger,
                 operation="INSERT",
-                table=model.__tablename__,
+                table=table_name,
                 details=f"Inserting single record",
             )
 
@@ -118,7 +121,7 @@ class DbSessionManager:
         except Exception as e:
             log_error(
                 _logger,
-                f"Failed to execute insert query on {model.__tablename__}",
+                f"Failed to execute insert query on {getattr(model, '__tablename__', model.__class__.__name__)}",
                 exc=e,
             )
 
@@ -132,7 +135,9 @@ class DbSessionManager:
             return
 
         try:
-            table_name = models[0].__tablename__
+            table_name = getattr(
+                models[0], "__tablename__", models[0].__class__.__name__
+            )
             log_db_operation(
                 _logger,
                 operation="INSERT",
