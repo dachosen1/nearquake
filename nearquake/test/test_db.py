@@ -323,7 +323,6 @@ class TestDatabaseIntegration:
 
     def test_relationship_event_location(self, db_session):
         """Test relationship between EventDetails and LocationDetails"""
-        import datetime
 
         # Create a test event
         event = self.TestEventDetails(
@@ -384,7 +383,6 @@ class TestDatabaseIntegration:
 
     def test_create_and_query_post(self, db_session):
         """Test creating and querying a post related to an event"""
-        import datetime
 
         # Create a test event
         event = self.TestEventDetails(
@@ -432,9 +430,6 @@ class TestDatabaseIntegration:
 # Also, let's add a test for the create_database function
 def test_create_database_with_schema(monkeypatch):
     """Test the create_database function with schema creation"""
-    from unittest.mock import MagicMock
-
-    from nearquake.app.db import create_database
 
     # Mock the create_engine function
     mock_engine = MagicMock()

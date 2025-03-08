@@ -1,7 +1,5 @@
-import sys
 from unittest.mock import patch
 
-import pytest
 
 from nearquake.cli import parse_arguments
 

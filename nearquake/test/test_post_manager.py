@@ -4,7 +4,6 @@ import pytest
 
 from nearquake.app.db import Post
 from nearquake.post_manager import (
-    _PLATFORM,
     BlueSkyPost,
     PlatformPoster,
     TwitterPost,
