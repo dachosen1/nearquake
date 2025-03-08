@@ -1,4 +1,3 @@
-
 import datetime
 import unittest
 from unittest.mock import MagicMock, patch
@@ -6,18 +5,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 import sqlalchemy.orm
 from sqlalchemy import MetaData, create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from sqlalchemy.exc import SQLAlchemyError
-
 from nearquake.app import DatabaseCreationError
-from nearquake.app.db import (
-    Base,
-    EventDetails,
-    LocationDetails,
-    Post,
-    create_database,
-)
+from nearquake.app.db import Base, EventDetails, LocationDetails, Post, create_database
 
 DATABASE_URL = "sqlite:///:memory:"
 
@@ -440,7 +432,7 @@ class TestDatabaseIntegration:
 # Also, let's add a test for the create_database function
 def test_create_database_with_schema(monkeypatch):
     """Test the create_database function with schema creation"""
-    from unittest.mock import MagicMock, patch
+    from unittest.mock import MagicMock
 
     from nearquake.app.db import create_database
 
