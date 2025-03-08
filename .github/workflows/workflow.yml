@@ -26,8 +26,6 @@ jobs:
     - name: Test with pytest and generate coverage
       run: |
         make coverage
-        make coverage-report
-        make pytest
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
