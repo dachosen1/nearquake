@@ -348,7 +348,7 @@ def timer(func):
         elif duration < 3600:
             value, period = duration // 60, "minutes"
         else:
-            value, period = duration // 3600, "minutes"
+            value, period = duration // 3600, "hours"
 
         _logger.info(f"{func.__name__} completed in {value:.0f} {period}")
         return result
