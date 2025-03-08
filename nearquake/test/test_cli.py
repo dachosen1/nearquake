@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-
 from nearquake.cli import parse_arguments
 
 

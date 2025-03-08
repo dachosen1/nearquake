@@ -83,8 +83,10 @@ class TestDataProcessingIntegration:
         }
 
         # Configure mock query to return our test event
-        mock_event = MockEventDetails(**test_event_data)
-        test_db.query.return_value.filter.return_value.all.return_value = [mock_event]
+        mock_event = ("location_test_id", 30.0, 120.0)  # id_event, latitude, longitude
+        test_db.session.query.return_value.join.return_value.filter.return_value.all.return_value = [
+            mock_event
+        ]
 
         # Test the location data upload process
         with patch(
