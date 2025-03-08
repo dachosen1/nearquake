@@ -89,27 +89,8 @@ class CustomFormatter(logging.Formatter):
 
 # Logging Configuration
 def setup_logging():
-    # Configure the root logger to affect all loggers in the application
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
-
-    # Remove any existing handlers to avoid duplicates
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
-    # Set specific log levels for external libraries
-    # This reduces noise while still capturing important messages
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
-    logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
-    logging.getLogger("PIL").setLevel(logging.WARNING)
-
-    # Ensure nearquake loggers remain at the desired level
-    logging.getLogger("nearquake").setLevel(
-        logging.DEBUG if DEBUG_MODE else logging.INFO
-    )
-
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
     # Create directory path to save logs
     create_dir("logs")
 
@@ -133,7 +114,7 @@ def setup_logging():
     )
 
     console_handler.setFormatter(color_formatter)
-    root_logger.addHandler(console_handler)
+    logger.addHandler(console_handler)
 
     # File Handler with Log Rotation and JSON Formatter
     file_handler = logging.handlers.RotatingFileHandler(
@@ -141,13 +122,9 @@ def setup_logging():
     )
     file_handler.setFormatter(JsonFormatter())
     file_handler.setLevel(logging.DEBUG)
-    root_logger.addHandler(file_handler)
+    logger.addHandler(file_handler)
 
 
 # Initialize logging
 DEBUG_MODE = os.environ.get("DEBUG_MODE")
 setup_logging()
-logger = logging.getLogger(__name__)
-
-# Log startup message
-logger.info("Nearquake application initialized with colorful logging configuration")
