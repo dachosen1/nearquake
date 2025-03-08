@@ -128,4 +128,3 @@ def setup_logging():
 # Initialize logging
 DEBUG_MODE = os.environ.get("DEBUG_MODE")
 setup_logging()
-logger = logging.getLogger(__name__)
