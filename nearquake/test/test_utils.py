@@ -35,9 +35,10 @@ def test_generate_date_range():
 
 def test_generate_date_range_negative():
 
-    generate_date_range(
+    result = generate_date_range(
         start_date="2023-01-01", end_date="2022-01-01", interval=15
-    ) == []
+    )
+    assert result == []
 
 
 def test_convert_time_to_utc():
