@@ -173,7 +173,10 @@ def log_api_request(
     if params:
         masked_params = {}
         for key, value in params.items():
-            if any(pattern in key.lower() for pattern in ['api_key', 'token', 'auth', 'password', 'secret']):
+            if any(
+                pattern in key.lower()
+                for pattern in ["api_key", "token", "auth", "password", "secret"]
+            ):
                 masked_params[key] = "********"
             else:
                 masked_params[key] = value
@@ -182,10 +185,12 @@ def log_api_request(
 
     if params:
         logger.log(
-            level, f"API Request to {api_name} - Endpoint: {endpoint}, Params: {masked_params}"
+            level,
+            f"API Request to {api_name} - Endpoint: {endpoint}, Params: {masked_params}",
         )
     else:
         logger.log(level, f"API Request to {api_name} - Endpoint: {endpoint}")
+
 
 def log_api_response(
     logger: logging.Logger,
