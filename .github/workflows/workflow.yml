@@ -21,11 +21,15 @@ jobs:
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install pytest
+        pip3 install pytest pytest-cov
         pip3 install -r requirements.txt
-    - name: Test with pytest
+    - name: Test with pytest and generate coverage
       run: |
-        pytest
+        make coverage
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   Linter:
     runs-on: ubuntu-latest
