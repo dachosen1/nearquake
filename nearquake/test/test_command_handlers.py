@@ -7,8 +7,6 @@ openai_patcher.start()
 
 from datetime import datetime, timedelta
 
-import pytest
-
 from nearquake.cli.command_handlers import (
     BackfillCommandHandler,
     CommandHandlerFactory,
