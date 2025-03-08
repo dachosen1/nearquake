@@ -1,6 +1,7 @@
 import json
 import logging
 import logging.handlers
+import os
 import sys
 
 import colorlog
@@ -96,6 +97,19 @@ def setup_logging():
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
 
+    # Set specific log levels for external libraries
+    # This reduces noise while still capturing important messages
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
+    logging.getLogger("PIL").setLevel(logging.WARNING)
+
+    # Ensure nearquake loggers remain at the desired level
+    logging.getLogger("nearquake").setLevel(
+        logging.DEBUG if DEBUG_MODE else logging.INFO
+    )
+
     # Create directory path to save logs
     create_dir("logs")
 
@@ -131,7 +145,7 @@ def setup_logging():
 
 
 # Initialize logging
-DEBUG_MODE = True  # Set to False in production
+DEBUG_MODE = os.environ.get("DEBUG_MODE")
 setup_logging()
 logger = logging.getLogger(__name__)
 
