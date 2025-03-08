@@ -1,3 +1,4 @@
+
 import datetime
 import unittest
 from unittest.mock import MagicMock, patch
@@ -5,6 +6,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 import sqlalchemy.orm
 from sqlalchemy import MetaData, create_engine
+from sqlalchemy.orm import Session
+
 from sqlalchemy.exc import SQLAlchemyError
 
 from nearquake.app import DatabaseCreationError
@@ -278,7 +281,6 @@ class TestDatabaseIntegration:
     @pytest.fixture
     def db_session(self, db_engine):
         """Create a new database session for testing"""
-        from sqlalchemy.orm import Session
 
         connection = db_engine.connect()
         transaction = connection.begin()
@@ -292,7 +294,6 @@ class TestDatabaseIntegration:
 
     def test_create_and_query_event(self, db_session):
         """Test creating and querying an earthquake event"""
-        import datetime
 
         # Create a test event using the test model
         event = self.TestEventDetails(
