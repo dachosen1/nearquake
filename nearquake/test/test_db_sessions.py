@@ -3,7 +3,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session
 
 from nearquake.utils.db_sessions import DbSessionManager
 

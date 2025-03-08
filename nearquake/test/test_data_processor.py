@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from nearquake.app.db import EventDetails, LocationDetails, Post
+from nearquake.app.db import EventDetails
 from nearquake.data_processor import (
     BaseDataUploader,
     TweetEarthquakeEvents,
