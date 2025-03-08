@@ -6,8 +6,14 @@ from atproto import Client
 
 from nearquake.app.db import Post
 from nearquake.config import BLUESKY_PASSWORD, BLUESKY_USER_NAME, TWITTER_AUTHENTICATION
+from nearquake.utils.logging_utils import (
+    get_logger,
+    log_db_operation,
+    log_error,
+    log_info,
+)
 
-_logger = logging.getLogger(__name__)
+_logger = get_logger(__name__)
 
 
 class PlatformPoster(ABC):
@@ -28,15 +34,15 @@ class TwitterPost(PlatformPoster):
             access_token=TWITTER_AUTHENTICATION["ACCESS_TOKEN"],
             access_token_secret=TWITTER_AUTHENTICATION["ACCESS_TOKEN_SECRET"],
         )
-        _logger.info("Successfully authenticated with Twitter")
+        log_info(_logger, "Successfully authenticated with Twitter")
 
     def post(self, post_text: str) -> bool:
         try:
             self.client.create_tweet(text=post_text)
-            _logger.info(f"Successfully posted to Twitter: {post_text}")
+            log_info(_logger, f"Successfully posted to Twitter: {post_text}")
             return True
         except Exception as e:
-            _logger.error(f"Failed to post to Twitter: {post_text}. Error: {e}")
+            log_error(_logger, f"Failed to post to Twitter: {post_text}", exc=e)
             return False
 
 
@@ -44,15 +50,15 @@ class BlueSkyPost(PlatformPoster):
     def __init__(self):
         self.client = Client()
         self.client.login(BLUESKY_USER_NAME, BLUESKY_PASSWORD)
-        _logger.info("Successfully authenticated with BlueSky")
+        log_info(_logger, "Successfully authenticated with BlueSky")
 
     def post(self, post_text: str) -> bool:
         try:
             self.client.send_post(text=post_text)
-            _logger.info(f"Successfully posted to BlueSky: {post_text}")
+            log_info(_logger, f"Successfully posted to BlueSky: {post_text}")
             return True
         except Exception as e:
-            _logger.error(f"Failed to post to BlueSky: {post_text}. Error: {e}")
+            log_error(_logger, f"Failed to post to BlueSky: {post_text}", exc=e)
             return False
 
 
@@ -64,10 +70,16 @@ def save_tweet_to_db(tweet_text: dict, conn) -> bool:
     """
     try:
         conn.insert(Post(**tweet_text))
-        _logger.info(f"Tweet saved to database: {tweet_text}")
+        log_db_operation(
+            _logger,
+            operation="INSERT",
+            table="tweet.fct__post",
+            details=f"Tweet saved: {tweet_text}",
+            level=logging.INFO,
+        )
         return True
     except Exception as e:
-        _logger.error(f"Failed to save tweet to database {tweet_text}. Error: {e}")
+        log_error(_logger, f"Failed to save tweet to database {tweet_text}", exc=e)
         return False
 
 

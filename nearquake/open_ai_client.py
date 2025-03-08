@@ -3,7 +3,15 @@ import os
 
 from openai import OpenAI
 
-_logger = logging.getLogger(__name__)
+from nearquake.utils.logging_utils import (
+    get_logger,
+    log_api_request,
+    log_api_response,
+    log_error,
+    log_info,
+)
+
+_logger = get_logger(__name__)
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -23,10 +31,20 @@ def generate_response(
     valid_roles = ["role", "user"]
 
     if role not in valid_roles:
-        _logger.error(f"Invalid role: {role}. Valid options are 'role' and 'user'.")
+        log_error(
+            _logger, f"Invalid role: {role}. Valid options are 'role' and 'user'."
+        )
         raise ValueError("Error: Invalid role. Please choose 'role' or 'user'.")
 
     try:
+        # Log the API request
+        log_api_request(
+            _logger,
+            api_name="OpenAI",
+            endpoint="chat.completions.create",
+            params={"model": model, "role": role, "prompt_length": len(prompt)},
+        )
+
         completion = client.chat.completions.create(
             model=model,
             messages=[
@@ -36,10 +54,19 @@ def generate_response(
                 },
             ],
         )
-        _logger.info(f"Prompt:{prompt}")
+
+        # Log the prompt and successful response
+        log_info(_logger, f"Prompt: {prompt}")
+        log_api_response(
+            _logger,
+            api_name="OpenAI",
+            endpoint="chat.completions.create",
+            status_code=200,
+            response_summary=f"Generated response with {len(completion.choices[0].message.content)} characters",
+        )
 
         return completion.choices[0].message.content
 
     except Exception as e:
-        _logger.error(f"Unexepected error occured {e}")
+        log_error(_logger, "Unexpected error occurred during OpenAI API call", exc=e)
         return f"Error {e}"
