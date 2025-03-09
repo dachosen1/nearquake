@@ -284,7 +284,7 @@ class TestInitializeCommandHandler(unittest.TestCase):
 
         # Verify the mock was called correctly
         mock_create_database.assert_called_once_with(
-            url="test_url", schema=["earthquake", "tweet", "testing"]
+            url="test_url", schema=["earthquake", "tweet"]
         )
 
 
