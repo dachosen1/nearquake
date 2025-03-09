@@ -3,7 +3,7 @@ services:
     image: earthquake_usgs_cron:1.3.0
     build:
       context: .
-    container_name: earthquake_bot
+    container_name: nearquake_bot
     volumes:
       - /var/log/nearquake:/usr/src/app/logs
     restart: always
@@ -27,6 +27,7 @@ services:
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
       # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    container_name: nearquake_postgres
     ports:
       - 5432:5432
     env_file: .env
