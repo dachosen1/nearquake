@@ -168,6 +168,4 @@ class InitializeCommandHandler(CommandHandler):
     """Handles database initialization."""
 
     def execute(self, db_session):
-        create_database(
-            url=POSTGRES_CONNECTION_URL, schema=["earthquake", "tweet", "testing"]
-        )
+        create_database(url=POSTGRES_CONNECTION_URL, schema=["earthquake", "tweet"])
