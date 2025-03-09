@@ -1,4 +1,4 @@
-name: Unit Test and Deployments 
+name: Unit Test and Deployments
 
 on: [push]
 
@@ -59,10 +59,8 @@ jobs:
         USER_NAME: ${{ secrets.USERNAME }}
       run: | 
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          sudo apt update && sudo apt install -y make
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
           cd .. && cd /home/nearquake && 
           git pull origin master && 
-          make up  && 
-          make prune;
+          make up;
           '
