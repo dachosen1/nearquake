@@ -12,10 +12,13 @@ from nearquake.utils import create_dir
 
 TIMESTAMP_NOW = TIMESTAMP_NOW.strftime("%Y%m%d")
 
-logtail_handler = LogtailHandler(
-    source_token=os.environ.get("LOGS_SOURCE_TOKEN"),
-    host=os.environ.get("LOGS_SOURCE_HOST"),
-)
+if os.environ.get("LOGS_SOURCE_TOKEN") and os.environ.get("LOGS_SOURCE_HOST"):
+    logtail_handler = LogtailHandler(
+        source_token=os.environ.get("LOGS_SOURCE_TOKEN"),
+        host=os.environ.get("LOGS_SOURCE_HOST"),
+    )
+else:
+    logtail_handler = None
 
 # ANSI color codes
 COLORS = {
@@ -129,7 +132,10 @@ def setup_logging():
     file_handler.setFormatter(JsonFormatter())
     file_handler.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
-    logger.addHandler(logtail_handler)
+    if logtail_handler:
+        logger.addHandler(logtail_handler)
+    else:
+        logger.debug("Logtail logging disabled: missing environment variables")
 
 
 # Initialize logging
