@@ -28,7 +28,7 @@ jobs:
         LOGS_SOURCE_TOKEN: ${{ secrets.LOGS_SOURCE_TOKEN }}
         LOGS_SOURCE_HOST: ${{ secrets.LOGS_SOURCE_HOST }}
       run: |
-        make test
+        make coverage
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
