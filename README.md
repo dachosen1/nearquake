@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/dachosen1/nearquake/branch/master/graph/badge.svg)](https://codecov.io/gh/dachosen1/nearquake)
 [![Twitter Follow](https://img.shields.io/badge/%20-@__quakebot_-black?color=14171A&labelColor=00acee&logo=twitter&logoColor=ffffff)](https://twitter.com/quakebot_)
 
-Quakebot is designed to tweet earthquakes greater than 4.0 around the world, provides a historical snapshot of earthquakes, and generates fun facts and key tips about earthquakes.
+Quakebot is designed to tweet earthquakes greater than 4.5 around the world, provides a historical snapshot of earthquakes, and generates fun facts and key tips about earthquakes.
 
 ## Features
 
