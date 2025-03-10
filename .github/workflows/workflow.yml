@@ -24,8 +24,11 @@ jobs:
         pip3 install pytest pytest-cov
         pip3 install -r requirements.txt
     - name: Test with pytest and generate coverage
+      env:
+        LOGS_SOURCE_TOKEN: ${{ secrets.LOGS_SOURCE_TOKEN }}
+        LOGS_SOURCE_HOST: ${{ secrets.LOGS_SOURCE_HOST }}
       run: |
-        make coverage
+        make test
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
       with:
