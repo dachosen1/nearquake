@@ -47,6 +47,12 @@ LEVEL_COLORS = {
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
+        """
+        Format the log record as JSON.
+
+        :param record: The log record to format.
+        :return: The formatted log record as a JSON string.
+        """
         log_record = {
             "time": self.formatTime(record, self.datefmt),
             "level": record.levelname,
@@ -64,6 +70,12 @@ class JsonFormatter(logging.Formatter):
 # Colorful formatter for console output
 class ColorfulFormatter(logging.Formatter):
     def format(self, record):
+        """
+        Format the log record with colors for console output.
+
+        :param record: The log record to format.
+        :return: The formatted log record as a string with ANSI color codes.
+        """
         level_color = LEVEL_COLORS.get(record.levelname, COLORS["RESET"])
         module_color = COLORS["CYAN"]
         message_color = COLORS["RESET"]
@@ -80,9 +92,20 @@ class ColorfulFormatter(logging.Formatter):
 # Filter for determining the output target
 class FilterForHandler(logging.Filter):
     def __init__(self, handler_type):
+        """
+        Initialize the filter with the handler type.
+
+        :param handler_type: The type of handler ("console" or "file").
+        """
         self.handler_type = handler_type
 
     def filter(self, record):
+        """
+        Filter the log record based on the handler type.
+
+        :param record: The log record to filter.
+        :return: True if the record should be logged, False otherwise.
+        """
         if self.handler_type == "console":
             record._formatted_record = ColorfulFormatter().format(record)
         elif self.handler_type == "file":
@@ -93,11 +116,22 @@ class FilterForHandler(logging.Filter):
 # Custom formatter to use the filtered record
 class CustomFormatter(logging.Formatter):
     def format(self, record):
+        """
+        Format the log record using the pre-filtered formatted record.
+
+        :param record: The log record to format.
+        :return: The pre-filtered formatted log record.
+        """
         return record._formatted_record
 
 
 # Logging Configuration
 def setup_logging():
+    """
+    Set up logging configuration for the application.
+
+    :return: None
+    """
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
     # Create directory path to save logs
