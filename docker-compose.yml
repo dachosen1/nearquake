@@ -26,7 +26,7 @@ services:
       POSTGRES_DB: ${NEARQUAKE_DATABASE}
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
-      # - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     container_name: nearquake_postgres
     ports:
       - 5432:5432
