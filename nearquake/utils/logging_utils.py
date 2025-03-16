@@ -44,10 +44,11 @@ def get_logger(module_name: str) -> logging.Logger:
 
 def log_function_call(logger: logging.Logger, level: int = logging.DEBUG) -> None:
     """
-    Log the name of the calling function with its arguments.
-
-    :param logger: The logger instance.
-    :param level: The log level to use.
+    Logs the calling function's name and its filtered arguments.
+    
+    Inspects the previous stack frame to extract the caller's function name and its arguments,
+    excluding "self", "logger", and "level". The information is logged using the provided logger
+    at the specified logging level.
     """
     frame = inspect.currentframe().f_back
     func_name = frame.f_code.co_name
@@ -63,36 +64,32 @@ def log_function_call(logger: logging.Logger, level: int = logging.DEBUG) -> Non
 
 def log_info(logger: logging.Logger, message: str, *args, **kwargs) -> None:
     """
-    Log an info message with standardized formatting.
-
-    :param logger: The logger instance.
-    :param message: The message to log.
-    :param args: Additional positional arguments for the logger.
-    :param kwargs: Additional keyword arguments for the logger.
+    Logs an informational message using the provided logger.
+    
+    Additional positional and keyword arguments are passed directly to the underlying logger.
     """
     logger.info(message, *args, **kwargs)
 
 
 def log_debug(logger: logging.Logger, message: str, *args, **kwargs) -> None:
     """
-    Log a debug message with standardized formatting.
-
-    :param logger: The logger instance.
+    Log a debug-level message.
+    
+    This function logs a message at the debug level using the provided logger.
+    Additional positional and keyword arguments are forwarded for message formatting.
+    
     :param message: The message to log.
-    :param args: Additional positional arguments for the logger.
-    :param kwargs: Additional keyword arguments for the logger.
+    :param args: Extra positional arguments for message formatting.
+    :param kwargs: Extra keyword arguments for message formatting.
     """
     logger.debug(message, *args, **kwargs)
 
 
 def log_warning(logger: logging.Logger, message: str, *args, **kwargs) -> None:
     """
-    Log a warning message with standardized formatting.
-
-    :param logger: The logger instance.
-    :param message: The message to log.
-    :param args: Additional positional arguments for the logger.
-    :param kwargs: Additional keyword arguments for the logger.
+    Logs a warning message with standardized formatting.
+    
+    Additional positional and keyword arguments are forwarded to the logger.
     """
     logger.warning(message, *args, **kwargs)
 
@@ -105,13 +102,10 @@ def log_error(
     **kwargs,
 ) -> None:
     """
-    Log an error message with standardized formatting.
-
-    :param logger: The logger instance.
-    :param message: The message to log.
-    :param exc: Optional exception to include.
-    :param args: Additional positional arguments for the logger.
-    :param kwargs: Additional keyword arguments for the logger.
+    Log an error message with optional exception details.
+    
+    :param message: The error message to log.
+    :param exc: An optional exception whose traceback will be included in the log output.
     """
     if exc:
         # If an exception is provided, include it in the message and add exc_info
@@ -128,13 +122,13 @@ def log_critical(
     **kwargs,
 ) -> None:
     """
-    Log a critical message with standardized formatting.
-
-    :param logger: The logger instance.
-    :param message: The message to log.
-    :param exc: Optional exception to include.
-    :param args: Additional positional arguments for the logger.
-    :param kwargs: Additional keyword arguments for the logger.
+    Log a critical message.
+    
+    Logs a message at the critical level using the provided logger. If an exception is supplied,
+    its details are appended to the message and exception information is recorded.
+    
+    :param message: The critical message to log.
+    :param exc: Optional exception to include in the log.
     """
     if exc:
         # If an exception is provided, include it in the message and add exc_info
@@ -151,13 +145,12 @@ def log_api_request(
     level: int = logging.DEBUG,
 ) -> None:
     """
-    Log an API request with standardized formatting.
-
-    :param logger: The logger instance.
+    Log an API request with standardized formatting and masked sensitive data.
+    
     :param api_name: The name of the API being called.
-    :param endpoint: The endpoint being called.
-    :param params: Optional parameters being sent with the request.
-    :param level: The log level to use.
+    :param endpoint: The API endpoint being invoked.
+    :param params: Optional dictionary of request parameters. Sensitive values (e.g., API keys, tokens, auth details, passwords, secrets) are masked.
+    :param level: The logging level to use.
     """
     # Mask sensitive data in parameters
     if params:
@@ -192,13 +185,12 @@ def log_api_response(
 ) -> None:
     """
     Log an API response with standardized formatting.
-
-    :param logger: The logger instance.
-    :param api_name: The name of the API being called.
-    :param endpoint: The endpoint being called.
+    
+    :param api_name: The name of the API.
+    :param endpoint: The endpoint accessed.
     :param status_code: The HTTP status code of the response.
     :param response_summary: Optional summary of the response.
-    :param level: The log level to use.
+    :param level: The log level to use (default is logging.DEBUG).
     """
     if response_summary:
         logger.log(
@@ -221,11 +213,10 @@ def log_db_operation(
 ) -> None:
     """
     Log a database operation with standardized formatting.
-
-    :param logger: The logger instance.
-    :param operation: The operation being performed (e.g., "INSERT", "SELECT").
-    :param table: The table being operated on.
-    :param details:  Optional details about the operation.
+    
+    :param operation: The type of operation performed (e.g., "INSERT", "SELECT").
+    :param table: The name of the database table involved.
+    :param details: Optional details about the operation.
     :param level: The log level to use.
     """
     if details:

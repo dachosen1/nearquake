@@ -93,18 +93,27 @@ class ColorfulFormatter(logging.Formatter):
 class FilterForHandler(logging.Filter):
     def __init__(self, handler_type):
         """
-        Initialize the filter with the handler type.
-
-        :param handler_type: The type of handler ("console" or "file").
+        Initialize a FilterForHandler with a designated handler type.
+        
+        Args:
+            handler_type (str): Specifies the handler category, either "console" for colored output
+                                or "file" for JSON file logging.
         """
         self.handler_type = handler_type
 
     def filter(self, record):
         """
-        Filter the log record based on the handler type.
-
-        :param record: The log record to filter.
-        :return: True if the record should be logged, False otherwise.
+        Filter a log record and attach a formatted message based on handler type.
+        
+        This method adds a `_formatted_record` attribute to the provided log record.
+        For a "console" handler, it applies color formatting using a colorful formatter;
+        for a "file" handler, it applies JSON formatting using a JSON formatter.
+        
+        Args:
+            record: A LogRecord instance representing the logging event.
+        
+        Returns:
+            True, indicating that the log record should be processed.
         """
         if self.handler_type == "console":
             record._formatted_record = ColorfulFormatter().format(record)
@@ -116,11 +125,13 @@ class FilterForHandler(logging.Filter):
 # Custom formatter to use the filtered record
 class CustomFormatter(logging.Formatter):
     def format(self, record):
-        """
-        Format the log record using the pre-filtered formatted record.
-
-        :param record: The log record to format.
-        :return: The pre-filtered formatted log record.
+        """Return the pre-filtered formatted log record.
+        
+        Args:
+            record: Log record containing a precomputed '_formatted_record' attribute.
+        
+        Returns:
+            The pre-filtered formatted log record.
         """
         return record._formatted_record
 
@@ -128,9 +139,13 @@ class CustomFormatter(logging.Formatter):
 # Logging Configuration
 def setup_logging():
     """
-    Set up logging configuration for the application.
-
-    :return: None
+    Configure application logging.
+    
+    This function configures the application's logger by setting its level based on the DEBUG_MODE flag, ensuring
+    the existence of a "logs" directory, and adding both console and file handlers with appropriate formatters.
+    The console handler uses ANSI color formatting, while the file handler writes JSON-formatted logs with rotation.
+    If a Logtail handler is available, it is added; otherwise, a debug message is logged indicating that Logtail logging
+    is disabled.
     """
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
