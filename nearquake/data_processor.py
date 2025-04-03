@@ -268,17 +268,10 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             latitude=latitude, longitude=longitude
         )
 
-        log_api_request(
-            _logger,
-            api_name="Geocoding API",
-            endpoint=url,
-            params={"latitude": latitude, "longitude": longitude},
-        )
-
         content = fetch_json_data_from_url(url=url)
 
         if content is None:
-            log_info(_logger, "Skipping event. The URL returned None type.")
+            log_info(_logger, "Skipping event: {event}. The URL returned None type.")
             return None
 
         if content.get("error") is not None:
@@ -296,13 +289,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 city=content.get("city"),
             )
 
-            log_api_response(
-                _logger,
-                api_name="Geocoding API",
-                endpoint=url,
-                status_code=200,
-                response_summary=f"Retrieved location data for event {id_event}: {content.get('countryName')}",
-            )
+            self.location_fetched + 1
 
             return location
 
@@ -317,6 +304,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
     @timer
     def upload(self, start_date: str, end_date: str = None, interval: int = 15) -> None:
         date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
+        self.location_fetched = 0
 
         for start, end in date_range:
             start_date = start.strftime("%Y-%m-%d")
@@ -334,6 +322,11 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 location_details = [
                     self._fetch_location_detail(event=event) for event in new_events
                 ]
+
+                log_info(
+                    _logger,
+                    f"Fetched location detaisl for {self.location_fetched} records",
+                )
 
                 # Filter out None values
                 location_details = [loc for loc in location_details if loc is not None]
