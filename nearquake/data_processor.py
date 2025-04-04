@@ -268,17 +268,13 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             latitude=latitude, longitude=longitude
         )
 
-        log_api_request(
-            _logger,
-            api_name="Geocoding API",
-            endpoint=url,
-            params={"latitude": latitude, "longitude": longitude},
-        )
-
         content = fetch_json_data_from_url(url=url)
 
         if content is None:
-            log_info(_logger, "Skipping event. The URL returned None type.")
+            log_info(
+                _logger,
+                f"Skipping event: {id_event}. The URL returned None type for {latitude} {latitude}",
+            )
             return None
 
         if content.get("error") is not None:
@@ -296,13 +292,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 city=content.get("city"),
             )
 
-            log_api_response(
-                _logger,
-                api_name="Geocoding API",
-                endpoint=url,
-                status_code=200,
-                response_summary=f"Retrieved location data for event {id_event}: {content.get('countryName')}",
-            )
 
             return location
 
@@ -334,6 +323,12 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 location_details = [
                     self._fetch_location_detail(event=event) for event in new_events
                 ]
+
+                log_info(
+                    _logger,
+                    f"Done Fetching location details for {len(new_events)} events {extraction_period}",
+                )
+
 
                 # Filter out None values
                 location_details = [loc for loc in location_details if loc is not None]
