@@ -273,7 +273,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         if content is None:
             log_info(
                 _logger,
-                f"Skipping event: {id_event}. The URL returned None type for {latitude} {latitude}",
+                f"Skipping event: {id_event}. The URL returned None type for {latitude} {longitude}",
             )
             return None
 
