@@ -292,7 +292,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 city=content.get("city"),
             )
 
-
             return location
 
         except Exception as e:
@@ -328,7 +327,6 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                     _logger,
                     f"Done Fetching location details for {len(new_events)} events {extraction_period}",
                 )
-
 
                 # Filter out None values
                 location_details = [loc for loc in location_details if loc is not None]
