@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from nearquake.config import generate_time_period_url
 from nearquake.data_processor import (
     TweetEarthquakeEvents,

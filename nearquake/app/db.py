@@ -1,7 +1,6 @@
 import logging
 from typing import List, Optional
 
-from nearquake.app import DatabaseCreationError
 from sqlalchemy import (
     TIMESTAMP,
     Boolean,
@@ -16,6 +15,8 @@ from sqlalchemy import (
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import text
+
+from nearquake.app import DatabaseCreationError
 
 _logger = logging.getLogger(__name__)
 

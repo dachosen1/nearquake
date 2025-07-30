@@ -4,11 +4,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import sqlalchemy.orm
-from nearquake.app import DatabaseCreationError
-from nearquake.app.db import Base, EventDetails, LocationDetails, Post, create_database
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+
+from nearquake.app import DatabaseCreationError
+from nearquake.app.db import Base, EventDetails, LocationDetails, Post, create_database
 
 DATABASE_URL = "sqlite:///:memory:"
 

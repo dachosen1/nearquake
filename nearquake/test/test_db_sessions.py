@@ -2,8 +2,9 @@ import logging
 from unittest.mock import Mock, patch
 
 import pytest
-from nearquake.utils.db_sessions import DbSessionManager
 from sqlalchemy import create_engine
+
+from nearquake.utils.db_sessions import DbSessionManager
 
 # Configure logging for tests
 logging.basicConfig(level=logging.INFO)

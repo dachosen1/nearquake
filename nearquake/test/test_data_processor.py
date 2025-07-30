@@ -2,6 +2,8 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy.orm import Session
+
 from nearquake.app.db import EventDetails
 from nearquake.data_processor import (
     BaseDataUploader,
@@ -10,7 +12,6 @@ from nearquake.data_processor import (
     UploadEarthQuakeLocation,
     get_date_range_summary,
 )
-from sqlalchemy.orm import Session
 
 
 class MockQuery:
