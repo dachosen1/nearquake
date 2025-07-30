@@ -4,10 +4,6 @@ from collections import Counter
 from datetime import timedelta, timezone
 from typing import List, Type, TypeVar
 
-from sqlalchemy import and_, func
-from sqlalchemy.orm import Session
-from tqdm import tqdm
-
 from nearquake.app.db import Base, EventDetails, LocationDetails, Post
 from nearquake.config import (
     EARTHQUAKE_POST_THRESHOLD,
@@ -32,6 +28,9 @@ from nearquake.utils.logging_utils import (
     log_error,
     log_info,
 )
+from sqlalchemy import and_, func
+from sqlalchemy.orm import Session
+from tqdm import tqdm
 
 _logger = get_logger(__name__)
 

@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 
 import tweepy
 from atproto import Client
-
 from nearquake.app.db import Post
 from nearquake.config import BLUESKY_PASSWORD, BLUESKY_USER_NAME, TWITTER_AUTHENTICATION
 from nearquake.utils.logging_utils import (

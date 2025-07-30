@@ -6,7 +6,6 @@ import sys
 
 import colorlog
 from logtail import LogtailHandler
-
 from nearquake.config import TIMESTAMP_NOW
 from nearquake.utils import create_dir
 

@@ -7,8 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
-from PIL import Image
-
 from nearquake.utils import (
     backfill_valid_date_range,
     convert_datetime,
@@ -25,6 +23,7 @@ from nearquake.utils import (
     save_content,
     timer,
 )
+from PIL import Image
 
 
 def test_generate_date_range():

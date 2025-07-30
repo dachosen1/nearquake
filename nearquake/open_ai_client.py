@@ -1,8 +1,6 @@
 import logging
 import os
 
-from openai import OpenAI
-
 from nearquake.utils.logging_utils import (
     get_logger,
     log_api_request,
@@ -10,6 +8,7 @@ from nearquake.utils.logging_utils import (
     log_error,
     log_info,
 )
+from openai import OpenAI
 
 _logger = get_logger(__name__)
 

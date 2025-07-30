@@ -1,5 +1,4 @@
 import pytest
-
 from nearquake.config import generate_time_period_url, generate_time_range_url
 
 

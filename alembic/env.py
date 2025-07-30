@@ -1,10 +1,9 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-
 from alembic import context
 from nearquake.app.db import Base
 from nearquake.config import POSTGRES_CONNECTION_URL
+from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
