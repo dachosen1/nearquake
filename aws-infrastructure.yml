@@ -1,0 +1,493 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Nearquake ECS Fargate infrastructure with EventBridge scheduling'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: nearquake
+    Description: Name of the project
+  
+  ECRRepositoryName:
+    Type: String
+    Default: nearquake
+    Description: Name of the ECR repository
+
+Resources:
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${ProjectName}-cluster"
+      CapacityProviders:
+        - FARGATE_SPOT
+        - FARGATE
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 4
+        - CapacityProvider: FARGATE
+          Weight: 1
+
+  # Task Execution Role
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-task-execution-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets*"
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres*"
+
+  # Task Role (for application permissions)
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-task-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets*"
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres*"
+
+  # EventBridge Execution Role
+  EventBridgeExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-eventbridge-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ECSTaskExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:RunTask
+                Resource:
+                  - !Ref LiveTaskDefinition
+                  - !Ref DailyTaskDefinition
+                  - !Ref WeeklyTaskDefinition
+                  - !Ref MonthlyTaskDefinition
+                  - !Ref FunFactTaskDefinition
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt TaskExecutionRole.Arn
+                  - !GetAtt TaskRole.Arn
+
+  # Reference existing secrets (don't create them)
+  # The secrets should already exist in your AWS account
+
+  # Task Definitions
+  LiveTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${ProjectName}-live"
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: !Sub "${ProjectName}-live"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+          Command: ["python", "main.py", "-l"]
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: live
+          Secrets:
+            - Name: CONSUMER_KEY
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
+            - Name: CONSUMER_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
+            - Name: ACCESS_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
+            - Name: ACCESS_TOKEN_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
+            - Name: BEARER_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
+            - Name: BLUESKY_USER_NAME
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
+            - Name: BLUESKY_PASSWORD
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
+            - Name: GEO_REVERSE_LOOKUP_BASE_URL
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
+            - Name: username
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
+            - Name: password
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
+            - Name: host
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
+            - Name: port
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
+            - Name: database
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
+            - Name: engine
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
+
+  DailyTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${ProjectName}-daily"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: !Sub "${ProjectName}-daily"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+          Command: ["python", "main.py", "-d"]
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: daily
+          Secrets:
+            - Name: CONSUMER_KEY
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
+            - Name: CONSUMER_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
+            - Name: ACCESS_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
+            - Name: ACCESS_TOKEN_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
+            - Name: BEARER_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
+            - Name: BLUESKY_USER_NAME
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
+            - Name: BLUESKY_PASSWORD
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
+            - Name: GEO_REVERSE_LOOKUP_BASE_URL
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
+            - Name: username
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
+            - Name: password
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
+            - Name: host
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
+            - Name: port
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
+            - Name: database
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
+            - Name: engine
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
+
+  WeeklyTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${ProjectName}-weekly"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: !Sub "${ProjectName}-weekly"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+          Command: ["python", "main.py", "-w"]
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: weekly
+          Secrets:
+            - Name: CONSUMER_KEY
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
+            - Name: CONSUMER_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
+            - Name: ACCESS_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
+            - Name: ACCESS_TOKEN_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
+            - Name: BEARER_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
+            - Name: BLUESKY_USER_NAME
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
+            - Name: BLUESKY_PASSWORD
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
+            - Name: GEO_REVERSE_LOOKUP_BASE_URL
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
+            - Name: username
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
+            - Name: password
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
+            - Name: host
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
+            - Name: port
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
+            - Name: database
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
+            - Name: engine
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
+
+  MonthlyTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${ProjectName}-monthly"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: !Sub "${ProjectName}-monthly"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+          Command: ["python", "main.py", "-m"]
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: monthly
+          Secrets:
+            - Name: CONSUMER_KEY
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
+            - Name: CONSUMER_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
+            - Name: ACCESS_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
+            - Name: ACCESS_TOKEN_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
+            - Name: BEARER_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
+            - Name: BLUESKY_USER_NAME
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
+            - Name: BLUESKY_PASSWORD
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
+            - Name: GEO_REVERSE_LOOKUP_BASE_URL
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
+            - Name: username
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
+            - Name: password
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
+            - Name: host
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
+            - Name: port
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
+            - Name: database
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
+            - Name: engine
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
+
+  FunFactTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${ProjectName}-fun"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: !Sub "${ProjectName}-fun"
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+          Command: ["python", "main.py", "-f"]
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref CloudWatchLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: fun
+          Secrets:
+            - Name: CONSUMER_KEY
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
+            - Name: CONSUMER_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
+            - Name: ACCESS_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
+            - Name: ACCESS_TOKEN_SECRET
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
+            - Name: BEARER_TOKEN
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
+            - Name: BLUESKY_USER_NAME
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
+            - Name: BLUESKY_PASSWORD
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
+            - Name: GEO_REVERSE_LOOKUP_BASE_URL
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
+            - Name: username
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
+            - Name: password
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
+            - Name: host
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
+            - Name: port
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
+            - Name: database
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
+            - Name: engine
+              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
+
+  # CloudWatch Log Group
+  CloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/ecs/${ProjectName}"
+      RetentionInDays: 30
+
+
+  # EventBridge Rules
+  LiveScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${ProjectName}-live-schedule"
+      Description: "Run live earthquake monitoring every 5 minutes"
+      ScheduleExpression: "rate(5 minutes)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt ECSCluster.Arn
+          Id: "LiveTask"
+          RoleArn: !GetAtt EventBridgeExecutionRole.Arn
+          EcsParameters:
+            TaskDefinitionArn: !Ref LiveTaskDefinition
+            CapacityProviderStrategy:
+              - CapacityProvider: FARGATE_SPOT
+                Weight: 1
+
+  DailyScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${ProjectName}-daily-schedule"
+      Description: "Run daily earthquake summary at 12:00 PM UTC"
+      ScheduleExpression: "cron(0 12 * * ? *)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt ECSCluster.Arn
+          Id: "DailyTask"
+          RoleArn: !GetAtt EventBridgeExecutionRole.Arn
+          EcsParameters:
+            TaskDefinitionArn: !Ref DailyTaskDefinition
+            CapacityProviderStrategy:
+              - CapacityProvider: FARGATE_SPOT
+                Weight: 1
+
+  WeeklyScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${ProjectName}-weekly-schedule"
+      Description: "Run weekly earthquake summary at 5:00 PM UTC on Mondays"
+      ScheduleExpression: "cron(0 17 ? * MON *)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt ECSCluster.Arn
+          Id: "WeeklyTask"
+          RoleArn: !GetAtt EventBridgeExecutionRole.Arn
+          EcsParameters:
+            TaskDefinitionArn: !Ref WeeklyTaskDefinition
+            CapacityProviderStrategy:
+              - CapacityProvider: FARGATE_SPOT
+                Weight: 1
+
+  MonthlyScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${ProjectName}-monthly-schedule"
+      Description: "Run monthly earthquake summary at 4:00 PM UTC on the 1st of each month"
+      ScheduleExpression: "cron(0 16 1 * ? *)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt ECSCluster.Arn
+          Id: "MonthlyTask"
+          RoleArn: !GetAtt EventBridgeExecutionRole.Arn
+          EcsParameters:
+            TaskDefinitionArn: !Ref MonthlyTaskDefinition
+            CapacityProviderStrategy:
+              - CapacityProvider: FARGATE_SPOT
+                Weight: 1
+
+  FunFactScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${ProjectName}-funfact-schedule"
+      Description: "Run fun fact posting at 12:00 PM and 8:00 PM UTC daily"
+      ScheduleExpression: "cron(0 12,20 * * ? *)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt ECSCluster.Arn
+          Id: "FunFactTask"
+          RoleArn: !GetAtt EventBridgeExecutionRole.Arn
+          EcsParameters:
+            TaskDefinitionArn: !Ref FunFactTaskDefinition
+            CapacityProviderStrategy:
+              - CapacityProvider: FARGATE_SPOT
+                Weight: 1
+
+Outputs:
+  ECRRepositoryURI:
+    Description: ECR Repository URI
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}"
+    Export:
+      Name: !Sub "${ProjectName}-ecr-uri"
+
+  ECSClusterName:
+    Description: ECS Cluster Name
+    Value: !Ref ECSCluster
+    Export:
+      Name: !Sub "${ProjectName}-ecs-cluster"
+
+  NearquakeSecretsArn:
+    Description: ARN of the Nearquake secrets
+    Value: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets"
+    Export:
+      Name: !Sub "${ProjectName}-secrets-arn"
+
+  PostgresSecretsArn:
+    Description: ARN of the Postgres secrets
+    Value: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres"
+    Export:
+      Name: !Sub "${ProjectName}-postgres-secrets-arn"
