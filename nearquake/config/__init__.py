@@ -129,7 +129,7 @@ CHAT_PROMPT = [
 ]
 
 
-COORDINATE_LOOKUP_BASE_URL = "{BASE_URL}?latitude={latitude}&longitude={longitude}&localityLanguage=en&key={API_KEY}"
+COORDINATE_LOOKUP_BASE_URL = "{BASE_URL}latitude={latitude}&longitude={longitude}&localityLanguage=en&key={API_KEY}"
 
 
 def generate_coordinate_lookup_detail_url(latitude, longitude) -> str:

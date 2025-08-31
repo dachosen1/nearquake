@@ -3,10 +3,10 @@ up:
 down: 
 	docker compose down
 test:
-	python -m pytest
+	uv run python -m pytest
 coverage:
-	python -m pytest --cov=nearquake --cov-report=term --cov-report=html --cov-report=xml
+	uv run python -m pytest --cov=nearquake --cov-report=term --cov-report=html --cov-report=xml
 coverage-report:
 	open htmlcov/index.html
 linter:
-	isort . && black .
+	uv run isort . && uv run black .

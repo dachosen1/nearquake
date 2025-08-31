@@ -303,7 +303,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return None
 
     @timer
-    def upload(self, start_date: str, end_date: str = None, interval: int = 15) -> None:
+    def upload(self, start_date, end_date = None, interval: int = 15) -> None:
         date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
 
         for start, end in date_range:
