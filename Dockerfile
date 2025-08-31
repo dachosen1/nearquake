@@ -19,4 +19,4 @@ RUN chown -R appuser:appuser /usr/src/app
 USER appuser
 
 # Default command - will be overridden by ECS task definition
-CMD ["python", "main.py", "-l"]
+CMD ["uv", "run", "main.py"]
