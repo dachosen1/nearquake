@@ -156,8 +156,9 @@ class DbSessionManager:
     def close(self):
         """Closes the database session."""
         try:
-            self.session.close()
-            log_info(_logger, "Database session closed")
+            if hasattr(self, "session") and self.session:
+                self.session.close()
+                log_info(_logger, "Database session closed")
 
         except Exception as e:
             log_error(
@@ -166,8 +167,26 @@ class DbSessionManager:
 
     def __enter__(self):
         self.session = self.Session()
-        return self.session
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Exits the runtime context and closes the database session."""
-        self.close()
+        try:
+            if hasattr(self, "session") and self.session:
+                if exc_type is None:
+                    # No exception, commit any pending transactions
+                    self.session.commit()
+                else:
+                    # Exception occurred, rollback
+                    self.session.rollback()
+                    log_error(
+                        _logger,
+                        f"Rolling back transaction due to exception: {exc_value}",
+                    )
+
+                self.close()
+        except Exception as e:
+            log_error(_logger, "Error in context manager exit", exc=e)
+
+        # Return False to propagate any exceptions
+        return False

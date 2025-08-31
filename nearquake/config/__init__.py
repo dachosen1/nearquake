@@ -129,22 +129,23 @@ CHAT_PROMPT = [
 ]
 
 
-COORDINATE_LOOKUP_BASE_URL = "{BASE_URL}latitude={latitude}&longitude={longitude}&localityLanguage=en&key={API_KEY}"
+COORDINATE_LOOKUP_BASE_URL = (
+    "{BASE_URL}latitude={latitude}&longitude={longitude}&localityLanguage=en"
+)
 
 
 def generate_coordinate_lookup_detail_url(latitude, longitude) -> str:
     """
-    Generate a URL for reverse geocoding using OpenStreetMap's Nominatim API.
+    Generate a URL for reverse geocoding without API key for secure logging.
 
-    :param lat: Latitude of the location
-    :param long: Longitude of the location
-    :return: str: A fully formatted URL with specified latitude and longitude.
+    :param latitude: Latitude of the location
+    :param longitude: Longitude of the location
+    :return: A fully formatted URL without the API key
     """
     return COORDINATE_LOOKUP_BASE_URL.format(
         BASE_URL=os.environ.get("GEO_REVERSE_LOOKUP_BASE_URL"),
         latitude=latitude,
         longitude=longitude,
-        API_KEY=os.environ.get("GEO_API_KEY"),
     )
 
 

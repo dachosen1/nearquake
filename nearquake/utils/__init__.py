@@ -136,7 +136,7 @@ def save_content(content: bytes, content_id: str, directory: str = "image"):
         _logger.error("An error occured while writing the file: %e", e)
 
 
-def fetch_json_data_from_url(url):
+def fetch_json_data_from_url(url, params=None):
     """
     Fetches and loads JSON data from a specified URL.
 
@@ -150,15 +150,15 @@ def fetch_json_data_from_url(url):
         >>> fetch_json_data_from_url('https://api.example.com/data')
         {'key': 'value'}
 
-    :param url: he URL from which to fetch JSON data.
+    :param url: The URL from which to fetch JSON data.
+    :param params: Optional dictionary of query parameters to add to the request.
 
-
-    :return:  dict or None: A Python dictionary parsed from the JSON response if the request is successful and the response contains valid JSON.
+    :return: dict or None: A Python dictionary parsed from the JSON response if the request is successful and the response contains valid JSON.
     Returns None if there's an HTTP error or if the response is not valid JSON.
 
     """
     try:
-        response = requests.get(url, timeout=30)
+        response = requests.get(url, params=params, timeout=30)
         response.raise_for_status()  # Raise an HTTPError for bad requests (4xx or 5xx)
 
         try:

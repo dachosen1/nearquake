@@ -7,6 +7,7 @@ consistent logging across all modules in the project.
 
 import inspect
 import logging
+import re
 from typing import Any, Dict, Optional
 
 # ANSI color codes for terminal output

@@ -143,13 +143,11 @@ class TestDataProcessingIntegration:
 def test_end_to_end_pipeline(test_db):
     """Test the complete data pipeline from fetching to posting."""
     # Mock all external API calls
-    with patch.object(
-        UploadEarthQuakeEvents, "upload"
-    ) as mock_earthquake_upload, patch.object(
-        UploadEarthQuakeLocation, "upload"
-    ) as mock_location_upload, patch.object(
-        TweetEarthquakeEvents, "upload"
-    ) as mock_tweet_upload:
+    with (
+        patch.object(UploadEarthQuakeEvents, "upload") as mock_earthquake_upload,
+        patch.object(UploadEarthQuakeLocation, "upload") as mock_location_upload,
+        patch.object(TweetEarthquakeEvents, "upload") as mock_tweet_upload,
+    ):
 
         # Step 1: Upload earthquake data
         earthquake_uploader = UploadEarthQuakeEvents(test_db)

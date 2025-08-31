@@ -38,7 +38,7 @@ class LiveCommandHandler(CommandHandler):
         self._days = 1
         self._today = TIMESTAMP_NOW.date()
         self._start_date = self._today - timedelta(days=self._days)
-        
+
     def execute(self, db_session):
         run = UploadEarthQuakeEvents(conn=db_session)
         tweet = TweetEarthquakeEvents(conn=db_session)
@@ -46,8 +46,10 @@ class LiveCommandHandler(CommandHandler):
         run.upload(url=generate_time_period_url("hour"))
         tweet.upload()
         loc = UploadEarthQuakeLocation(conn=db_session)
-        loc.upload(start_date=self._start_date.strftime("%Y-%m-%d"), end_date=self._today.strftime("%Y-%m-%d"))
-
+        loc.upload(
+            start_date=self._start_date.strftime("%Y-%m-%d"),
+            end_date=self._today.strftime("%Y-%m-%d"),
+        )
 
 
 class SummaryCommandHandler(CommandHandler):
@@ -72,7 +74,10 @@ class SummaryCommandHandler(CommandHandler):
             end_date=self._today,
         )
         loc = UploadEarthQuakeLocation(conn=db_session)
-        loc.upload(start_date=self._start_date.strftime("%Y-%m-%d"), end_date=self._today.strftime("%Y-%m-%d"))
+        loc.upload(
+            start_date=self._start_date.strftime("%Y-%m-%d"),
+            end_date=self._today.strftime("%Y-%m-%d"),
+        )
 
         # Format and post message
         message = self._generate_message(content)
