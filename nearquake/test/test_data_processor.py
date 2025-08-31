@@ -179,9 +179,12 @@ class TestUploadEarthQuakeLocation:
         mock_start = datetime.strptime("2022-01-01", "%Y-%m-%d").date()
         mock_end = datetime.strptime("2022-01-15", "%Y-%m-%d").date()
 
-        with patch.object(uploader, "_extract_between", return_value=[]), patch(
-            "nearquake.data_processor.backfill_valid_date_range",
-            return_value=[(mock_start, mock_end)],
+        with (
+            patch.object(uploader, "_extract_between", return_value=[]),
+            patch(
+                "nearquake.data_processor.backfill_valid_date_range",
+                return_value=[(mock_start, mock_end)],
+            ),
         ):
             uploader.upload(start_date=start_date, end_date=end_date)
             uploader.conn.insert_many.assert_not_called()

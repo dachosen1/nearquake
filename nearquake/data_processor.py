@@ -1,4 +1,5 @@
 import logging
+import os
 from abc import ABC, abstractmethod
 from collections import Counter
 from datetime import timedelta, timezone
@@ -268,7 +269,9 @@ class UploadEarthQuakeLocation(BaseDataUploader):
             latitude=latitude, longitude=longitude
         )
 
-        content = fetch_json_data_from_url(url=url)
+        # Pass API key as a separate parameter for secure logging
+        params = {"key": os.environ.get("GEO_API_KEY")}
+        content = fetch_json_data_from_url(url=url, params=params)
 
         if content is None:
             log_info(
@@ -303,7 +306,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         return None
 
     @timer
-    def upload(self, start_date: str, end_date: str = None, interval: int = 15) -> None:
+    def upload(self, start_date, end_date=None, interval: int = 15) -> None:
         date_range = backfill_valid_date_range(start_date, end_date, interval=interval)
 
         for start, end in date_range:
