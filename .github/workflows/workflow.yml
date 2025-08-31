@@ -6,7 +6,7 @@ jobs:
   Unit_Test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Set up Python 3.12.1
       uses: actions/setup-python@v5
       with:
@@ -34,7 +34,7 @@ jobs:
   Linter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: psf/black@stable
         with:
           options: "--check --verbose"
@@ -42,7 +42,7 @@ jobs:
   Build-Docker-Image:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Build the Docker image
       run: docker build .
 
@@ -51,7 +51,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Build and Deploy
       env:
         PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
