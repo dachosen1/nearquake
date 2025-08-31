@@ -1,5 +1,3 @@
-import logging
-import os
 from abc import ABC, abstractmethod
 from collections import Counter
 from datetime import timedelta, timezone
@@ -14,6 +12,7 @@ from nearquake.config import (
     EARTHQUAKE_POST_THRESHOLD,
     REPORTED_SINCE_THRESHOLD,
     TIMESTAMP_NOW,
+    _nearquake_secrets,
     generate_coordinate_lookup_detail_url,
     generate_time_range_url,
 )
@@ -271,7 +270,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         )
 
         # Pass API key as a separate parameter for secure logging
-        params = {"key": os.environ.get("GEO_API_KEY")}
+        params = {"key": _nearquake_secrets.get("GEO_API_KEY")}
         content = fetch_json_data_from_url(url=url, params=params)
 
         if content is None:
