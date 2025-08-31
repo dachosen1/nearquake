@@ -135,35 +135,6 @@ Resources:
               awslogs-group: !Ref CloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: live
-          Secrets:
-            - Name: CONSUMER_KEY
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
-            - Name: CONSUMER_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
-            - Name: ACCESS_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
-            - Name: ACCESS_TOKEN_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
-            - Name: BEARER_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
-            - Name: BLUESKY_USER_NAME
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
-            - Name: BLUESKY_PASSWORD
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
-            - Name: GEO_REVERSE_LOOKUP_BASE_URL
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
-            - Name: username
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
-            - Name: password
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
-            - Name: host
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
-            - Name: port
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
-            - Name: database
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
-            - Name: engine
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
 
   DailyTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -187,35 +158,6 @@ Resources:
               awslogs-group: !Ref CloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: daily
-          Secrets:
-            - Name: CONSUMER_KEY
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
-            - Name: CONSUMER_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
-            - Name: ACCESS_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
-            - Name: ACCESS_TOKEN_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
-            - Name: BEARER_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
-            - Name: BLUESKY_USER_NAME
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
-            - Name: BLUESKY_PASSWORD
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
-            - Name: GEO_REVERSE_LOOKUP_BASE_URL
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
-            - Name: username
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
-            - Name: password
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
-            - Name: host
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
-            - Name: port
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
-            - Name: database
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
-            - Name: engine
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
 
   WeeklyTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -239,35 +181,6 @@ Resources:
               awslogs-group: !Ref CloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: weekly
-          Secrets:
-            - Name: CONSUMER_KEY
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
-            - Name: CONSUMER_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
-            - Name: ACCESS_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
-            - Name: ACCESS_TOKEN_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
-            - Name: BEARER_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
-            - Name: BLUESKY_USER_NAME
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
-            - Name: BLUESKY_PASSWORD
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
-            - Name: GEO_REVERSE_LOOKUP_BASE_URL
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
-            - Name: username
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
-            - Name: password
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
-            - Name: host
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
-            - Name: port
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
-            - Name: database
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
-            - Name: engine
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
 
   MonthlyTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -291,35 +204,6 @@ Resources:
               awslogs-group: !Ref CloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: monthly
-          Secrets:
-            - Name: CONSUMER_KEY
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
-            - Name: CONSUMER_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
-            - Name: ACCESS_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
-            - Name: ACCESS_TOKEN_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
-            - Name: BEARER_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
-            - Name: BLUESKY_USER_NAME
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
-            - Name: BLUESKY_PASSWORD
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
-            - Name: GEO_REVERSE_LOOKUP_BASE_URL
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
-            - Name: username
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
-            - Name: password
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
-            - Name: host
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
-            - Name: port
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
-            - Name: database
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
-            - Name: engine
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
 
   FunFactTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -343,35 +227,6 @@ Resources:
               awslogs-group: !Ref CloudWatchLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: fun
-          Secrets:
-            - Name: CONSUMER_KEY
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_KEY::"
-            - Name: CONSUMER_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:CONSUMER_SECRET::"
-            - Name: ACCESS_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN::"
-            - Name: ACCESS_TOKEN_SECRET
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:ACCESS_TOKEN_SECRET::"
-            - Name: BEARER_TOKEN
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BEARER_TOKEN::"
-            - Name: BLUESKY_USER_NAME
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_USER_NAME::"
-            - Name: BLUESKY_PASSWORD
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:BLUESKY_PASSWORD::"
-            - Name: GEO_REVERSE_LOOKUP_BASE_URL
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets:GEO_REVERSE_LOOKUP_BASE_URL::"
-            - Name: username
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:username::"
-            - Name: password
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:password::"
-            - Name: host
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:host::"
-            - Name: port
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:port::"
-            - Name: database
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:database::"
-            - Name: engine
-              ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres:engine::"
 
   # CloudWatch Log Group
   CloudWatchLogGroup:
@@ -479,15 +334,3 @@ Outputs:
     Value: !Ref ECSCluster
     Export:
       Name: !Sub "${ProjectName}-ecs-cluster"
-
-  NearquakeSecretsArn:
-    Description: ARN of the Nearquake secrets
-    Value: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets"
-    Export:
-      Name: !Sub "${ProjectName}-secrets-arn"
-
-  PostgresSecretsArn:
-    Description: ARN of the Postgres secrets
-    Value: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres"
-    Export:
-      Name: !Sub "${ProjectName}-postgres-secrets-arn"
