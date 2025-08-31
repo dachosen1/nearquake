@@ -14,8 +14,9 @@ RUN uv sync --frozen --no-dev
 COPY . .
 
 # Create a non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN groupadd -r appuser && useradd -r -g appuser appuser -m
 RUN chown -R appuser:appuser /usr/src/app
+RUN mkdir -p /home/appuser/.cache && chown -R appuser:appuser /home/appuser/.cache
 USER appuser
 
 # Default command - will be overridden by ECS task definition
