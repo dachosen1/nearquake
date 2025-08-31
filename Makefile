@@ -52,7 +52,7 @@ build-and-push: ## Build and push Docker image to ECR
 	@echo "Logging into ECR..."
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(shell aws sts get-caller-identity --query Account --output text).dkr.ecr.$(AWS_REGION).amazonaws.com
 	@echo "Building Docker image..."
-	docker build -t nearquake .
+	docker build --platform linux/amd64 -t nearquake .
 	@echo "Tagging and pushing image..."
 	docker tag nearquake:latest $(shell aws sts get-caller-identity --query Account --output text).dkr.ecr.$(AWS_REGION).amazonaws.com/nearquake:latest
 	docker tag nearquake:latest $(shell aws sts get-caller-identity --query Account --output text).dkr.ecr.$(AWS_REGION).amazonaws.com/nearquake:$(shell git rev-parse --short HEAD)

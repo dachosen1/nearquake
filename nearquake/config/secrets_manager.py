@@ -48,4 +48,3 @@ def get_nearquake_secret(region_name: str = "us-east-1") -> Dict[str, Any]:
     :return: Dictionary containing the nearquake secret values
     """
     return get_secret("nearquake/secrets", region_name)
-

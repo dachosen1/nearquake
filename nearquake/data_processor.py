@@ -105,6 +105,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
 
         except TypeError:
             new_events = data["features"]
+            self.existing_event_ids_count = 0
             log_api_response(
                 _logger,
                 api_name="USGS Earthquake API",
@@ -114,6 +115,8 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             )
 
         except Exception as e:
+            new_events = data["features"]
+            self.existing_event_ids_count = 0
             log_error(
                 _logger,
                 "Encountered an unexpected error during earthquake data extraction",
@@ -169,9 +172,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             )
 
             self.conn.insert_many(new_event_list)
-            summary = Counter(
-                event.date.strftime("%Y-%m-%d") for event in new_event_list
-            )
+            summary = Counter(str(event.date) for event in new_event_list)
             log_info(
                 _logger,
                 f"Added {len(new_event_list)} records and {self.existing_event_ids_count} records were already added. {dict(summary)}",

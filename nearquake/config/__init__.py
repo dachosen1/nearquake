@@ -72,14 +72,13 @@ def generate_time_period_url(time_period: int) -> str:
 DB_AUTHENTICATION = {
     "user": _postgres_secrets.get("username"),
     "host": _postgres_secrets.get("host"),
-    "dbname": _postgres_secrets.get("database"),
+    "dbname": _postgres_secrets.get("dbname"),
     "port": _postgres_secrets.get("port"),
     "password": _postgres_secrets.get("password"),
     "sqlengine": _postgres_secrets.get("engine"),
 }
 
 POSTGRES_CONNECTION_URL = f"{DB_AUTHENTICATION['sqlengine']}://{DB_AUTHENTICATION['user']}:{DB_AUTHENTICATION['password']}@{DB_AUTHENTICATION['host']}:{DB_AUTHENTICATION['port']}/{DB_AUTHENTICATION['dbname']}"
-
 
 TWITTER_AUTHENTICATION = {
     "CONSUMER_KEY": _nearquake_secrets.get("CONSUMER_KEY"),

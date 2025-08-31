@@ -76,6 +76,93 @@ Resources:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets*"
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres*"
 
+  # VPC and Networking Resources
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-vpc"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-igw"
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-public-subnet-1"
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-public-subnet-2"
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-public-rt"
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${ProjectName}-sg"
+      GroupDescription: Security group for ECS tasks
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-sg"
+
   # EventBridge Execution Role
   EventBridgeExecutionRole:
     Type: AWS::IAM::Role
@@ -250,9 +337,15 @@ Resources:
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
           EcsParameters:
             TaskDefinitionArn: !Ref LiveTaskDefinition
-            CapacityProviderStrategy:
-              - CapacityProvider: FARGATE_SPOT
-                Weight: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                Subnets:
+                  - !Ref PublicSubnet1
+                  - !Ref PublicSubnet2
+                SecurityGroups:
+                  - !Ref SecurityGroup
+                AssignPublicIp: ENABLED
 
   DailyScheduleRule:
     Type: AWS::Events::Rule
@@ -267,9 +360,15 @@ Resources:
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
           EcsParameters:
             TaskDefinitionArn: !Ref DailyTaskDefinition
-            CapacityProviderStrategy:
-              - CapacityProvider: FARGATE_SPOT
-                Weight: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                Subnets:
+                  - !Ref PublicSubnet1
+                  - !Ref PublicSubnet2
+                SecurityGroups:
+                  - !Ref SecurityGroup
+                AssignPublicIp: ENABLED
 
   WeeklyScheduleRule:
     Type: AWS::Events::Rule
@@ -284,9 +383,15 @@ Resources:
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
           EcsParameters:
             TaskDefinitionArn: !Ref WeeklyTaskDefinition
-            CapacityProviderStrategy:
-              - CapacityProvider: FARGATE_SPOT
-                Weight: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                Subnets:
+                  - !Ref PublicSubnet1
+                  - !Ref PublicSubnet2
+                SecurityGroups:
+                  - !Ref SecurityGroup
+                AssignPublicIp: ENABLED
 
   MonthlyScheduleRule:
     Type: AWS::Events::Rule
@@ -301,9 +406,15 @@ Resources:
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
           EcsParameters:
             TaskDefinitionArn: !Ref MonthlyTaskDefinition
-            CapacityProviderStrategy:
-              - CapacityProvider: FARGATE_SPOT
-                Weight: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                Subnets:
+                  - !Ref PublicSubnet1
+                  - !Ref PublicSubnet2
+                SecurityGroups:
+                  - !Ref SecurityGroup
+                AssignPublicIp: ENABLED
 
   FunFactScheduleRule:
     Type: AWS::Events::Rule
@@ -318,9 +429,15 @@ Resources:
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
           EcsParameters:
             TaskDefinitionArn: !Ref FunFactTaskDefinition
-            CapacityProviderStrategy:
-              - CapacityProvider: FARGATE_SPOT
-                Weight: 1
+            LaunchType: FARGATE
+            NetworkConfiguration:
+              AwsVpcConfiguration:
+                Subnets:
+                  - !Ref PublicSubnet1
+                  - !Ref PublicSubnet2
+                SecurityGroups:
+                  - !Ref SecurityGroup
+                AssignPublicIp: ENABLED
 
 Outputs:
   ECRRepositoryURI:
