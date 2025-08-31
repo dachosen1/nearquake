@@ -23,7 +23,7 @@ def get_secret(secret_name: str, region_name: str = "us-east-1") -> Dict[str, An
     try:
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
     except ClientError as e:
-        _logger.error(f"Failed to retrieve secret {secret_name}: {e}")
+        _logger.error(f"Failed to retrieve secret from AWS Secrets Manager: {e}")
         raise e
 
     secret = get_secret_value_response["SecretString"]
