@@ -20,6 +20,19 @@ down: ## Stop local development
 test: ## Run tests
 	uv run python -m pytest
 
+live: 
+	uv run main.py -l 
+
+daily: 
+	uv run main.py -d
+	
+weekly: 
+	uv run main.py -w
+
+
+monthly: 
+	uv run main.py -m 
+
 coverage: ## Run tests with coverage
 	uv run python -m pytest --cov=nearquake --cov-report=term --cov-report=html --cov-report=xml
 

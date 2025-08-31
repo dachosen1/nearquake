@@ -214,7 +214,7 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub "${ProjectName}-live"
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["python", "main.py", "-l"]
+          Command: ["make", "live"]
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
@@ -237,7 +237,7 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub "${ProjectName}-daily"
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["python", "main.py", "-d"]
+          Command: ["make", "daily"]
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
@@ -260,7 +260,7 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub "${ProjectName}-weekly"
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["python", "main.py", "-w"]
+          Command: ["make", "weekly"]
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
@@ -283,7 +283,7 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub "${ProjectName}-monthly"
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["python", "main.py", "-m"]
+          Command: ["make", "monthly"]
           Essential: true
           LogConfiguration:
             LogDriver: awslogs

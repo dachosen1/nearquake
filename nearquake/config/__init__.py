@@ -78,7 +78,7 @@ DB_AUTHENTICATION = {
     "sqlengine": _postgres_secrets.get("engine"),
 }
 
-POSTGRES_CONNECTION_URL = f"{DB_AUTHENTICATION['sqlengine']}://{DB_AUTHENTICATION['user']}:{DB_AUTHENTICATION['password']}@{DB_AUTHENTICATION['host']}:{DB_AUTHENTICATION['port']}/{DB_AUTHENTICATION['dbname']}"
+POSTGRES_CONNECTION_URL = f"{DB_AUTHENTICATION['sqlengine']}://{DB_AUTHENTICATION['user']}:{DB_AUTHENTICATION['password']}@{DB_AUTHENTICATION['host']}:{DB_AUTHENTICATION['port']}/{DB_AUTHENTICATION['dbname']}?sslmode=require"
 
 TWITTER_AUTHENTICATION = {
     "CONSUMER_KEY": _nearquake_secrets.get("CONSUMER_KEY"),
