@@ -1,15 +1,20 @@
 import logging
-import os
 import random
 from datetime import UTC, datetime
 
-from dotenv import load_dotenv
+from .secrets_manager import get_nearquake_secret, get_postgres_secret
 
 _logger = logging.getLogger(__name__)
 
-load_dotenv()
-
 TIMESTAMP_NOW = datetime.now(UTC)
+
+# Load secrets from AWS Secrets Manager
+try:
+    _postgres_secrets = get_postgres_secret()
+    _nearquake_secrets = get_nearquake_secret()
+except Exception as e:
+    _logger.error(f"Failed to load secrets from AWS Secrets Manager: {e}")
+    raise e
 
 API_BASE_URL: str = (
     "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_{time_period}.geojson"
@@ -65,27 +70,26 @@ def generate_time_period_url(time_period: int) -> str:
 
 
 DB_AUTHENTICATION = {
-    "user": os.environ.get("NEARQUAKE_USERNAME"),
-    "host": os.environ.get("NEARQUAKE_HOST"),
-    "dbname": os.environ.get("NEARQUAKE_DATABASE"),
-    "port": os.environ.get("NEARQUAKE_PORT"),
-    "password": os.environ.get("NEARQUAKE_PASSWORD"),
-    "sqlengine": os.environ.get("NEARQUAKE_ENGINE"),
+    "user": _postgres_secrets.get("username"),
+    "host": _postgres_secrets.get("host"),
+    "dbname": _postgres_secrets.get("dbname"),
+    "port": _postgres_secrets.get("port"),
+    "password": _postgres_secrets.get("password"),
+    "sqlengine": _postgres_secrets.get("engine"),
 }
 
-POSTGRES_CONNECTION_URL = f"{DB_AUTHENTICATION['sqlengine']}://{DB_AUTHENTICATION['user']}:{DB_AUTHENTICATION['password']}@{DB_AUTHENTICATION['host']}:{DB_AUTHENTICATION['port']}/{DB_AUTHENTICATION['dbname']}"
-
+POSTGRES_CONNECTION_URL = f"{DB_AUTHENTICATION['sqlengine']}://{DB_AUTHENTICATION['user']}:{DB_AUTHENTICATION['password']}@{DB_AUTHENTICATION['host']}:{DB_AUTHENTICATION['port']}/{DB_AUTHENTICATION['dbname']}?sslmode=require"
 
 TWITTER_AUTHENTICATION = {
-    "CONSUMER_KEY": os.environ.get("CONSUMER_KEY"),
-    "CONSUMER_SECRET": os.environ.get("CONSUMER_SECRET"),
-    "ACCESS_TOKEN": os.environ.get("ACCESS_TOKEN"),
-    "ACCESS_TOKEN_SECRET": os.environ.get("ACCESS_TOKEN_SECRET"),
-    "BEARER_TOKEN": os.environ.get("BEARER_TOKEN"),
+    "CONSUMER_KEY": _nearquake_secrets.get("CONSUMER_KEY"),
+    "CONSUMER_SECRET": _nearquake_secrets.get("CONSUMER_SECRET"),
+    "ACCESS_TOKEN": _nearquake_secrets.get("ACCESS_TOKEN"),
+    "ACCESS_TOKEN_SECRET": _nearquake_secrets.get("ACCESS_TOKEN_SECRET"),
+    "BEARER_TOKEN": _nearquake_secrets.get("BEARER_TOKEN"),
 }
 
-BLUESKY_USER_NAME = os.environ.get("BLUESKY_USER_NAME")
-BLUESKY_PASSWORD = os.environ.get("BLUESKY_PASSWORD")
+BLUESKY_USER_NAME = _nearquake_secrets.get("BLUESKY_USER_NAME")
+BLUESKY_PASSWORD = _nearquake_secrets.get("BLUESKY_PASSWORD")
 
 TWEET_CONCLUSION = [
     "How do you prepare? Share tips and stay safe! #earthquakePrep. Data provided by #usgs",
@@ -143,7 +147,7 @@ def generate_coordinate_lookup_detail_url(latitude, longitude) -> str:
     :return: A fully formatted URL without the API key
     """
     return COORDINATE_LOOKUP_BASE_URL.format(
-        BASE_URL=os.environ.get("GEO_REVERSE_LOOKUP_BASE_URL"),
+        BASE_URL=_nearquake_secrets.get("GEO_REVERSE_LOOKUP_BASE_URL"),
         latitude=latitude,
         longitude=longitude,
     )

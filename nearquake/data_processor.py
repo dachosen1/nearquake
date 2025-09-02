@@ -1,5 +1,3 @@
-import logging
-import os
 from abc import ABC, abstractmethod
 from collections import Counter
 from datetime import timedelta, timezone
@@ -14,6 +12,7 @@ from nearquake.config import (
     EARTHQUAKE_POST_THRESHOLD,
     REPORTED_SINCE_THRESHOLD,
     TIMESTAMP_NOW,
+    _nearquake_secrets,
     generate_coordinate_lookup_detail_url,
     generate_time_range_url,
 )
@@ -105,6 +104,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
 
         except TypeError:
             new_events = data["features"]
+            self.existing_event_ids_count = 0
             log_api_response(
                 _logger,
                 api_name="USGS Earthquake API",
@@ -114,6 +114,8 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             )
 
         except Exception as e:
+            new_events = data["features"]
+            self.existing_event_ids_count = 0
             log_error(
                 _logger,
                 "Encountered an unexpected error during earthquake data extraction",
@@ -169,9 +171,7 @@ class UploadEarthQuakeEvents(BaseDataUploader):
             )
 
             self.conn.insert_many(new_event_list)
-            summary = Counter(
-                event.date.strftime("%Y-%m-%d") for event in new_event_list
-            )
+            summary = Counter(str(event.date) for event in new_event_list)
             log_info(
                 _logger,
                 f"Added {len(new_event_list)} records and {self.existing_event_ids_count} records were already added. {dict(summary)}",
@@ -270,7 +270,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
         )
 
         # Pass API key as a separate parameter for secure logging
-        params = {"key": os.environ.get("GEO_API_KEY")}
+        params = {"key": _nearquake_secrets.get("GEO_API_KEY")}
         content = fetch_json_data_from_url(url=url, params=params)
 
         if content is None:
