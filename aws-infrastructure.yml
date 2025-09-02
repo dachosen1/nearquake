@@ -328,8 +328,8 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub "${ProjectName}-live-schedule"
-      Description: "Run live earthquake monitoring every 5 minutes"
-      ScheduleExpression: "rate(5 minutes)"
+      Description: "Run live earthquake monitoring every 15 minutes"
+      ScheduleExpression: "rate(15 minutes)"
       State: ENABLED
       Targets:
         - Arn: !GetAtt ECSCluster.Arn

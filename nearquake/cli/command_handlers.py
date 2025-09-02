@@ -45,11 +45,6 @@ class LiveCommandHandler(CommandHandler):
 
         run.upload(url=generate_time_period_url("hour"))
         tweet.upload()
-        loc = UploadEarthQuakeLocation(conn=db_session)
-        loc.upload(
-            start_date=self._start_date.strftime("%Y-%m-%d"),
-            end_date=self._today.strftime("%Y-%m-%d"),
-        )
 
 
 class SummaryCommandHandler(CommandHandler):
