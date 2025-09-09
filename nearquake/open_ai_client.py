@@ -3,6 +3,7 @@ import os
 
 from openai import OpenAI
 
+from nearquake.config import _nearquake_secrets
 from nearquake.utils.logging_utils import (
     get_logger,
     log_api_request,
@@ -13,7 +14,7 @@ from nearquake.utils.logging_utils import (
 
 _logger = get_logger(__name__)
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client = OpenAI(api_key=_nearquake_secrets.get("OPENAI_API_KEY"))
 
 
 def generate_response(

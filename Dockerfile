@@ -1,25 +1,35 @@
-FROM python:3.13.5-slim
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends cron && \
-    rm -rf /var/lib/apt/lists/*
+# Multi-stage build for better caching
+FROM python:3.13.5-slim AS base
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 WORKDIR /usr/src/app
 
-# Copy Python project files
+# Create user early to avoid permission issues
+RUN groupadd -r appuser && useradd -r -g appuser appuser -m
+
+# Dependencies stage - changes rarely
+FROM base AS deps
 COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
-# Install dependencies with uv
-RUN uv sync --frozen --no-dev
+# Runtime stage
+FROM base AS runtime
+# Copy dependencies from deps stage
+COPY --from=deps /usr/src/app/.venv /usr/src/app/.venv
+COPY --from=deps /usr/src/app/pyproject.toml /usr/src/app/uv.lock ./
 
+# Copy application code (changes frequently)
 COPY . .
 
-# Add crontab file in the cron directory
-COPY crontab /etc/cron.d/my-cron-job
+# Set ownership and permissions
+RUN chown -R appuser:appuser /usr/src/app && \
+    mkdir -p /home/appuser/.cache && \
+    chown -R appuser:appuser /home/appuser/.cache
 
-RUN chmod 0644 /etc/cron.d/my-cron-job && crontab /etc/cron.d/my-cron-job && touch /var/log/cron.log
+USER appuser
 
-CMD cron && tail -f /var/log/cron.log
+# Default command - will be overridden by Batch job definition
+CMD ["uv", "run", "main.py"]
