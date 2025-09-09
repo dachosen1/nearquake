@@ -107,17 +107,27 @@ clean: ## Delete CloudFormation stack
 	@echo "🗑️  Stack deletion initiated"
 
 # Logging commands
-logs-live: ## Show logs for live task
-	aws logs tail /aws/ecs/nearquake --filter-pattern "live" --follow
+logs-live: ## Show logs for live job
+	aws logs tail /aws/batch/nearquake --filter-pattern "live" --follow
 
-logs-daily: ## Show logs for daily task  
-	aws logs tail /aws/ecs/nearquake --filter-pattern "daily" --follow
+logs-daily: ## Show logs for daily job  
+	aws logs tail /aws/batch/nearquake --filter-pattern "daily" --follow
 
-logs-weekly: ## Show logs for weekly task
-	aws logs tail /aws/ecs/nearquake --filter-pattern "weekly" --follow
+logs-weekly: ## Show logs for weekly job
+	aws logs tail /aws/batch/nearquake --filter-pattern "weekly" --follow
 
-logs-monthly: ## Show logs for monthly task
-	aws logs tail /aws/ecs/nearquake --filter-pattern "monthly" --follow
+logs-monthly: ## Show logs for monthly job
+	aws logs tail /aws/batch/nearquake --filter-pattern "monthly" --follow
 
-logs-fun: ## Show logs for fun task
-	aws logs tail /aws/ecs/nearquake --filter-pattern "fun" --follow
+logs-fun: ## Show logs for fun job
+	aws logs tail /aws/batch/nearquake --filter-pattern "fun" --follow
+
+# Batch job management commands
+batch-jobs: ## List batch jobs
+	aws batch list-jobs --job-queue nearquake-job-queue-spot
+
+batch-describe-job: ## Describe a specific batch job (usage: make batch-describe-job JOB_ID=<job-id>)
+	aws batch describe-jobs --jobs $(JOB_ID)
+
+batch-cancel-job: ## Cancel a specific batch job (usage: make batch-cancel-job JOB_ID=<job-id>)
+	aws batch cancel-job --job-id $(JOB_ID) --reason "Manual cancellation"

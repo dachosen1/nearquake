@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Nearquake ECS Fargate infrastructure with EventBridge scheduling'
+Description: 'Nearquake AWS Batch infrastructure with EventBridge scheduling'
 
 Parameters:
   ProjectName:
@@ -13,24 +13,38 @@ Parameters:
     Description: Name of the ECR repository
 
 Resources:
-  ECSCluster:
-    Type: AWS::ECS::Cluster
+  # AWS Batch Compute Environment (Spot)
+  BatchComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
     Properties:
-      ClusterName: !Sub "${ProjectName}-cluster"
-      CapacityProviders:
-        - FARGATE_SPOT
-        - FARGATE
-      DefaultCapacityProviderStrategy:
-        - CapacityProvider: FARGATE_SPOT
-          Weight: 4
-        - CapacityProvider: FARGATE
-          Weight: 1
+      ComputeEnvironmentName: !Sub "${ProjectName}-compute-env-spot"
+      Type: MANAGED
+      State: ENABLED
+      ComputeResources:
+        Type: FARGATE_SPOT
+        MaxvCpus: 10
+        Subnets:
+          - !Ref PublicSubnet1
+          - !Ref PublicSubnet2
+        SecurityGroupIds:
+          - !Ref SecurityGroup
 
-  # Task Execution Role
-  TaskExecutionRole:
+  # AWS Batch Job Queue
+  BatchJobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      JobQueueName: !Sub "${ProjectName}-job-queue-spot"
+      State: ENABLED
+      Priority: 1
+      ComputeEnvironmentOrder:
+        - Order: 1
+          ComputeEnvironment: !Ref BatchComputeEnvironment
+
+  # Batch Execution Role
+  BatchExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${ProjectName}-task-execution-role"
+      RoleName: !Sub "${ProjectName}-batch-execution-role"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -52,11 +66,11 @@ Resources:
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/secrets*"
                   - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/postgres*"
 
-  # Task Role (for application permissions)
-  TaskRole:
+  # Batch Job Role (for application permissions)
+  BatchJobRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${ProjectName}-task-role"
+      RoleName: !Sub "${ProjectName}-batch-job-role"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -153,8 +167,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub "${ProjectName}-sg"
-      GroupDescription: Security group for ECS tasks
+      GroupDescription: Security group for Batch jobs
       VpcId: !Ref VPC
       SecurityGroupEgress:
         - IpProtocol: -1
@@ -176,150 +189,166 @@ Resources:
               Service: events.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: ECSTaskExecution
+        - PolicyName: BatchJobExecution
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - ecs:RunTask
+                  - batch:SubmitJob
                 Resource:
-                  - !Ref LiveTaskDefinition
-                  - !Ref DailyTaskDefinition
-                  - !Ref WeeklyTaskDefinition
-                  - !Ref MonthlyTaskDefinition
-                  - !Ref FunFactTaskDefinition
+                  - !Ref LiveJobDefinition
+                  - !Ref DailyJobDefinition
+                  - !Ref WeeklyJobDefinition
+                  - !Ref MonthlyJobDefinition
+                  - !Ref FunFactJobDefinition
+                  - !Ref BatchJobQueue
               - Effect: Allow
                 Action:
                   - iam:PassRole
                 Resource:
-                  - !GetAtt TaskExecutionRole.Arn
-                  - !GetAtt TaskRole.Arn
+                  - !GetAtt BatchExecutionRole.Arn
+                  - !GetAtt BatchJobRole.Arn
 
   # Reference existing secrets (don't create them)
   # The secrets should already exist in your AWS account
 
-  # Task Definitions
-  LiveTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
+  # Job Definitions
+  LiveJobDefinition:
+    Type: AWS::Batch::JobDefinition
     Properties:
-      Family: !Sub "${ProjectName}-live"
-      RequiresCompatibilities:
+      JobDefinitionName: !Sub "${ProjectName}-live"
+      Type: container
+      PlatformCapabilities:
         - FARGATE
-      NetworkMode: awsvpc
-      Cpu: 256
-      Memory: 512
-      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ContainerDefinitions:
-        - Name: !Sub "${ProjectName}-live"
-          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["uv", "run", "main.py", "-l"]
-          Essential: true
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref CloudWatchLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: live
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+        Command: ["uv", "run", "main.py", "-l"]
+        ResourceRequirements:
+          - Type: VCPU
+            Value: "0.25"
+          - Type: MEMORY
+            Value: "512"
+        ExecutionRoleArn: !GetAtt BatchExecutionRole.Arn
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref CloudWatchLogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: live
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
 
-  DailyTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
+  DailyJobDefinition:
+    Type: AWS::Batch::JobDefinition
     Properties:
-      Family: !Sub "${ProjectName}-daily"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
+      JobDefinitionName: !Sub "${ProjectName}-daily"
+      Type: container
+      PlatformCapabilities:
         - FARGATE
-      Cpu: 256
-      Memory: 512
-      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ContainerDefinitions:
-        - Name: !Sub "${ProjectName}-daily"
-          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["uv", "run", "main.py", "-d"]
-          Essential: true
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref CloudWatchLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: daily
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+        Command: ["uv", "run", "main.py", "-d"]
+        ResourceRequirements:
+          - Type: VCPU
+            Value: "0.25"
+          - Type: MEMORY
+            Value: "512"
+        ExecutionRoleArn: !GetAtt BatchExecutionRole.Arn
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref CloudWatchLogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: daily
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
 
-  WeeklyTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
+  WeeklyJobDefinition:
+    Type: AWS::Batch::JobDefinition
     Properties:
-      Family: !Sub "${ProjectName}-weekly"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
+      JobDefinitionName: !Sub "${ProjectName}-weekly"
+      Type: container
+      PlatformCapabilities:
         - FARGATE
-      Cpu: 256
-      Memory: 512
-      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ContainerDefinitions:
-        - Name: !Sub "${ProjectName}-weekly"
-          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["uv", "run", "main.py", "-w"]
-          Essential: true
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref CloudWatchLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: weekly
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+        Command: ["uv", "run", "main.py", "-w"]
+        ResourceRequirements:
+          - Type: VCPU
+            Value: "0.25"
+          - Type: MEMORY
+            Value: "512"
+        ExecutionRoleArn: !GetAtt BatchExecutionRole.Arn
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref CloudWatchLogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: weekly
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
 
-  MonthlyTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
+  MonthlyJobDefinition:
+    Type: AWS::Batch::JobDefinition
     Properties:
-      Family: !Sub "${ProjectName}-monthly"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
+      JobDefinitionName: !Sub "${ProjectName}-monthly"
+      Type: container
+      PlatformCapabilities:
         - FARGATE
-      Cpu: 256
-      Memory: 512
-      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ContainerDefinitions:
-        - Name: !Sub "${ProjectName}-monthly"
-          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["uv", "run", "main.py", "-m"]
-          Essential: true
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref CloudWatchLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: monthly
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+        Command: ["uv", "run", "main.py", "-m"]
+        ResourceRequirements:
+          - Type: VCPU
+            Value: "0.25"
+          - Type: MEMORY
+            Value: "512"
+        ExecutionRoleArn: !GetAtt BatchExecutionRole.Arn
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref CloudWatchLogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: monthly
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
 
-  FunFactTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
+  FunFactJobDefinition:
+    Type: AWS::Batch::JobDefinition
     Properties:
-      Family: !Sub "${ProjectName}-fun"
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
+      JobDefinitionName: !Sub "${ProjectName}-fun"
+      Type: container
+      PlatformCapabilities:
         - FARGATE
-      Cpu: 256
-      Memory: 512
-      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ContainerDefinitions:
-        - Name: !Sub "${ProjectName}-fun"
-          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          Command: ["python", "main.py", "-f"]
-          Essential: true
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref CloudWatchLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: fun
+      ContainerProperties:
+        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+        Command: ["uv", "run", "main.py", "-f"]
+        ResourceRequirements:
+          - Type: VCPU
+            Value: "0.25"
+          - Type: MEMORY
+            Value: "512"
+        ExecutionRoleArn: !GetAtt BatchExecutionRole.Arn
+        JobRoleArn: !GetAtt BatchJobRole.Arn
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group: !Ref CloudWatchLogGroup
+            awslogs-region: !Ref AWS::Region
+            awslogs-stream-prefix: fun
+        NetworkConfiguration:
+          AssignPublicIp: ENABLED
 
   # CloudWatch Log Group
   CloudWatchLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/ecs/${ProjectName}"
+      LogGroupName: !Sub "/aws/batch/${ProjectName}"
       RetentionInDays: 30
 
 
@@ -328,24 +357,16 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub "${ProjectName}-live-schedule"
-      Description: "Run live earthquake monitoring every 15 minutes"
-      ScheduleExpression: "rate(15 minutes)"
+      Description: "Run live earthquake monitoring every 5 minutes"
+      ScheduleExpression: "rate(5 minutes)"
       State: ENABLED
       Targets:
-        - Arn: !GetAtt ECSCluster.Arn
-          Id: "LiveTask"
+        - Arn: !Sub "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${ProjectName}-job-queue-spot"
+          Id: "LiveJob"
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
-          EcsParameters:
-            TaskDefinitionArn: !Ref LiveTaskDefinition
-            LaunchType: FARGATE
-            NetworkConfiguration:
-              AwsVpcConfiguration:
-                Subnets:
-                  - !Ref PublicSubnet1
-                  - !Ref PublicSubnet2
-                SecurityGroups:
-                  - !Ref SecurityGroup
-                AssignPublicIp: ENABLED
+          BatchParameters:
+            JobName: !Sub "${ProjectName}-live-job"
+            JobDefinition: !Ref LiveJobDefinition
 
   DailyScheduleRule:
     Type: AWS::Events::Rule
@@ -355,20 +376,12 @@ Resources:
       ScheduleExpression: "cron(0 12 * * ? *)"
       State: ENABLED
       Targets:
-        - Arn: !GetAtt ECSCluster.Arn
-          Id: "DailyTask"
+        - Arn: !Sub "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${ProjectName}-job-queue-spot"
+          Id: "DailyJob"
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
-          EcsParameters:
-            TaskDefinitionArn: !Ref DailyTaskDefinition
-            LaunchType: FARGATE
-            NetworkConfiguration:
-              AwsVpcConfiguration:
-                Subnets:
-                  - !Ref PublicSubnet1
-                  - !Ref PublicSubnet2
-                SecurityGroups:
-                  - !Ref SecurityGroup
-                AssignPublicIp: ENABLED
+          BatchParameters:
+            JobName: !Sub "${ProjectName}-daily-job"
+            JobDefinition: !Ref DailyJobDefinition
 
   WeeklyScheduleRule:
     Type: AWS::Events::Rule
@@ -378,20 +391,12 @@ Resources:
       ScheduleExpression: "cron(0 17 ? * MON *)"
       State: ENABLED
       Targets:
-        - Arn: !GetAtt ECSCluster.Arn
-          Id: "WeeklyTask"
+        - Arn: !Sub "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${ProjectName}-job-queue-spot"
+          Id: "WeeklyJob"
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
-          EcsParameters:
-            TaskDefinitionArn: !Ref WeeklyTaskDefinition
-            LaunchType: FARGATE
-            NetworkConfiguration:
-              AwsVpcConfiguration:
-                Subnets:
-                  - !Ref PublicSubnet1
-                  - !Ref PublicSubnet2
-                SecurityGroups:
-                  - !Ref SecurityGroup
-                AssignPublicIp: ENABLED
+          BatchParameters:
+            JobName: !Sub "${ProjectName}-weekly-job"
+            JobDefinition: !Ref WeeklyJobDefinition
 
   MonthlyScheduleRule:
     Type: AWS::Events::Rule
@@ -401,20 +406,12 @@ Resources:
       ScheduleExpression: "cron(0 16 1 * ? *)"
       State: ENABLED
       Targets:
-        - Arn: !GetAtt ECSCluster.Arn
-          Id: "MonthlyTask"
+        - Arn: !Sub "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${ProjectName}-job-queue-spot"
+          Id: "MonthlyJob"
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
-          EcsParameters:
-            TaskDefinitionArn: !Ref MonthlyTaskDefinition
-            LaunchType: FARGATE
-            NetworkConfiguration:
-              AwsVpcConfiguration:
-                Subnets:
-                  - !Ref PublicSubnet1
-                  - !Ref PublicSubnet2
-                SecurityGroups:
-                  - !Ref SecurityGroup
-                AssignPublicIp: ENABLED
+          BatchParameters:
+            JobName: !Sub "${ProjectName}-monthly-job"
+            JobDefinition: !Ref MonthlyJobDefinition
 
   FunFactScheduleRule:
     Type: AWS::Events::Rule
@@ -424,20 +421,12 @@ Resources:
       ScheduleExpression: "cron(0 12,20 * * ? *)"
       State: ENABLED
       Targets:
-        - Arn: !GetAtt ECSCluster.Arn
-          Id: "FunFactTask"
+        - Arn: !Sub "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${ProjectName}-job-queue-spot"
+          Id: "FunFactJob"
           RoleArn: !GetAtt EventBridgeExecutionRole.Arn
-          EcsParameters:
-            TaskDefinitionArn: !Ref FunFactTaskDefinition
-            LaunchType: FARGATE
-            NetworkConfiguration:
-              AwsVpcConfiguration:
-                Subnets:
-                  - !Ref PublicSubnet1
-                  - !Ref PublicSubnet2
-                SecurityGroups:
-                  - !Ref SecurityGroup
-                AssignPublicIp: ENABLED
+          BatchParameters:
+            JobName: !Sub "${ProjectName}-funfact-job"
+            JobDefinition: !Ref FunFactJobDefinition
 
 Outputs:
   ECRRepositoryURI:
@@ -446,8 +435,14 @@ Outputs:
     Export:
       Name: !Sub "${ProjectName}-ecr-uri"
 
-  ECSClusterName:
-    Description: ECS Cluster Name
-    Value: !Ref ECSCluster
+  BatchJobQueueName:
+    Description: Batch Job Queue Name
+    Value: !Ref BatchJobQueue
     Export:
-      Name: !Sub "${ProjectName}-ecs-cluster"
+      Name: !Sub "${ProjectName}-batch-job-queue"
+  
+  BatchComputeEnvironmentName:
+    Description: Batch Compute Environment Name
+    Value: !Ref BatchComputeEnvironment
+    Export:
+      Name: !Sub "${ProjectName}-batch-compute-env"
