@@ -292,18 +292,21 @@ class TestBackfillCommandHandler(unittest.TestCase):
     """Test the BackfillCommandHandler class."""
 
     def setUp(self):
-        self.handler = BackfillCommandHandler()
+        self.handler = BackfillCommandHandler(
+            start_date="2023-01-01",
+            end_date="2023-01-31", 
+            backfill_events=True,
+            backfill_locations=True
+        )
         self.mock_db_session = MagicMock()
 
-    @patch("nearquake.cli.command_handlers.input")
     @patch("nearquake.cli.command_handlers.UploadEarthQuakeEvents")
     @patch("nearquake.cli.command_handlers.UploadEarthQuakeLocation")
     def test_execute_with_both_backfills(
-        self, mock_upload_location, mock_upload_events, mock_input
+        self, mock_upload_location, mock_upload_events
     ):
         """Test the execute method with both backfills enabled."""
         # Set up mocks
-        mock_input.side_effect = ["2023-01-01", "2023-01-31", "True", "True"]
         mock_upload_events_instance = mock_upload_events.return_value
         mock_upload_location_instance = mock_upload_location.return_value
 
@@ -311,7 +314,6 @@ class TestBackfillCommandHandler(unittest.TestCase):
         self.handler.execute(self.mock_db_session)
 
         # Verify the mocks were called correctly
-        self.assertEqual(mock_input.call_count, 4)
         mock_upload_events.assert_called_once_with(conn=self.mock_db_session)
         mock_upload_location.assert_called_once_with(conn=self.mock_db_session)
         mock_upload_events_instance.backfill.assert_called_once_with(
@@ -321,46 +323,66 @@ class TestBackfillCommandHandler(unittest.TestCase):
             start_date="2023-01-01", end_date="2023-01-31"
         )
 
-    @patch("nearquake.cli.command_handlers.input")
     @patch("nearquake.cli.command_handlers.UploadEarthQuakeEvents")
     @patch("nearquake.cli.command_handlers.UploadEarthQuakeLocation")
     def test_execute_with_events_only(
-        self, mock_upload_location, mock_upload_events, mock_input
+        self, mock_upload_location, mock_upload_events
     ):
         """Test the execute method with only event backfill enabled."""
-        # Set up mocks
-        mock_input.side_effect = ["2023-01-01", "2023-01-31", "True", ""]
+        # Create handler with only events enabled
+        handler = BackfillCommandHandler(
+            start_date="2023-01-01",
+            end_date="2023-01-31", 
+            backfill_events=True,
+            backfill_locations=False
+        )
         mock_upload_events_instance = mock_upload_events.return_value
 
         # Execute the handler
-        self.handler.execute(self.mock_db_session)
+        handler.execute(self.mock_db_session)
 
         # Verify the mocks were called correctly
-        self.assertEqual(mock_input.call_count, 4)
         mock_upload_events.assert_called_once_with(conn=self.mock_db_session)
         mock_upload_events_instance.backfill.assert_called_once_with(
             start_date="2023-01-01", end_date="2023-01-31"
         )
         mock_upload_location.assert_not_called()
 
-    @patch("nearquake.cli.command_handlers.input")
     @patch("nearquake.cli.command_handlers.UploadEarthQuakeEvents")
     @patch("nearquake.cli.command_handlers.UploadEarthQuakeLocation")
     def test_execute_with_location_only(
-        self, mock_upload_location, mock_upload_events, mock_input
+        self, mock_upload_location, mock_upload_events
     ):
         """Test the execute method with only location backfill enabled."""
-        # Set up mocks
-        mock_input.side_effect = ["2023-01-01", "2023-01-31", "", "True"]
+        # Create handler with only locations enabled
+        handler = BackfillCommandHandler(
+            start_date="2023-01-01",
+            end_date="2023-01-31", 
+            backfill_events=False,
+            backfill_locations=True
+        )
         mock_upload_location_instance = mock_upload_location.return_value
 
         # Execute the handler
-        self.handler.execute(self.mock_db_session)
+        handler.execute(self.mock_db_session)
 
         # Verify the mocks were called correctly
-        self.assertEqual(mock_input.call_count, 4)
         mock_upload_events.assert_not_called()
         mock_upload_location.assert_called_once_with(conn=self.mock_db_session)
         mock_upload_location_instance.backfill.assert_called_once_with(
             start_date="2023-01-01", end_date="2023-01-31"
         )
+
+    def test_execute_missing_dates_raises_error(self):
+        """Test that execute raises ValueError when dates are missing."""
+        handler = BackfillCommandHandler(
+            start_date=None,
+            end_date=None, 
+            backfill_events=True,
+            backfill_locations=True
+        )
+        
+        with self.assertRaises(ValueError) as context:
+            handler.execute(self.mock_db_session)
+        
+        self.assertIn("start_date and end_date are required", str(context.exception))

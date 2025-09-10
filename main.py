@@ -33,7 +33,19 @@ def main():
     with db_session:
         for command_name, enabled in vars(args).items():
             if enabled:
-                handler = factory.create(command_name)
+                if command_name == "backfill":
+                    # Special handling for backfill command with parameters
+                    if not args.start_date or not args.end_date:
+                        raise ValueError("--start-date and --end-date are required with --backfill")
+                    handler = BackfillCommandHandler(
+                        start_date=args.start_date,
+                        end_date=args.end_date,
+                        backfill_events=args.backfill_events,
+                        backfill_locations=args.backfill_locations
+                    )
+                else:
+                    handler = factory.create(command_name)
+                
                 if handler:
                     handler.execute(db_session)
 

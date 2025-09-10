@@ -138,22 +138,34 @@ class FunFactCommandHandler(CommandHandler):
 class BackfillCommandHandler(CommandHandler):
     """Handles backfilling earthquake data."""
 
+    def __init__(self, start_date=None, end_date=None, backfill_events=False, backfill_locations=False):
+        """Initialize backfill handler with parameters.
+        
+        :param start_date: Start date for backfill operation
+        :param end_date: End date for backfill operation  
+        :param backfill_events: Whether to backfill earthquake event details
+        :param backfill_locations: Whether to backfill earthquake location data
+        """
+        self.start_date = start_date
+        self.end_date = end_date
+        self.backfill_events = backfill_events
+        self.backfill_locations = backfill_locations
+
     def execute(self, db_session):
-        start_date = input("Type Start Date:")
-        end_date = input("Type End Date:")
+        """Execute backfill operation with configured parameters.
+        
+        :param db_session: Database session for operations
+        """
+        if not self.start_date or not self.end_date:
+            raise ValueError("start_date and end_date are required for backfill operation")
 
-        backfill_event = input("Backfill earthquake.fct__event_detail: True or Blank ")
-        backfill_location = input(
-            "Backfill earthquake.dim__event_location: True or Blank "
-        )
-
-        if backfill_event == "True":
+        if self.backfill_events:
             run = UploadEarthQuakeEvents(conn=db_session)
-            run.backfill(start_date=start_date, end_date=end_date)
+            run.backfill(start_date=self.start_date, end_date=self.end_date)
 
-        if backfill_location == "True":
+        if self.backfill_locations:
             loc = UploadEarthQuakeLocation(conn=db_session)
-            loc.backfill(start_date=start_date, end_date=end_date)
+            loc.backfill(start_date=self.start_date, end_date=self.end_date)
 
 
 class CommandHandlerFactory:
