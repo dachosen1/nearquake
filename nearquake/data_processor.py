@@ -228,7 +228,7 @@ class UploadEarthQuakeLocation(BaseDataUploader):
                 LocationDetails.id_event == EventDetails.id_event,
                 isouter=True,
             )
-            .filter(LocationDetails.id_event == None, EventDetails.date == date)
+            .filter(LocationDetails.id_event.is_(None), EventDetails.date == date)
         )
         results = query.all()
         log_info(_logger, f"Extracted {len(results)} quake events on {date}")
