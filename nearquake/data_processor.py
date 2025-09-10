@@ -405,12 +405,6 @@ class TweetEarthquakeEvents(BaseDataUploader):
                 < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
                 Post.id_event.is_(None),
             )
-            .filter(
-                EventDetails.mag > EARTHQUAKE_POST_THRESHOLD,
-                func.now() - EventDetails.ts_event_utc
-                < timedelta(seconds=REPORTED_SINCE_THRESHOLD),
-                Post.id_event.is_(None),
-            )
         )
         results = query.all()
 
