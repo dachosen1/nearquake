@@ -128,7 +128,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [0, !GetAZs '']
       CidrBlock: 10.0.1.0/24
-      Ipv6CidrBlock: !Select [0, !Cidr [!Select [0, !GetAtt VPC.Ipv6CidrBlocks], 256, 64]]
+      Ipv6CidrBlock: !Select [0, !Cidr [!Select [0, !GetAtt VPC.Ipv6CidrBlocks], 256, 8]]
       MapPublicIpOnLaunch: true
       AssignIpv6AddressOnCreation: true
       Tags:
@@ -142,7 +142,7 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [1, !GetAZs '']
       CidrBlock: 10.0.2.0/24
-      Ipv6CidrBlock: !Select [1, !Cidr [!Select [0, !GetAtt VPC.Ipv6CidrBlocks], 256, 64]]
+      Ipv6CidrBlock: !Select [1, !Cidr [!Select [0, !GetAtt VPC.Ipv6CidrBlocks], 256, 8]]
       MapPublicIpOnLaunch: true
       AssignIpv6AddressOnCreation: true
       Tags:
