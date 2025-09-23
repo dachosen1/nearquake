@@ -101,6 +101,13 @@ Resources:
         - Key: Name
           Value: !Sub "${ProjectName}-vpc"
 
+  # IPv6 CIDR Block for VPC
+  VPCIPv6CidrBlock:
+    Type: AWS::EC2::VPCCidrBlock
+    Properties:
+      VpcId: !Ref VPC
+      AmazonProvidedIpv6CidrBlock: true
+
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -116,22 +123,28 @@ Resources:
 
   PublicSubnet1:
     Type: AWS::EC2::Subnet
+    DependsOn: VPCIPv6CidrBlock
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [0, !GetAZs '']
       CidrBlock: 10.0.1.0/24
+      Ipv6CidrBlock: !Select [0, !Cidr [!Select [0, !GetAtt VPC.Ipv6CidrBlocks], 256, 64]]
       MapPublicIpOnLaunch: true
+      AssignIpv6AddressOnCreation: true
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-public-subnet-1"
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
+    DependsOn: VPCIPv6CidrBlock
     Properties:
       VpcId: !Ref VPC
       AvailabilityZone: !Select [1, !GetAZs '']
       CidrBlock: 10.0.2.0/24
+      Ipv6CidrBlock: !Select [1, !Cidr [!Select [0, !GetAtt VPC.Ipv6CidrBlocks], 256, 64]]
       MapPublicIpOnLaunch: true
+      AssignIpv6AddressOnCreation: true
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-public-subnet-2"
@@ -150,6 +163,14 @@ Resources:
     Properties:
       RouteTableId: !Ref RouteTable
       DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  DefaultIPv6Route:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationIpv6CidrBlock: ::/0
       GatewayId: !Ref InternetGateway
 
   PublicSubnet1RouteTableAssociation:
@@ -172,6 +193,10 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+          Description: Allow all IPv4 outbound traffic
+        - IpProtocol: -1
+          CidrIpv6: ::/0
+          Description: Allow all IPv6 outbound traffic
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-sg"
