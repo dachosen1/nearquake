@@ -167,7 +167,9 @@ Resources:
 
   DefaultIPv6Route:
     Type: AWS::EC2::Route
-    DependsOn: InternetGatewayAttachment
+    DependsOn:
+      - InternetGatewayAttachment
+      - VPCIPv6CidrBlock
     Properties:
       RouteTableId: !Ref RouteTable
       DestinationIpv6CidrBlock: ::/0
