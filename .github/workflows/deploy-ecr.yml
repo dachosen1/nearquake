@@ -2,45 +2,54 @@ name: deploy_ci_cd_pipeline
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   cf-validate:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12.1'
-      
+
       - name: Configure AWS CLI
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::148282786374:role/nearquake-github-actions-role
           aws-region: us-east-1
+          audience: sts.amazonaws.com
 
       - name: Validate CloudFormation template
         run: |
           echo "Validating CloudFormation template..."
           make validate
           echo "CloudFormation template validation completed!"
-          
+
   deploy-cloudformation:
     needs: [cf-validate]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@v5
-      
+
       - name: Configure AWS CLI
         uses: aws-actions/configure-aws-credentials@v5
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::148282786374:role/nearquake-github-actions-role
           aws-region: us-east-1
-      
+          audience: sts.amazonaws.com
+
       - name: Deploy CloudFormation Stack
         run: make deploy-infra
