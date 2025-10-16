@@ -2,6 +2,9 @@ name: deploy_ci_cd_pipeline
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
   cf-validate:
     runs-on: ubuntu-latest
