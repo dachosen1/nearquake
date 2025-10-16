@@ -69,13 +69,17 @@ Resources:
                   - cloudformation:DescribeStackEvents
                   - cloudformation:DescribeStackResources
                   - cloudformation:GetTemplate
-                  - cloudformation:ValidateTemplate
                   - cloudformation:CreateChangeSet
                   - cloudformation:DescribeChangeSet
                   - cloudformation:ExecuteChangeSet
                 Resource:
                   - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${ProjectName}-infrastructure/*"
                   - !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:changeSet/*"
+              - Sid: CloudFormationValidate
+                Effect: Allow
+                Action:
+                  - cloudformation:ValidateTemplate
+                Resource: "*"
               - Sid: ECRAccess
                 Effect: Allow
                 Action:
@@ -91,25 +95,53 @@ Resources:
                   - ecr:ListImages
                   - ecr:CreateRepository
                 Resource: "*"
-              - Sid: IAMAccess
+              - Sid: IAMRoleManagement
                 Effect: Allow
                 Action:
-                  - iam:PassRole
                   - iam:GetRole
                   - iam:CreateRole
                   - iam:DeleteRole
-                  - iam:AttachRolePolicy
-                  - iam:DetachRolePolicy
                   - iam:PutRolePolicy
                   - iam:DeleteRolePolicy
                   - iam:GetRolePolicy
-                  - iam:CreateOpenIDConnectProvider
-                  - iam:GetOpenIDConnectProvider
-                  - iam:DeleteOpenIDConnectProvider
                   - iam:TagRole
                   - iam:UntagRole
                   - iam:ListRoleTags
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-*"
+              - Sid: IAMOIDCProviderManagement
+                Effect: Allow
+                Action:
+                  - iam:CreateOpenIDConnectProvider
+                  - iam:GetOpenIDConnectProvider
+                  - iam:DeleteOpenIDConnectProvider
+                  - iam:TagOpenIDConnectProvider
+                  - iam:UntagOpenIDConnectProvider
+                Resource:
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+              - Sid: IAMPassRole
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-*"
+                Condition:
+                  StringEquals:
+                    iam:PassedToService:
+                      - ecs-tasks.amazonaws.com
+                      - events.amazonaws.com
+                      - batch.amazonaws.com
+              - Sid: IAMManagedPolicyAttachment
+                Effect: Allow
+                Action:
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                Resource:
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-*"
+                Condition:
+                  ArnEquals:
+                    iam:PolicyArn:
+                      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
               - Sid: STSAccess
                 Effect: Allow
                 Action:
@@ -140,8 +172,8 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                   - secretsmanager:DescribeSecret
-                  - secretsmanager:ListSecrets
-                Resource: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/*"
+                Resource:
+                  - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nearquake/*"
       Tags:
         - Key: Name
           Value: !Sub "${ProjectName}-github-actions-role"
