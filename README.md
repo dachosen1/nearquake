@@ -24,4 +24,4 @@ Quakebot is designed to tweet earthquakes greater than 4.5 around the world, pro
 Earthquake data is provided by the [United States Geological Survey (USGS)](https://earthquake.usgs.gov)
 
 ## Why Build this? 
-On July 4th, 2019, I was in LA and experienced my first earthquake. When it happened, I had no clue what was happening. I was panicking as to why the building was moving. It took me a while to realize that I was in an earthquake. I panicked and ran downstairs because I didn't want the building to collapse on me. When I got outside, I ran because I was scared that the building was going to fall on me. That moment, I became interested in earthquakes.
+On July 4th, 2019, I was in LA and experienced my first earthquake. When it happened, I had no idea what was going on. I panicked, wondering why the building was moving. It took me a moment to realize I was experiencing an earthquake. I rushed downstairs because I didn't want the building to collapse on me. Once outside, I kept running, scared the building would fall. That moment sparked my interest in earthquakes.
