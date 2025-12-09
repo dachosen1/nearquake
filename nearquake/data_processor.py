@@ -20,8 +20,10 @@ from nearquake.post_manager import post_and_save_tweet
 from nearquake.utils import (
     backfill_valid_date_range,
     convert_timestamp_to_utc,
+    extract_url_content,
     fetch_json_data_from_url,
     format_earthquake_alert,
+    get_earthquake_image_url,
     timer,
 )
 from nearquake.utils.logging_utils import (
@@ -441,7 +443,23 @@ class TweetEarthquakeEvents(BaseDataUploader):
             try:
                 log_info(_logger, f"Posting tweet about earthquake {quake.id_event}")
 
-                post_and_save_tweet(tweet_text, self.conn)
+                # Fetch earthquake shakemap image
+                image_data = None
+                try:
+                    event_url = generate_coordinate_lookup_detail_url(quake.id_event)
+                    event_details = fetch_json_data_from_url(event_url)
+                    image_url = get_earthquake_image_url(event_details)
+                    if image_url:
+                        image_data = extract_url_content(image_url)
+                        log_info(_logger, f"Successfully fetched shakemap image for {quake.id_event}")
+                except Exception as img_error:
+                    log_error(
+                        _logger,
+                        f"Failed to fetch shakemap image for {quake.id_event}, posting without image",
+                        exc=img_error,
+                    )
+
+                post_and_save_tweet(tweet_text, self.conn, media_data=image_data)
 
                 log_info(
                     _logger,
