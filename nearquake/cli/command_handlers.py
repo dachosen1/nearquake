@@ -103,6 +103,16 @@ class DailyCommandHandler(SummaryCommandHandler):
         self._days = 1
         self._start_date = self._today - timedelta(days=self._days)
 
+    def execute(self, db_session):
+        """Execute daily summary with graphics."""
+        # First run the standard summary (data upload + text tweet)
+        super().execute(db_session)
+
+        # Then post the daily summary graphic
+        from nearquake.data_processor import TweetDailySummary
+        daily_graphic = TweetDailySummary(conn=db_session)
+        daily_graphic.upload()
+
 
 class WeeklyCommandHandler(SummaryCommandHandler):
     """Handles weekly earthquake summary."""
@@ -112,6 +122,16 @@ class WeeklyCommandHandler(SummaryCommandHandler):
         self._period_name = "week"
         self._days = 7
         self._start_date = self._today - timedelta(days=self._days)
+
+    def execute(self, db_session):
+        """Execute weekly summary with graphics."""
+        # First run the standard summary (data upload + text tweet)
+        super().execute(db_session)
+
+        # Then post the weekly summary graphic
+        from nearquake.data_processor import TweetWeeklySummary
+        weekly_graphic = TweetWeeklySummary(conn=db_session)
+        weekly_graphic.upload()
 
 
 class MonthlyCommandHandler(SummaryCommandHandler):
