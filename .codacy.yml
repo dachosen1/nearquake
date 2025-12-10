@@ -1,0 +1,8 @@
+---
+# Codacy configuration file
+# https://docs.codacy.com/repositories-configure/codacy-configuration-file/
+
+# Exclude markdown files from static code analysis
+exclude_paths:
+  - "**/*.md"
+  - "**/*.markdown"
