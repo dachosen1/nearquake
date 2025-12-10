@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import Counter
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Type, TypeVar
 
 from sqlalchemy import and_, func
@@ -432,12 +432,20 @@ class TweetEarthquakeEvents(BaseDataUploader):
                 f"Preparing tweet for earthquake {quake.id_event} (magnitude {quake.mag})",
             )
 
+            # Get full event details for depth and place
+            event_query = self.conn.session.query(EventDetails).filter(
+                EventDetails.id_event == quake.id_event
+            ).first()
+
             tweet_text = format_earthquake_alert(
                 id_event=quake.id_event,
                 ts_event=earthquake_ts_event,
                 duration=duration,
                 message=quake.title,
                 post_type="event",
+                magnitude=quake.mag,
+                felt=event_query.felt if event_query else None,
+                tsunami=event_query.tsunami if event_query else None,
             )
 
             try:
@@ -459,12 +467,50 @@ class TweetEarthquakeEvents(BaseDataUploader):
                         exc=img_error,
                     )
 
-                post_and_save_tweet(tweet_text, self.conn, media_data=image_data)
+                # Post initial tweet
+                result = post_and_save_tweet(tweet_text, self.conn, media_data=image_data)
 
                 log_info(
                     _logger,
                     f"Successfully posted tweet about earthquake {quake.id_event}",
                 )
+
+                # For significant earthquakes (M5.5+), create a 2-tweet thread with context
+                if quake.mag >= 5.5:
+                    from nearquake.utils import generate_earthquake_context
+
+                    twitter_tweet_id = result.get("twitter")
+                    if twitter_tweet_id:
+                        log_info(_logger, f"Creating thread for significant earthquake {quake.id_event} (M{quake.mag})")
+
+                        try:
+                            # Tweet 2: Historical context
+                            location = event_query.place if event_query else "this region"
+                            context_text = generate_earthquake_context(
+                                magnitude=quake.mag,
+                                location=location
+                            )
+
+                            context_tweet = {
+                                "post": f"📊 Context: {context_text}",
+                                "ts_upload_utc": tweet_text["ts_upload_utc"],
+                                "id_event": quake.id_event,
+                                "post_type": "context",
+                            }
+
+                            post_and_save_tweet(
+                                context_tweet,
+                                self.conn,
+                                in_reply_to_tweet_id=twitter_tweet_id
+                            )
+
+                            log_info(_logger, f"Successfully created 2-tweet thread for {quake.id_event}")
+                        except Exception as thread_error:
+                            log_error(
+                                _logger,
+                                f"Failed to create thread for {quake.id_event}",
+                                exc=thread_error,
+                            )
 
             except Exception as e:
                 log_error(
@@ -474,6 +520,142 @@ class TweetEarthquakeEvents(BaseDataUploader):
                 )
 
         return None
+
+
+class TweetDailySummary(BaseDataUploader):
+    """Post daily earthquake summary with professional graphics."""
+
+    def _extract(self) -> List:
+        """Not used for summary posting."""
+        pass
+
+    def upload(self, date: str = None) -> None:
+        """
+        Generate and post daily earthquake summary.
+
+        :param date: Date in YYYY-MM-DD format (defaults to yesterday)
+        """
+        from nearquake.graphics_generator import generate_daily_summary_graphic
+
+        if date is None:
+            date = (TIMESTAMP_NOW - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        log_info(_logger, f"Generating daily summary for {date}")
+
+        try:
+            # Generate graphic
+            log_info(_logger, f"Attempting to generate daily summary graphic for {date}")
+            image_data = generate_daily_summary_graphic(self.conn, date)
+
+            if not image_data:
+                log_info(_logger, f"No events to summarize for {date}")
+                return
+
+            log_info(_logger, f"Successfully generated graphic, size: {len(image_data)} bytes")
+
+            # Get event count for tweet text
+            events = (
+                self.conn.session.query(EventDetails)
+                .filter(EventDetails.date == date, EventDetails.type == "earthquake")
+                .all()
+            )
+
+            magnitudes = [e.mag for e in events if e.mag]
+            max_mag = max(magnitudes) if magnitudes else 0
+            max_event = max(events, key=lambda e: e.mag if e.mag else 0)
+            location = max_event.place if max_event.place else "Unknown"
+            event_time = max_event.time.strftime("%H:%M") if max_event.time else "00:00"
+
+            # Create narrative tweet text
+            tweet_text = f"""Over the last 24 hours there were {len(events)} earthquakes detected and the largest being M{max_mag:.1f} - {location} reported in at {event_time} UTC
+
+#Earthquake #SeismicActivity
+Data: earthquake.usgs.gov"""
+
+            tweet_data = {
+                "post": tweet_text,
+                "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
+                "id_event": None,
+                "post_type": "daily_summary",
+            }
+
+            post_and_save_tweet(tweet_data, self.conn, media_data=image_data)
+            log_info(_logger, f"Successfully posted daily summary for {date}")
+
+        except Exception as e:
+            log_error(_logger, f"Failed to post daily summary for {date}", exc=e)
+
+
+class TweetWeeklySummary(BaseDataUploader):
+    """Post weekly earthquake summary with professional graphics."""
+
+    def _extract(self) -> List:
+        """Not used for summary posting."""
+        pass
+
+    def upload(self, end_date: str = None) -> None:
+        """
+        Generate and post weekly earthquake summary.
+
+        :param end_date: End date in YYYY-MM-DD format (defaults to yesterday)
+        """
+        from nearquake.graphics_generator import generate_weekly_summary_graphic
+
+        if end_date is None:
+            end_date = (TIMESTAMP_NOW - timedelta(days=1)).strftime("%Y-%m-%d")
+
+        start_date = (
+            datetime.strptime(end_date, "%Y-%m-%d") - timedelta(days=6)
+        ).strftime("%Y-%m-%d")
+
+        log_info(_logger, f"Generating weekly summary from {start_date} to {end_date}")
+
+        try:
+            # Generate graphic
+            log_info(_logger, f"Attempting to generate weekly summary graphic for week ending {end_date}")
+            image_data = generate_weekly_summary_graphic(self.conn, end_date)
+
+            if not image_data:
+                log_info(_logger, f"No events to summarize for week ending {end_date}")
+                return
+
+            log_info(_logger, f"Successfully generated graphic, size: {len(image_data)} bytes")
+
+            # Get event count for tweet text
+            events = (
+                self.conn.session.query(EventDetails)
+                .filter(
+                    EventDetails.date >= start_date,
+                    EventDetails.date <= end_date,
+                    EventDetails.type == "earthquake",
+                )
+                .all()
+            )
+
+            magnitudes = [e.mag for e in events if e.mag]
+            max_mag = max(magnitudes) if magnitudes else 0
+            max_event = max(events, key=lambda e: e.mag if e.mag else 0)
+            location = max_event.place if max_event.place else "Unknown"
+            max_event_date = max_event.date.strftime("%Y-%m-%d") if max_event.date else end_date
+
+            # Create narrative tweet text
+            tweet_text = f"""Over the last 7 days there were {len(events)} earthquakes detected and the largest being M{max_mag:.1f} - {location} reported in on {max_event_date}
+
+#Earthquake #WeeklyReport
+Data: earthquake.usgs.gov"""
+
+            tweet_data = {
+                "post": tweet_text,
+                "ts_upload_utc": TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S"),
+                "id_event": None,
+                "post_type": "weekly_summary",
+            }
+
+            post_and_save_tweet(tweet_data, self.conn, media_data=image_data)
+            log_info(_logger, f"Successfully posted weekly summary for week ending {end_date}")
+
+        except Exception as e:
+            log_error(_logger, f"Failed to post weekly summary for week ending {end_date}", exc=e)
 
 
 def get_date_range_summary(

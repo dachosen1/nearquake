@@ -281,13 +281,32 @@ def create_dir(path: str):
     return None
 
 
+def get_earthquake_emoji(magnitude: float) -> str:
+    """
+    Returns contextually appropriate emoji based on earthquake magnitude.
+
+    :param magnitude: Earthquake magnitude
+    :return: Emoji string
+    """
+    if magnitude >= 7.0:
+        return "🚨"  # Critical alert
+    elif magnitude >= 6.0:
+        return "⚠️"  # Warning
+    elif magnitude >= 5.0:
+        return "📢"  # Alert
+    else:
+        return "🌍"  # General earth/location
+
+
 def format_earthquake_alert(
     post_type: str,
-    title: str = None,
     ts_event: str = None,
     duration: timedelta = None,
     id_event: str = None,
     message: str = None,
+    magnitude: float = None,
+    felt: int = None,
+    tsunami: bool = None,
 ) -> dict:
     """
     Formats an alert for an earthquake event or fact.
@@ -297,14 +316,48 @@ def format_earthquake_alert(
     :param id_event: Unique identifier for the earthquake event.
     :param post_type: Type of post, either 'event' or 'fact'.
     :param message: Message content for fact-type posts.
+    :param magnitude: Earthquake magnitude.
+    :param place: Location description.
+    :param felt: Number of people who reported feeling it.
+    :param tsunami: Whether tsunami was generated.
     :return: A dictionary formatted as an alert or fact post.
     """
 
     ts_upload_utc = TIMESTAMP_NOW.strftime("%Y-%m-%d %H:%M:%S")
 
     if post_type == "event":
+        # Get appropriate emoji
+        emoji = get_earthquake_emoji(magnitude)
+
+        # Format with impact first
+        minutes_ago = duration.seconds / 60
+        time_str = f"{minutes_ago:.0f} min ago" if minutes_ago < 60 else f"{minutes_ago/60:.1f} hrs ago"
+
+        # Build the tweet with better formatting - use title directly
+        tweet_lines = [
+            f"{emoji} {message}",
+            f"🕐 {ts_event} UTC ({time_str})",
+        ]
+
+        # Add felt reports if available - this creates engagement!
+        if felt and felt > 0:
+            tweet_lines.append(f"🙋 {felt:,} people reported feeling it")
+
+        # Add tsunami warning if applicable
+        if tsunami:
+            tweet_lines.append("🌊 TSUNAMI WARNING")
+
+        tweet_text = "\n".join(tweet_lines)
+        tweet_text += f"\n\n🔗 Full details: {EVENT_DETAIL_URL.format(id=id_event)}"
+
+        # Add engaging call-to-action based on magnitude
+        if magnitude >= 5.5:
+            tweet_text += "\n\n💬 Did you feel it? Reply with your location!"
+        else:
+            tweet_text += f"\n{tweet_conclusion_text()}"
+
         return {
-            "post": f"Recent #Earthquake: {message} reported at {ts_event} UTC ({duration.seconds/60:.0f} minutes ago). #EarthquakeAlert. \nSee more details at {EVENT_DETAIL_URL.format(id=id_event)}. \n {tweet_conclusion_text()}",
+            "post": tweet_text,
             "ts_upload_utc": ts_upload_utc,
             "id_event": id_event,
             "post_type": post_type,
@@ -354,3 +407,62 @@ def timer(func):
         return result
 
     return wrapper
+
+
+def generate_earthquake_context(magnitude: float, location: str) -> str:
+    """
+    Generate historical context for a significant earthquake using OpenAI.
+
+    :param magnitude: Earthquake magnitude
+    :param location: Location description
+    :return: Context text suitable for a tweet (280 chars or less)
+    """
+    from nearquake.open_ai_client import generate_response
+
+    prompt = f"""Generate a brief historical context tweet (max 250 characters) about a M{magnitude} earthquake near {location}.
+
+Include ONE of the following if relevant:
+- Comparison to recent earthquakes in this region
+- Historical earthquake activity in this area
+- What this magnitude typically means for ground shaking
+
+Keep it factual, informative, and concise. Do NOT include quotes, hashtags, or emojis. This will be tweet 2 in a thread."""
+
+    try:
+        response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
+        # Truncate if needed
+        if len(response) > 250:
+            response = response[:247] + "..."
+        return response
+    except Exception as e:
+        _logger.error(f"Failed to generate earthquake context: {e}")
+        return f"This M{magnitude} earthquake is significant for the {location} region. Historical data suggests events of this size can cause damage to structures."
+
+
+def generate_preparedness_tip() -> str:
+    """
+    Generate a preparedness tip using OpenAI.
+
+    :return: Preparedness tip text suitable for a tweet (280 chars or less)
+    """
+    from nearquake.open_ai_client import generate_response
+
+    prompt = """Generate a brief earthquake preparedness tip (max 250 characters).
+
+Focus on ONE actionable tip such as:
+- What to do during shaking
+- Emergency kit essentials
+- Home safety measures
+- Community preparedness
+
+Keep it concise and actionable. Do NOT include quotes or excessive hashtags. Include 1-2 relevant emojis. This will be the final tweet in a 3-tweet thread."""
+
+    try:
+        response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
+        # Truncate if needed
+        if len(response) > 250:
+            response = response[:247] + "..."
+        return response
+    except Exception as e:
+        _logger.error(f"Failed to generate preparedness tip: {e}")
+        return "🏠 Secure heavy items to walls and practice Drop, Cover, and Hold On with your family. Being prepared saves lives! #EarthquakePrep"
