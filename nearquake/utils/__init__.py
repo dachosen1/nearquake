@@ -50,32 +50,24 @@ def extract_coordinates(data):
     return coordinates
 
 
-def get_earthquake_image_url(url):
+def get_earthquake_image_url(event_data):
     """
-    Extract the image URL from the results of the USA.gov earthquake API
+    Extract the shakemap image URL from earthquake event data.
 
     Example:
-        get_earthquake_image_url("https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us6000kd0n&format=geojson")
+        # From event data dict
+        get_earthquake_image_url({"properties": {"products": {"shakemap": [...]}}})
 
-    :param url: URL to the earthquake data.
-    :return: String containing the URL to the image, or None if no image could be found.
+    :param event_data: Dictionary containing earthquake event data from USGS API
+    :return: String containing the URL to the shakemap image, or None if no image could be found.
     """
-    response = requests.get(url, timeout=5)
-    if response.status_code != 200:
-        _logger.error(
-            f"Failed to get data from URL {url}. Status code: {response.status_code}"
-        )
-        return None
-
     try:
-        data = json.loads(response.text)
-        image_url = data["properties"]["products"]["shakemap"][0]["contents"][
+        image_url = event_data["properties"]["products"]["shakemap"][0]["contents"][
             "download/pga.jpg"
         ]["url"]
-        _logger.info("")
         return image_url
-    except KeyError:
-        _logger.error("Could not find image URL in response data.")
+    except (KeyError, TypeError, IndexError) as e:
+        _logger.error(f"Could not find shakemap image URL in event data: {e}")
         return None
 
 
@@ -283,7 +275,6 @@ def create_dir(path: str):
 
 def format_earthquake_alert(
     post_type: str,
-    title: str = None,
     ts_event: str = None,
     duration: timedelta = None,
     id_event: str = None,

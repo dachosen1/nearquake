@@ -28,6 +28,10 @@ EVENT_DETAIL_URL: str = (
     "https://earthquake.usgs.gov/earthquakes/eventpage/{id}/executive"
 )
 
+EVENT_DETAIL_API_URL: str = (
+    "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid={id}&format=geojson"
+)
+
 EARTHQUAKE_POST_THRESHOLD = 4.5
 
 REPORTED_SINCE_THRESHOLD = 7200
@@ -151,6 +155,16 @@ def generate_coordinate_lookup_detail_url(latitude, longitude) -> str:
         latitude=latitude,
         longitude=longitude,
     )
+
+
+def generate_event_detail_url(event_id: str) -> str:
+    """
+    Generate a URL for fetching earthquake event details from USGS API.
+
+    :param event_id: The earthquake event ID
+    :return: A fully formatted URL for the USGS event query API
+    """
+    return EVENT_DETAIL_API_URL.format(id=event_id)
 
 
 def tweet_conclusion_text():
