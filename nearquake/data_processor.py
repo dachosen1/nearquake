@@ -14,6 +14,7 @@ from nearquake.config import (
     TIMESTAMP_NOW,
     _nearquake_secrets,
     generate_coordinate_lookup_detail_url,
+    generate_event_detail_url,
     generate_time_range_url,
 )
 from nearquake.post_manager import post_and_save_tweet
@@ -446,12 +447,13 @@ class TweetEarthquakeEvents(BaseDataUploader):
                 # Fetch earthquake shakemap image
                 image_data = None
                 try:
-                    event_url = generate_coordinate_lookup_detail_url(quake.id_event)
+                    event_url = generate_event_detail_url(quake.id_event)
                     event_details = fetch_json_data_from_url(event_url)
-                    image_url = get_earthquake_image_url(event_details)
-                    if image_url:
-                        image_data = extract_url_content(image_url)
-                        log_info(_logger, f"Successfully fetched shakemap image for {quake.id_event}")
+                    if event_details:
+                        image_url = get_earthquake_image_url(event_details)
+                        if image_url:
+                            image_data = extract_url_content(image_url)
+                            log_info(_logger, f"Successfully fetched shakemap image for {quake.id_event}")
                 except Exception as img_error:
                     log_error(
                         _logger,
