@@ -9,7 +9,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from nearquake.app import DatabaseCreationError
-from nearquake.app.db import Base, EventDetails, LocationDetails, Post, create_database
+from nearquake.app.db import (Base, EventDetails, LocationDetails, Post,
+                              create_database)
 
 DATABASE_URL = "sqlite:///:memory:"
 
@@ -192,16 +193,8 @@ class TestDatabaseIntegration:
     def db_engine(self):
         """Create an in-memory SQLite database for testing"""
         # Use the correct import path for declarative_base
-        from sqlalchemy import (
-            TIMESTAMP,
-            Boolean,
-            Column,
-            Date,
-            Float,
-            ForeignKey,
-            Integer,
-            String,
-        )
+        from sqlalchemy import (TIMESTAMP, Boolean, Column, Date, Float,
+                                ForeignKey, Integer, String)
         from sqlalchemy.orm import declarative_base, relationship
 
         TestBase = declarative_base()

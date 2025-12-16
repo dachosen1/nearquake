@@ -4,13 +4,9 @@ import os
 from openai import OpenAI
 
 from nearquake.config import _nearquake_secrets
-from nearquake.utils.logging_utils import (
-    get_logger,
-    log_api_request,
-    log_api_response,
-    log_error,
-    log_info,
-)
+from nearquake.utils.logging_utils import (get_logger, log_api_request,
+                                           log_api_response, log_error,
+                                           log_info)
 
 _logger = get_logger(__name__)
 
@@ -33,9 +29,12 @@ def generate_response(
 
     if role not in valid_roles:
         log_error(
-            _logger, f"Invalid role: {role}. Valid options are {', '.join(valid_roles)}."
+            _logger,
+            f"Invalid role: {role}. Valid options are {', '.join(valid_roles)}.",
         )
-        raise ValueError(f"Error: Invalid role. Please choose one of: {', '.join(valid_roles)}.")
+        raise ValueError(
+            f"Error: Invalid role. Please choose one of: {', '.join(valid_roles)}."
+        )
 
     try:
         # Log the API request

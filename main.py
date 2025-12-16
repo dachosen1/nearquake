@@ -1,14 +1,12 @@
 from nearquake.cli import parse_arguments
-from nearquake.cli.command_handlers import (
-    BackfillCommandHandler,
-    CommandHandlerFactory,
-    DailyCommandHandler,
-    FunFactCommandHandler,
-    InitializeCommandHandler,
-    LiveCommandHandler,
-    MonthlyCommandHandler,
-    WeeklyCommandHandler,
-)
+from nearquake.cli.command_handlers import (BackfillCommandHandler,
+                                            CommandHandlerFactory,
+                                            DailyCommandHandler,
+                                            FunFactCommandHandler,
+                                            InitializeCommandHandler,
+                                            LiveCommandHandler,
+                                            MonthlyCommandHandler,
+                                            WeeklyCommandHandler)
 from nearquake.config import POSTGRES_CONNECTION_URL
 from nearquake.utils.db_sessions import DbSessionManager
 

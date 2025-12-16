@@ -9,7 +9,8 @@ from io import BytesIO
 import requests
 from PIL import Image
 
-from nearquake.config import EVENT_DETAIL_URL, TIMESTAMP_NOW, tweet_conclusion_text
+from nearquake.config import (EVENT_DETAIL_URL, TIMESTAMP_NOW,
+                              tweet_conclusion_text)
 
 _logger = logging.getLogger(__name__)
 
@@ -323,7 +324,11 @@ def format_earthquake_alert(
 
         # Format with impact first
         minutes_ago = duration.seconds / 60
-        time_str = f"{minutes_ago:.0f} min ago" if minutes_ago < 60 else f"{minutes_ago/60:.1f} hrs ago"
+        time_str = (
+            f"{minutes_ago:.0f} min ago"
+            if minutes_ago < 60
+            else f"{minutes_ago/60:.1f} hrs ago"
+        )
 
         # Build the tweet with better formatting - use title directly
         tweet_lines = [
@@ -401,20 +406,110 @@ def timer(func):
     return wrapper
 
 
-def generate_earthquake_context(magnitude: float, location: str) -> str:
+def get_earthquakes_within_radius(
+    conn, latitude: float, longitude: float, radius_miles: float = 5.0
+):
+    """
+    Query all earthquakes within a specified radius of a location.
+    Uses the Haversine formula to calculate distance.
+
+    :param conn: Database session connection
+    :param latitude: Latitude of the center point
+    :param longitude: Longitude of the center point
+    :param radius_miles: Radius in miles (default 5.0)
+    :return: List of earthquakes within the radius
+    """
+    from sqlalchemy import func
+
+    from nearquake.app.db import EventDetails
+
+    # Convert miles to kilometers (Haversine formula uses km)
+    radius_km = radius_miles * 1.60934
+
+    # Query using Haversine formula to calculate distance
+    # The formula calculates great-circle distance between two points on a sphere
+    distance_formula = 6371 * func.acos(
+        func.least(
+            1.0,
+            func.cos(func.radians(latitude))
+            * func.cos(func.radians(EventDetails.latitude))
+            * func.cos(func.radians(EventDetails.longitude) - func.radians(longitude))
+            + func.sin(func.radians(latitude))
+            * func.sin(func.radians(EventDetails.latitude)),
+        )
+    )
+
+    query = (
+        conn.session.query(
+            EventDetails.id_event,
+            EventDetails.mag,
+            EventDetails.ts_event_utc,
+            EventDetails.place,
+            EventDetails.latitude,
+            EventDetails.longitude,
+            distance_formula.label("distance_km"),
+        )
+        .filter(
+            EventDetails.type == "earthquake",
+            EventDetails.mag.isnot(None),
+            distance_formula <= radius_km,
+        )
+        .order_by(EventDetails.ts_event_utc.desc())
+    )
+
+    try:
+        results = query.all()
+        _logger.info(
+            f"Found {len(results)} earthquakes within {radius_miles} miles of ({latitude}, {longitude})"
+        )
+        return results
+    except Exception as e:
+        _logger.error(f"Error querying earthquakes within radius: {e}")
+        return []
+
+
+def generate_earthquake_context(
+    magnitude: float,
+    location: str,
+    latitude: float = None,
+    longitude: float = None,
+    conn=None,
+) -> str:
     """
     Generate historical context for a significant earthquake using OpenAI.
 
     :param magnitude: Earthquake magnitude
     :param location: Location description
+    :param latitude: Latitude of the earthquake (optional, for querying nearby events)
+    :param longitude: Longitude of the earthquake (optional, for querying nearby events)
+    :param conn: Database connection (optional, for querying historical data)
     :return: Context text suitable for a tweet (280 chars or less)
     """
     from nearquake.open_ai_client import generate_response
 
-    prompt = f"""Generate a brief historical context tweet (max 250 characters) about a M{magnitude} earthquake near {location}.
+    historical_data_str = ""
 
+    # Query historical earthquakes within 5-mile radius if coordinates provided
+    if latitude is not None and longitude is not None and conn is not None:
+        try:
+            nearby_quakes = get_earthquakes_within_radius(
+                conn, latitude, longitude, radius_miles=5.0
+            )
+
+            if nearby_quakes:
+                # Format historical data for LLM
+                historical_data_str = (
+                    f"\n\nHistorical earthquake data within 5 miles:\n"
+                )
+                for quake in nearby_quakes[:10]:  # Limit to 10 most recent
+                    historical_data_str += f"- M{quake.mag:.1f} on {quake.ts_event_utc.strftime('%Y-%m-%d')} at {quake.place}\n"
+        except Exception as e:
+            _logger.error(f"Failed to fetch nearby earthquakes: {e}")
+
+    prompt = f"""Generate a brief historical context tweet (max 250 characters) about a M{magnitude} earthquake near {location}.
+{historical_data_str}
 Include ONE of the following if relevant:
-- Comparison to recent earthquakes in this region
+- Comparison to recent earthquakes in this region (use the historical data provided above if available)
 - Historical earthquake activity in this area
 - What this magnitude typically means for ground shaking
 

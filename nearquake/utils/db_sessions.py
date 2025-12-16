@@ -3,12 +3,8 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from nearquake.utils.logging_utils import (
-    get_logger,
-    log_db_operation,
-    log_error,
-    log_info,
-)
+from nearquake.utils.logging_utils import (get_logger, log_db_operation,
+                                           log_error, log_info)
 
 _logger = get_logger(__name__)
 

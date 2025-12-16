@@ -3,14 +3,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from nearquake.app.db import Post
-from nearquake.post_manager import (
-    BlueSkyPost,
-    PlatformPoster,
-    TwitterPost,
-    post_and_save_tweet,
-    post_to_all_platforms,
-    save_tweet_to_db,
-)
+from nearquake.post_manager import (BlueSkyPost, PlatformPoster, TwitterPost,
+                                    post_and_save_tweet, post_to_all_platforms,
+                                    save_tweet_to_db)
 
 
 class TestPlatformPoster:

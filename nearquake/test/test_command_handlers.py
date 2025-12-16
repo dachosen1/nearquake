@@ -7,17 +7,15 @@ openai_patcher.start()
 
 from datetime import datetime, timedelta
 
-from nearquake.cli.command_handlers import (
-    BackfillCommandHandler,
-    CommandHandlerFactory,
-    DailyCommandHandler,
-    FunFactCommandHandler,
-    InitializeCommandHandler,
-    LiveCommandHandler,
-    MonthlyCommandHandler,
-    SummaryCommandHandler,
-    WeeklyCommandHandler,
-)
+from nearquake.cli.command_handlers import (BackfillCommandHandler,
+                                            CommandHandlerFactory,
+                                            DailyCommandHandler,
+                                            FunFactCommandHandler,
+                                            InitializeCommandHandler,
+                                            LiveCommandHandler,
+                                            MonthlyCommandHandler,
+                                            SummaryCommandHandler,
+                                            WeeklyCommandHandler)
 
 
 # Stop the patcher when the module is unloaded
