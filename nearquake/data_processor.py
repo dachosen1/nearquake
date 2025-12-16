@@ -434,9 +434,11 @@ class TweetEarthquakeEvents(BaseDataUploader):
             )
 
             # Get full event details for depth and place
-            event_query = self.conn.session.query(EventDetails).filter(
-                EventDetails.id_event == quake.id_event
-            ).first()
+            event_query = (
+                self.conn.session.query(EventDetails)
+                .filter(EventDetails.id_event == quake.id_event)
+                .first()
+            )
 
             tweet_text = format_earthquake_alert(
                 id_event=quake.id_event,
@@ -461,7 +463,10 @@ class TweetEarthquakeEvents(BaseDataUploader):
                         image_url = get_earthquake_image_url(event_details)
                         if image_url:
                             image_data = extract_url_content(image_url)
-                            log_info(_logger, f"Successfully fetched shakemap image for {quake.id_event}")
+                            log_info(
+                                _logger,
+                                f"Successfully fetched shakemap image for {quake.id_event}",
+                            )
                 except Exception as img_error:
                     log_error(
                         _logger,
@@ -470,7 +475,9 @@ class TweetEarthquakeEvents(BaseDataUploader):
                     )
 
                 # Post initial tweet
-                result = post_and_save_tweet(tweet_text, self.conn, media_data=image_data)
+                result = post_and_save_tweet(
+                    tweet_text, self.conn, media_data=image_data
+                )
 
                 log_info(
                     _logger,
@@ -483,14 +490,24 @@ class TweetEarthquakeEvents(BaseDataUploader):
 
                     twitter_tweet_id = result.get("twitter")
                     if twitter_tweet_id:
-                        log_info(_logger, f"Creating thread for significant earthquake {quake.id_event} (M{quake.mag})")
+                        log_info(
+                            _logger,
+                            f"Creating thread for significant earthquake {quake.id_event} (M{quake.mag})",
+                        )
 
                         try:
                             # Tweet 2: Historical context
-                            location = event_query.place if event_query else "this region"
+                            location = (
+                                event_query.place if event_query else "this region"
+                            )
                             context_text = generate_earthquake_context(
                                 magnitude=quake.mag,
-                                location=location
+                                location=location,
+                                latitude=event_query.latitude if event_query else None,
+                                longitude=(
+                                    event_query.longitude if event_query else None
+                                ),
+                                conn=self.conn,
                             )
 
                             context_tweet = {
@@ -503,10 +520,13 @@ class TweetEarthquakeEvents(BaseDataUploader):
                             post_and_save_tweet(
                                 context_tweet,
                                 self.conn,
-                                in_reply_to_tweet_id=twitter_tweet_id
+                                in_reply_to_tweet_id=twitter_tweet_id,
                             )
 
-                            log_info(_logger, f"Successfully created 2-tweet thread for {quake.id_event}")
+                            log_info(
+                                _logger,
+                                f"Successfully created 2-tweet thread for {quake.id_event}",
+                            )
                         except Exception as thread_error:
                             log_error(
                                 _logger,
@@ -546,14 +566,19 @@ class TweetDailySummary(BaseDataUploader):
 
         try:
             # Generate graphic
-            log_info(_logger, f"Attempting to generate daily summary graphic for {date}")
+            log_info(
+                _logger, f"Attempting to generate daily summary graphic for {date}"
+            )
             image_data = generate_daily_summary_graphic(self.conn, date)
 
             if not image_data:
                 log_info(_logger, f"No events to summarize for {date}")
                 return
 
-            log_info(_logger, f"Successfully generated graphic, size: {len(image_data)} bytes")
+            log_info(
+                _logger,
+                f"Successfully generated graphic, size: {len(image_data)} bytes",
+            )
 
             # Get event count for tweet text
             events = (
@@ -566,7 +591,11 @@ class TweetDailySummary(BaseDataUploader):
             max_mag = max(magnitudes) if magnitudes else 0
             max_event = max(events, key=lambda e: e.mag if e.mag else 0)
             location = max_event.place if max_event.place else "Unknown"
-            event_time = max_event.time.strftime("%H:%M") if max_event.time else "00:00"
+            event_time = (
+                max_event.ts_event_utc.strftime("%H:%M")
+                if max_event.ts_event_utc
+                else "00:00"
+            )
 
             # Create narrative tweet text
             tweet_text = f"""Over the last 24 hours there were {len(events)} earthquakes detected and the largest being M{max_mag:.1f} - {location} reported in at {event_time} UTC
@@ -614,14 +643,20 @@ class TweetWeeklySummary(BaseDataUploader):
 
         try:
             # Generate graphic
-            log_info(_logger, f"Attempting to generate weekly summary graphic for week ending {end_date}")
+            log_info(
+                _logger,
+                f"Attempting to generate weekly summary graphic for week ending {end_date}",
+            )
             image_data = generate_weekly_summary_graphic(self.conn, end_date)
 
             if not image_data:
                 log_info(_logger, f"No events to summarize for week ending {end_date}")
                 return
 
-            log_info(_logger, f"Successfully generated graphic, size: {len(image_data)} bytes")
+            log_info(
+                _logger,
+                f"Successfully generated graphic, size: {len(image_data)} bytes",
+            )
 
             # Get event count for tweet text
             events = (
@@ -638,7 +673,9 @@ class TweetWeeklySummary(BaseDataUploader):
             max_mag = max(magnitudes) if magnitudes else 0
             max_event = max(events, key=lambda e: e.mag if e.mag else 0)
             location = max_event.place if max_event.place else "Unknown"
-            max_event_date = max_event.date.strftime("%Y-%m-%d") if max_event.date else end_date
+            max_event_date = (
+                max_event.date.strftime("%Y-%m-%d") if max_event.date else end_date
+            )
 
             # Create narrative tweet text
             tweet_text = f"""Over the last 7 days there were {len(events)} earthquakes detected and the largest being M{max_mag:.1f} - {location} reported in on {max_event_date}
@@ -654,10 +691,17 @@ Data: earthquake.usgs.gov"""
             }
 
             post_and_save_tweet(tweet_data, self.conn, media_data=image_data)
-            log_info(_logger, f"Successfully posted weekly summary for week ending {end_date}")
+            log_info(
+                _logger,
+                f"Successfully posted weekly summary for week ending {end_date}",
+            )
 
         except Exception as e:
-            log_error(_logger, f"Failed to post weekly summary for week ending {end_date}", exc=e)
+            log_error(
+                _logger,
+                f"Failed to post weekly summary for week ending {end_date}",
+                exc=e,
+            )
 
 
 def get_date_range_summary(

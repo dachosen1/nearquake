@@ -33,9 +33,12 @@ def generate_response(
 
     if role not in valid_roles:
         log_error(
-            _logger, f"Invalid role: {role}. Valid options are {', '.join(valid_roles)}."
+            _logger,
+            f"Invalid role: {role}. Valid options are {', '.join(valid_roles)}.",
         )
-        raise ValueError(f"Error: Invalid role. Please choose one of: {', '.join(valid_roles)}.")
+        raise ValueError(
+            f"Error: Invalid role. Please choose one of: {', '.join(valid_roles)}."
+        )
 
     try:
         # Log the API request

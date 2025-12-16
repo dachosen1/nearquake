@@ -110,6 +110,7 @@ class DailyCommandHandler(SummaryCommandHandler):
 
         # Then post the daily summary graphic
         from nearquake.data_processor import TweetDailySummary
+
         daily_graphic = TweetDailySummary(conn=db_session)
         daily_graphic.upload()
 
@@ -130,6 +131,7 @@ class WeeklyCommandHandler(SummaryCommandHandler):
 
         # Then post the weekly summary graphic
         from nearquake.data_processor import TweetWeeklySummary
+
         weekly_graphic = TweetWeeklySummary(conn=db_session)
         weekly_graphic.upload()
 

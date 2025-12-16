@@ -74,7 +74,8 @@ def test_generate_response_with_assistant_role(mock_create):
 def test_generate_response_invalid_role():
     # Test with an invalid role
     with pytest.raises(
-        ValueError, match="Error: Invalid role. Please choose one of: system, user, assistant."
+        ValueError,
+        match="Error: Invalid role. Please choose one of: system, user, assistant.",
     ):
         generate_response("Test prompt", "invalid_role")
 
