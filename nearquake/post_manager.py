@@ -6,10 +6,13 @@ import tweepy
 from atproto import Client
 
 from nearquake.app.db import Post
-from nearquake.config import (BLUESKY_PASSWORD, BLUESKY_USER_NAME,
-                              TWITTER_AUTHENTICATION)
-from nearquake.utils.logging_utils import (get_logger, log_db_operation,
-                                           log_error, log_info)
+from nearquake.config import BLUESKY_PASSWORD, BLUESKY_USER_NAME, TWITTER_AUTHENTICATION
+from nearquake.utils.logging_utils import (
+    get_logger,
+    log_db_operation,
+    log_error,
+    log_info,
+)
 
 _logger = get_logger(__name__)
 

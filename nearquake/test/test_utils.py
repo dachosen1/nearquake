@@ -9,13 +9,22 @@ import pytest
 import requests
 from PIL import Image
 
-from nearquake.utils import (backfill_valid_date_range, convert_datetime,
-                             convert_timestamp_to_utc, create_dir,
-                             extract_coordinates, extract_image,
-                             extract_properties, extract_url_content,
-                             fetch_json_data_from_url, format_earthquake_alert,
-                             generate_date_range, get_earthquake_image_url,
-                             save_content, timer)
+from nearquake.utils import (
+    backfill_valid_date_range,
+    convert_datetime,
+    convert_timestamp_to_utc,
+    create_dir,
+    extract_coordinates,
+    extract_image,
+    extract_properties,
+    extract_url_content,
+    fetch_json_data_from_url,
+    format_earthquake_alert,
+    generate_date_range,
+    get_earthquake_image_url,
+    save_content,
+    timer,
+)
 
 
 def test_generate_date_range():

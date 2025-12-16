@@ -1,8 +1,17 @@
 import logging
 from typing import List, Optional
 
-from sqlalchemy import (TIMESTAMP, Boolean, Column, Date, Float, ForeignKey,
-                        Integer, String, create_engine)
+from sqlalchemy import (
+    TIMESTAMP,
+    Boolean,
+    Column,
+    Date,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    create_engine,
+)
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import text

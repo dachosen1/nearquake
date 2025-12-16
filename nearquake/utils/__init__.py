@@ -9,8 +9,7 @@ from io import BytesIO
 import requests
 from PIL import Image
 
-from nearquake.config import (EVENT_DETAIL_URL, TIMESTAMP_NOW,
-                              tweet_conclusion_text)
+from nearquake.config import EVENT_DETAIL_URL, TIMESTAMP_NOW, tweet_conclusion_text
 
 _logger = logging.getLogger(__name__)
 

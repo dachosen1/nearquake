@@ -5,10 +5,13 @@ import pytest
 from sqlalchemy.orm import Session
 
 from nearquake.app.db import EventDetails
-from nearquake.data_processor import (BaseDataUploader, TweetEarthquakeEvents,
-                                      UploadEarthQuakeEvents,
-                                      UploadEarthQuakeLocation,
-                                      get_date_range_summary)
+from nearquake.data_processor import (
+    BaseDataUploader,
+    TweetEarthquakeEvents,
+    UploadEarthQuakeEvents,
+    UploadEarthQuakeLocation,
+    get_date_range_summary,
+)
 
 
 class MockQuery:

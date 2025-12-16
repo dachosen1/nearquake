@@ -8,20 +8,33 @@ from sqlalchemy.orm import Session
 from tqdm import tqdm
 
 from nearquake.app.db import Base, EventDetails, LocationDetails, Post
-from nearquake.config import (EARTHQUAKE_POST_THRESHOLD,
-                              REPORTED_SINCE_THRESHOLD, TIMESTAMP_NOW,
-                              _nearquake_secrets,
-                              generate_coordinate_lookup_detail_url,
-                              generate_event_detail_url,
-                              generate_time_range_url)
+from nearquake.config import (
+    EARTHQUAKE_POST_THRESHOLD,
+    REPORTED_SINCE_THRESHOLD,
+    TIMESTAMP_NOW,
+    _nearquake_secrets,
+    generate_coordinate_lookup_detail_url,
+    generate_event_detail_url,
+    generate_time_range_url,
+)
 from nearquake.post_manager import post_and_save_tweet
-from nearquake.utils import (backfill_valid_date_range,
-                             convert_timestamp_to_utc, extract_url_content,
-                             fetch_json_data_from_url, format_earthquake_alert,
-                             get_earthquake_image_url, timer)
-from nearquake.utils.logging_utils import (get_logger, log_api_request,
-                                           log_api_response, log_db_operation,
-                                           log_error, log_info)
+from nearquake.utils import (
+    backfill_valid_date_range,
+    convert_timestamp_to_utc,
+    extract_url_content,
+    fetch_json_data_from_url,
+    format_earthquake_alert,
+    get_earthquake_image_url,
+    timer,
+)
+from nearquake.utils.logging_utils import (
+    get_logger,
+    log_api_request,
+    log_api_response,
+    log_db_operation,
+    log_error,
+    log_info,
+)
 
 _logger = get_logger(__name__)
 
@@ -617,8 +630,7 @@ class TweetWeeklySummary(BaseDataUploader):
 
         :param end_date: End date in YYYY-MM-DD format (defaults to yesterday)
         """
-        from nearquake.graphics_generator import \
-            generate_weekly_summary_graphic
+        from nearquake.graphics_generator import generate_weekly_summary_graphic
 
         if end_date is None:
             end_date = (TIMESTAMP_NOW - timedelta(days=1)).strftime("%Y-%m-%d")

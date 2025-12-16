@@ -3,13 +3,20 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 
 from nearquake.app.db import EventDetails, create_database
-from nearquake.config import (CHAT_PROMPT, EARTHQUAKE_POST_THRESHOLD,
-                              POSTGRES_CONNECTION_URL, TIMESTAMP_NOW,
-                              generate_time_period_url, tweet_conclusion_text)
-from nearquake.data_processor import (TweetEarthquakeEvents,
-                                      UploadEarthQuakeEvents,
-                                      UploadEarthQuakeLocation,
-                                      get_date_range_summary)
+from nearquake.config import (
+    CHAT_PROMPT,
+    EARTHQUAKE_POST_THRESHOLD,
+    POSTGRES_CONNECTION_URL,
+    TIMESTAMP_NOW,
+    generate_time_period_url,
+    tweet_conclusion_text,
+)
+from nearquake.data_processor import (
+    TweetEarthquakeEvents,
+    UploadEarthQuakeEvents,
+    UploadEarthQuakeLocation,
+    get_date_range_summary,
+)
 from nearquake.open_ai_client import generate_response
 from nearquake.post_manager import post_and_save_tweet
 from nearquake.utils import format_earthquake_alert

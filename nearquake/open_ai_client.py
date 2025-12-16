@@ -4,9 +4,13 @@ import os
 from openai import OpenAI
 
 from nearquake.config import _nearquake_secrets
-from nearquake.utils.logging_utils import (get_logger, log_api_request,
-                                           log_api_response, log_error,
-                                           log_info)
+from nearquake.utils.logging_utils import (
+    get_logger,
+    log_api_request,
+    log_api_response,
+    log_error,
+    log_info,
+)
 
 _logger = get_logger(__name__)
 
