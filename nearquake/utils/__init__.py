@@ -459,7 +459,7 @@ def get_earthquakes_within_radius(
     try:
         results = query.all()
         _logger.info(
-            f"Found {len(results)} earthquakes within {radius_miles} miles of ({latitude}, {longitude})"
+            f"Found {len(results)} earthquakes within {radius_miles} miles of the earthquake"
         )
         return results
     except Exception as e:
