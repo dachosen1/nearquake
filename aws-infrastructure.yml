@@ -409,8 +409,8 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub "${ProjectName}-daily-schedule"
-      Description: "Run daily earthquake summary at 12:00 PM UTC"
-      ScheduleExpression: "cron(0 12 * * ? *)"
+      Description: "Run daily earthquake summary at 12:00 PM EST (5:00 PM UTC)"
+      ScheduleExpression: "cron(0 17 * * ? *)"
       State: ENABLED
       Targets:
         - Arn: !Sub "arn:aws:batch:${AWS::Region}:${AWS::AccountId}:job-queue/${ProjectName}-job-queue-spot"
@@ -424,7 +424,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Name: !Sub "${ProjectName}-weekly-schedule"
-      Description: "Run weekly earthquake summary at 5:00 PM UTC on Mondays"
+      Description: "Run weekly earthquake summary at 12:00 PM EST (5:00 PM UTC) on Mondays"
       ScheduleExpression: "cron(0 17 ? * MON *)"
       State: ENABLED
       Targets:
