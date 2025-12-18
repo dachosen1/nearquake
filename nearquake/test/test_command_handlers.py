@@ -7,17 +7,15 @@ openai_patcher.start()
 
 from datetime import datetime, timedelta
 
-from nearquake.cli.command_handlers import (
-    BackfillCommandHandler,
-    CommandHandlerFactory,
-    DailyCommandHandler,
-    FunFactCommandHandler,
-    InitializeCommandHandler,
-    LiveCommandHandler,
-    MonthlyCommandHandler,
-    SummaryCommandHandler,
-    WeeklyCommandHandler,
-)
+from nearquake.cli.command_handlers import (BackfillCommandHandler,
+                                            CommandHandlerFactory,
+                                            DailyCommandHandler,
+                                            FunFactCommandHandler,
+                                            InitializeCommandHandler,
+                                            LiveCommandHandler,
+                                            MonthlyCommandHandler,
+                                            SummaryCommandHandler,
+                                            WeeklyCommandHandler)
 
 
 # Stop the patcher when the module is unloaded
@@ -105,76 +103,91 @@ class TestSummaryCommandHandler(unittest.TestCase):
         self.handler = ConcreteSummaryHandler()
         self.mock_db_session = MagicMock()
 
-    @patch("nearquake.cli.command_handlers.UploadEarthQuakeEvents")
-    @patch("nearquake.cli.command_handlers.get_date_range_summary")
-    @patch("nearquake.cli.command_handlers.format_earthquake_alert")
     @patch("nearquake.cli.command_handlers.post_and_save_tweet")
+    @patch("nearquake.cli.command_handlers.format_earthquake_alert")
+    @patch("nearquake.cli.command_handlers.UploadEarthQuakeLocation")
+    @patch("nearquake.cli.command_handlers.UploadEarthQuakeEvents")
     @patch("nearquake.cli.command_handlers.generate_time_period_url")
     def test_execute(
         self,
         mock_generate_url,
-        mock_post_tweet,
-        mock_format_alert,
-        mock_get_summary,
         mock_upload_events,
+        mock_upload_location,
+        mock_format_alert,
+        mock_post_tweet,
     ):
-        """Test the execute method."""
+        """Test the execute method with new summary format."""
         # Set up mocks
         mock_upload_instance = mock_upload_events.return_value
+        mock_location_instance = mock_upload_location.return_value
         mock_generate_url.return_value = "http://example.com/test_period"
-
-        # Mock earthquake events
-        mock_event1 = MagicMock()
-        mock_event1.mag = 4.5
-        mock_event2 = MagicMock()
-        mock_event2.mag = 5.2
-        mock_get_summary.return_value = [mock_event1, mock_event2]
-
-        # Mock formatting and posting
-        mock_format_alert.return_value = "Formatted tweet text"
+        mock_format_alert.return_value = {"post": "Formatted tweet"}
 
         # Execute the handler
-        self.handler.execute(self.mock_db_session)
+        with patch(
+            "nearquake.cli.command_handlers.get_date_range_summary"
+        ) as mock_get_summary:
+            # Create mock events
+            mock_event = MagicMock()
+            mock_event.mag = 5.2
+            mock_event.place = "Test Location"
+            mock_event.ts_event_utc = MagicMock()
+            mock_event.ts_event_utc.strftime.return_value = "12:00 UTC"
+            mock_get_summary.return_value = [mock_event]
 
-        # Verify the mocks were called correctly
-        mock_upload_events.assert_called_once_with(conn=self.mock_db_session)
-        mock_upload_instance.upload.assert_called_once_with(
-            url="http://example.com/test_period"
-        )
-        mock_get_summary.assert_called_once()
-        mock_format_alert.assert_called_once()
-        mock_post_tweet.assert_called_once_with(
-            "Formatted tweet text", self.mock_db_session
-        )
+            self.handler.execute(self.mock_db_session)
+
+            # Verify data upload was called
+            mock_upload_events.assert_called_once_with(conn=self.mock_db_session)
+            mock_upload_instance.upload.assert_called_once_with(
+                url="http://example.com/test_period"
+            )
+
+            # Verify location upload was called
+            mock_upload_location.assert_called_once_with(conn=self.mock_db_session)
+            mock_location_instance.upload.assert_called_once()
+
+            # Verify post was made
+            mock_post_tweet.assert_called_once()
 
     def test_generate_message(self):
-        """Test the _generate_message method."""
-        # Create mock earthquake events
+        """Test the _generate_message method with new format."""
+        # Create mock earthquake events with timestamps
+        from datetime import datetime
+
         mock_event1 = MagicMock()
         mock_event1.mag = 4.5
+        mock_event1.place = "Location A"
+        mock_event1.ts_event_utc = datetime(2024, 1, 1, 10, 30)
+
         mock_event2 = MagicMock()
         mock_event2.mag = 5.2
+        mock_event2.place = "Location B"
+        mock_event2.ts_event_utc = datetime(2024, 1, 1, 14, 20)
+
         mock_event3 = MagicMock()
         mock_event3.mag = 6.0
+        mock_event3.place = "Location C"
+        mock_event3.ts_event_utc = datetime(2024, 1, 1, 18, 45)
+
         mock_events = [mock_event1, mock_event2, mock_event3]
 
         # Test with period_name = "day"
         self.handler._period_name = "day"
         message = self.handler._generate_message(mock_events)
-        self.assertIn("Yesterday", message)
-        self.assertIn("3", message)  # Total earthquakes
-        # There are 2 earthquakes with mag >= 5.0, but we need to check for the actual count in the message
-        # The implementation is counting all earthquakes with mag >= EARTHQUAKE_POST_THRESHOLD
-        # Let's patch the EARTHQUAKE_POST_THRESHOLD value to ensure our test is accurate
-        with patch("nearquake.cli.command_handlers.EARTHQUAKE_POST_THRESHOLD", 5.0):
-            message = self.handler._generate_message(mock_events)
-            self.assertIn("2", message)  # Earthquakes >= 5.0
+        self.assertIn("Over the last 24 hours", message)
+        self.assertIn("3 earthquakes detected", message)
+        self.assertIn("M6.0", message)  # Largest earthquake
+        self.assertIn("Location C", message)  # Location of largest
+        self.assertIn("#Earthquake", message)
+        self.assertIn("#SeismicActivity", message)
+        self.assertIn("http://earthquake.usgs.gov", message)
 
-        # Test with a different period_name
+        # Test with period_name = "week"
         self.handler._period_name = "week"
         message = self.handler._generate_message(mock_events)
-        self.assertIn("During the past week", message)
-        self.assertIn("3", message)  # Total earthquakes
+        self.assertIn("Over the last week", message)
+        self.assertIn("3 earthquakes detected", message)
 
 
 class TestDailyCommandHandler(unittest.TestCase):

@@ -3,20 +3,12 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 
 from nearquake.app.db import EventDetails, create_database
-from nearquake.config import (
-    CHAT_PROMPT,
-    EARTHQUAKE_POST_THRESHOLD,
-    POSTGRES_CONNECTION_URL,
-    TIMESTAMP_NOW,
-    generate_time_period_url,
-    tweet_conclusion_text,
-)
-from nearquake.data_processor import (
-    TweetEarthquakeEvents,
-    UploadEarthQuakeEvents,
-    UploadEarthQuakeLocation,
-    get_date_range_summary,
-)
+from nearquake.config import (CHAT_PROMPT, POSTGRES_CONNECTION_URL,
+                              TIMESTAMP_NOW, generate_time_period_url)
+from nearquake.data_processor import (TweetEarthquakeEvents,
+                                      UploadEarthQuakeEvents,
+                                      UploadEarthQuakeLocation,
+                                      get_date_range_summary)
 from nearquake.open_ai_client import generate_response
 from nearquake.post_manager import post_and_save_tweet
 from nearquake.utils import format_earthquake_alert
@@ -58,23 +50,26 @@ class SummaryCommandHandler(CommandHandler):
         self._start_date = self._today - timedelta(days=self._days)
 
     def execute(self, db_session):
-
+        # Upload earthquake event data
         run = UploadEarthQuakeEvents(conn=db_session)
         run.upload(url=generate_time_period_url(self._period_name))
 
+        # Get earthquake data for summary
         content = get_date_range_summary(
             conn=db_session,
             model=EventDetails,
             start_date=self._start_date,
             end_date=self._today,
         )
+
+        # Upload location data for events in the date range
         loc = UploadEarthQuakeLocation(conn=db_session)
         loc.upload(
             start_date=self._start_date.strftime("%Y-%m-%d"),
             end_date=self._today.strftime("%Y-%m-%d"),
         )
 
-        # Format and post message
+        # Generate and post summary message
         message = self._generate_message(content)
         tweet_text = format_earthquake_alert(post_type="fact", message=message)
 
@@ -82,16 +77,37 @@ class SummaryCommandHandler(CommandHandler):
             post_and_save_tweet(tweet_text, db_session)
 
     def _generate_message(self, content):
-        """Generate the summary message."""
-        greater_than_5 = sum(
-            1
-            for i in content
-            if i.mag is not None and i.mag >= EARTHQUAKE_POST_THRESHOLD
-        )
-        if self._period_name == "day":
-            return f"Yesterday, there were {len(content):,} #earthquakes globally, with {greater_than_5} of them registering a magnitude of 5.0 or higher. {tweet_conclusion_text()}"
+        """Generate the summary message with largest earthquake details."""
+        if not content:
+            return None
+
+        # Find the largest earthquake
+        largest_quake = max(content, key=lambda x: x.mag if x.mag else 0)
+
+        # Format timestamp
+        if largest_quake.ts_event_utc:
+            time_str = largest_quake.ts_event_utc.strftime("%H:%M UTC")
         else:
-            return f"During the past {self._period_name}, there were {len(content):,} #earthquakes globally, with {greater_than_5} of them registering a magnitude of 5.0 or higher. {tweet_conclusion_text()}"
+            time_str = "unknown time"
+
+        # Create the message
+        if self._period_name == "day":
+            period_text = "Over the last 24 hours"
+        elif self._period_name == "week":
+            period_text = "Over the last week"
+        elif self._period_name == "month":
+            period_text = "Over the last month"
+        else:
+            period_text = f"During the past {self._period_name}"
+
+        message = (
+            f"{period_text} there were {len(content):,} earthquakes detected and the largest being "
+            f"M{largest_quake.mag:.1f} - {largest_quake.place} reported in at {time_str}\n\n"
+            f"#Earthquake #SeismicActivity\n"
+            f"Data: http://earthquake.usgs.gov"
+        )
+
+        return message
 
 
 class DailyCommandHandler(SummaryCommandHandler):
