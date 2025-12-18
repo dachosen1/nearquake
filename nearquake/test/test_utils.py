@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 from datetime import timedelta
 from io import BytesIO
@@ -131,48 +130,34 @@ def test_extract_coordinates():
     assert result == [["id1", 1.0, 2.0, 3.0], ["id2", 4.0, 5.0, 6.0]]
 
 
-@patch("requests.get")
-def test_get_earthquake_image_url_success(mock_get):
-    url = "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=test&format=geojson"
+def test_get_earthquake_image_url_success():
     expected_image_url = "https://example.com/image.jpg"
 
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.text = json.dumps(
-        {
-            "properties": {
-                "products": {
-                    "shakemap": [
-                        {"contents": {"download/pga.jpg": {"url": expected_image_url}}}
-                    ]
-                }
+    event_data = {
+        "properties": {
+            "products": {
+                "shakemap": [
+                    {"contents": {"download/pga.jpg": {"url": expected_image_url}}}
+                ]
             }
         }
-    )
-    mock_get.return_value = mock_response
+    }
 
-    result = get_earthquake_image_url(url)
+    result = get_earthquake_image_url(event_data)
     assert result == expected_image_url
 
 
-@patch("requests.get")
-def test_get_earthquake_image_url_failure(mock_get):
-    url = "https://earthquake.usgs.gov/fdsnws/event/1/query?eventid=test&format=geojson"
+def test_get_earthquake_image_url_failure():
+    # Test with missing shakemap data
+    event_data = {"properties": {}}
 
-    # Test HTTP error
-    mock_response = MagicMock()
-    mock_response.status_code = 404
-    mock_get.return_value = mock_response
-
-    result = get_earthquake_image_url(url)
+    result = get_earthquake_image_url(event_data)
     assert result is None
 
-    # Test KeyError
-    mock_response.status_code = 200
-    mock_response.text = json.dumps({"properties": {}})
-    mock_get.return_value = mock_response
+    # Test with incomplete shakemap data
+    event_data = {"properties": {"products": {}}}
 
-    result = get_earthquake_image_url(url)
+    result = get_earthquake_image_url(event_data)
     assert result is None
 
 
@@ -267,30 +252,25 @@ def test_backfill_valid_date_range_invalid_dates():
 
 
 @patch("nearquake.config.TIMESTAMP_NOW")
-@patch("nearquake.config.EVENT_DETAIL_URL")
 @patch("nearquake.utils.tweet_conclusion_text")
-def test_format_earthquake_alert_event(
-    mock_tweet_conclusion, mock_event_detail_url, mock_timestamp
-):
+def test_format_earthquake_alert_event(mock_tweet_conclusion, mock_timestamp):
     mock_timestamp.strftime.return_value = "2023-01-01 12:00:00"
-    mock_event_detail_url.format.return_value = "https://example.com/event/123"
-    mock_tweet_conclusion.return_value = "Stay safe!"
+    mock_tweet_conclusion.return_value = "Stay safe! #SafetyFirst"
 
     result = format_earthquake_alert(
         post_type="event",
-        title="Test Earthquake",
-        ts_event="2023-01-01 11:30:00",
+        ts_event="11:30:00",
         duration=timedelta(minutes=30),
         id_event="123",
-        message="Magnitude 5.0",
+        message="M 5.0 - Test Location",
+        magnitude=5.0,
     )
 
     assert result["post_type"] == "event"
     assert result["id_event"] == "123"
-    assert (
-        "Recent #Earthquake: Magnitude 5.0 reported at 2023-01-01 11:30:00 UTC (30 minutes ago)"
-        in result["post"]
-    )
+    assert "#RecentEarthquake" in result["post"]
+    assert "magnitude 5.0 earthquake occurred Test Location" in result["post"]
+    assert "11:30:00 UTC (30 min ago)" in result["post"]
     assert "Stay safe!" in result["post"]
     assert "earthquake.usgs.gov/earthquakes/eventpage/123/executive" in result["post"]
 

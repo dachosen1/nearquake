@@ -321,7 +321,7 @@ def format_earthquake_alert(
         # Get appropriate emoji
         emoji = get_earthquake_emoji(magnitude)
 
-        # Format with impact first
+        # Format time ago
         minutes_ago = duration.seconds / 60
         time_str = (
             f"{minutes_ago:.0f} min ago"
@@ -329,31 +329,32 @@ def format_earthquake_alert(
             else f"{minutes_ago/60:.1f} hrs ago"
         )
 
-        # Build the tweet with better formatting - use title directly
-        tweet_lines = [
-            f"{emoji} {message}",
-            f"🕐 {ts_event} UTC ({time_str})",
-        ]
-
+        location = message.split(" - ", 1)[1] if " - " in message else message
+        narrative = f"{emoji} #RecentEarthquake: A magnitude {magnitude} earthquake occurred {location} at {ts_event} UTC ({time_str})."
         # Add felt reports if available - this creates engagement!
         if felt and felt > 0:
-            tweet_lines.append(f"🙋 {felt:,} people reported feeling it")
+            narrative += f"\n🙋 {felt:,} people reported feeling it!"
 
         # Add tsunami warning if applicable
         if tsunami:
-            tweet_lines.append("🌊 TSUNAMI WARNING")
+            narrative += "\n🌊 TSUNAMI WARNING"
 
-        tweet_text = "\n".join(tweet_lines)
-        tweet_text += f"\n\n🔗 Full details: {EVENT_DETAIL_URL.format(id=id_event)}"
+        # Add full details link
+        narrative += f"\n\n🔗 Full details: {EVENT_DETAIL_URL.format(id=id_event)}"
 
-        # Add engaging call-to-action based on magnitude
+        # Add engaging call-to-action or safety tip based on magnitude
         if magnitude >= 5.5:
-            tweet_text += "\n\n💬 Did you feel it? Reply with your location!"
+            narrative += "\n\n💬 Did you feel it? Reply with your location! #Earthquake"
         else:
-            tweet_text += f"\n{tweet_conclusion_text()}"
+            conclusion = tweet_conclusion_text()
+            # Ensure hashtags are properly formatted
+            conclusion = conclusion.replace("#usgs", "#USGS")
+            conclusion = conclusion.replace("#safetyfirst", "#SafetyFirst")
+            conclusion = conclusion.replace("#earthquake", "#Earthquake")
+            narrative += f"\n{conclusion}"
 
         return {
-            "post": tweet_text,
+            "post": narrative,
             "ts_upload_utc": ts_upload_utc,
             "id_event": id_event,
             "post_type": post_type,
@@ -497,9 +498,7 @@ def generate_earthquake_context(
 
             if nearby_quakes:
                 # Format historical data for LLM
-                historical_data_str = (
-                    f"\n\nHistorical earthquake data within 5 miles:\n"
-                )
+                historical_data_str = "\n\nHistorical earthquake data within 5 miles:\n"
                 for quake in nearby_quakes[:10]:  # Limit to 10 most recent
                     historical_data_str += f"- M{quake.mag:.1f} on {quake.ts_event_utc.strftime('%Y-%m-%d')} at {quake.place}\n"
         except Exception as e:
