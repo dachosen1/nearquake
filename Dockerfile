@@ -1,5 +1,5 @@
 # Multi-stage build for better caching
-FROM python:3.13.5-slim AS base
+FROM python:3.14.2-slim AS base
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
