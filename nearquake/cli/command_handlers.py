@@ -57,8 +57,8 @@ class SummaryCommandHandler(CommandHandler):
         self._today = TIMESTAMP_NOW.date()
         self._start_date = self._today - timedelta(days=self._days)
 
-    def execute(self, db_session):
-
+    def _prepare_data(self, db_session):
+        """Upload earthquake data and location information."""
         run = UploadEarthQuakeEvents(conn=db_session)
         run.upload(url=generate_time_period_url(self._period_name))
 
@@ -73,6 +73,10 @@ class SummaryCommandHandler(CommandHandler):
             start_date=self._start_date.strftime("%Y-%m-%d"),
             end_date=self._today.strftime("%Y-%m-%d"),
         )
+        return content
+
+    def execute(self, db_session):
+        content = self._prepare_data(db_session)
 
         # Format and post message
         message = self._generate_message(content)
@@ -105,10 +109,10 @@ class DailyCommandHandler(SummaryCommandHandler):
 
     def execute(self, db_session):
         """Execute daily summary with graphics."""
-        # First run the standard summary (data upload + text tweet)
-        super().execute(db_session)
+        # Prepare data (upload earthquake events and locations)
+        self._prepare_data(db_session)
 
-        # Then post the daily summary graphic
+        # Post the daily summary graphic (no separate text post)
         from nearquake.data_processor import TweetDailySummary
 
         daily_graphic = TweetDailySummary(conn=db_session)
@@ -126,10 +130,10 @@ class WeeklyCommandHandler(SummaryCommandHandler):
 
     def execute(self, db_session):
         """Execute weekly summary with graphics."""
-        # First run the standard summary (data upload + text tweet)
-        super().execute(db_session)
+        # Prepare data (upload earthquake events and locations)
+        self._prepare_data(db_session)
 
-        # Then post the weekly summary graphic
+        # Post the weekly summary graphic (no separate text post)
         from nearquake.data_processor import TweetWeeklySummary
 
         weekly_graphic = TweetWeeklySummary(conn=db_session)
