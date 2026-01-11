@@ -147,15 +147,83 @@ def test_get_earthquake_image_url_success():
     assert result == expected_image_url
 
 
+def test_get_earthquake_image_url_fallback_to_intensity():
+    """Test fallback to intensity.jpg when pga.jpg is missing."""
+    expected_image_url = "https://example.com/intensity.jpg"
+
+    event_data = {
+        "properties": {
+            "products": {
+                "shakemap": [
+                    {
+                        "contents": {
+                            "download/intensity.jpg": {"url": expected_image_url}
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+    result = get_earthquake_image_url(event_data)
+    assert result == expected_image_url
+
+
+def test_get_earthquake_image_url_fallback_to_dyfi():
+    """Test fallback to DYFI product when shakemap is not available."""
+    expected_image_url = "https://example.com/dyfi_map.png"
+
+    event_data = {
+        "properties": {
+            "products": {
+                "dyfi": [
+                    {"contents": {"dyfi_geo_10km.png": {"url": expected_image_url}}}
+                ]
+            }
+        }
+    }
+
+    result = get_earthquake_image_url(event_data)
+    assert result == expected_image_url
+
+
+def test_get_earthquake_image_url_prefers_shakemap_over_dyfi():
+    """Test that shakemap is preferred over DYFI when both are available."""
+    shakemap_url = "https://example.com/shakemap.jpg"
+    dyfi_url = "https://example.com/dyfi.png"
+
+    event_data = {
+        "properties": {
+            "products": {
+                "shakemap": [{"contents": {"download/pga.jpg": {"url": shakemap_url}}}],
+                "dyfi": [{"contents": {"dyfi_geo_10km.png": {"url": dyfi_url}}}],
+            }
+        }
+    }
+
+    result = get_earthquake_image_url(event_data)
+    assert result == shakemap_url
+
+
 def test_get_earthquake_image_url_failure():
-    # Test with missing shakemap data
+    # Test with missing products data
     event_data = {"properties": {}}
 
     result = get_earthquake_image_url(event_data)
     assert result is None
 
-    # Test with incomplete shakemap data
+    # Test with empty products
     event_data = {"properties": {"products": {}}}
+
+    result = get_earthquake_image_url(event_data)
+    assert result is None
+
+    # Test with products but no image content
+    event_data = {
+        "properties": {
+            "products": {"origin": [{"contents": {}}]}  # No shakemap or dyfi
+        }
+    }
 
     result = get_earthquake_image_url(event_data)
     assert result is None
