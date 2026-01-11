@@ -9,7 +9,8 @@ from io import BytesIO
 import requests
 from PIL import Image
 
-from nearquake.config import EVENT_DETAIL_URL, TIMESTAMP_NOW, tweet_conclusion_text
+from nearquake.config import (EVENT_DETAIL_URL, TIMESTAMP_NOW,
+                              tweet_conclusion_text)
 
 _logger = logging.getLogger(__name__)
 
@@ -468,6 +469,170 @@ def get_earthquakes_within_radius(
         return []
 
 
+def get_earthquake_statistics(
+    conn, latitude: float, longitude: float, current_magnitude: float
+) -> dict:
+    """
+    Get comprehensive earthquake statistics for a region to provide context.
+
+    :param conn: Database session connection
+    :param latitude: Latitude of the earthquake
+    :param longitude: Longitude of the earthquake
+    :param current_magnitude: Magnitude of the current earthquake
+    :return: Dictionary with regional statistics
+    """
+    from sqlalchemy import func
+
+    from nearquake.app.db import EventDetails
+
+    stats = {
+        "total_5yr": 0,
+        "total_1yr": 0,
+        "largest_mag": None,
+        "largest_date": None,
+        "largest_place": None,
+        "avg_per_year": 0,
+        "similar_or_larger_count": 0,
+        "last_similar_date": None,
+        "last_similar_mag": None,
+        "recent_30d_count": 0,
+    }
+
+    # Use 150-mile radius for regional context (about 240 km)
+    radius_km = 150 * 1.60934
+
+    distance_formula = 6371 * func.acos(
+        func.least(
+            1.0,
+            func.cos(func.radians(latitude))
+            * func.cos(func.radians(EventDetails.latitude))
+            * func.cos(func.radians(EventDetails.longitude) - func.radians(longitude))
+            + func.sin(func.radians(latitude))
+            * func.sin(func.radians(EventDetails.latitude)),
+        )
+    )
+
+    try:
+        now = datetime.now(timezone.utc)
+        five_years_ago = now - timedelta(days=5 * 365)
+        one_year_ago = now - timedelta(days=365)
+        thirty_days_ago = now - timedelta(days=30)
+
+        # Total earthquakes in last 5 years (M4.5+)
+        total_5yr = (
+            conn.session.query(func.count(EventDetails.id_event))
+            .filter(
+                EventDetails.type == "earthquake",
+                EventDetails.mag >= 4.5,
+                EventDetails.ts_event_utc >= five_years_ago,
+                distance_formula <= radius_km,
+            )
+            .scalar()
+            or 0
+        )
+        stats["total_5yr"] = total_5yr
+        stats["avg_per_year"] = round(total_5yr / 5, 1) if total_5yr > 0 else 0
+
+        # Total in last year
+        stats["total_1yr"] = (
+            conn.session.query(func.count(EventDetails.id_event))
+            .filter(
+                EventDetails.type == "earthquake",
+                EventDetails.mag >= 4.5,
+                EventDetails.ts_event_utc >= one_year_ago,
+                distance_formula <= radius_km,
+            )
+            .scalar()
+            or 0
+        )
+
+        # Recent activity (last 30 days)
+        stats["recent_30d_count"] = (
+            conn.session.query(func.count(EventDetails.id_event))
+            .filter(
+                EventDetails.type == "earthquake",
+                EventDetails.mag >= 4.5,
+                EventDetails.ts_event_utc >= thirty_days_ago,
+                distance_formula <= radius_km,
+            )
+            .scalar()
+            or 0
+        )
+
+        # Largest earthquake in region (all time in our database)
+        largest = (
+            conn.session.query(
+                EventDetails.mag,
+                EventDetails.ts_event_utc,
+                EventDetails.place,
+            )
+            .filter(
+                EventDetails.type == "earthquake",
+                EventDetails.mag.isnot(None),
+                distance_formula <= radius_km,
+            )
+            .order_by(EventDetails.mag.desc())
+            .first()
+        )
+        if largest:
+            stats["largest_mag"] = largest.mag
+            stats["largest_date"] = largest.ts_event_utc
+            stats["largest_place"] = largest.place
+
+        # Count of earthquakes similar magnitude or larger (within 0.5)
+        similar_threshold = current_magnitude - 0.5
+        similar_quakes = (
+            conn.session.query(
+                EventDetails.mag,
+                EventDetails.ts_event_utc,
+            )
+            .filter(
+                EventDetails.type == "earthquake",
+                EventDetails.mag >= similar_threshold,
+                EventDetails.ts_event_utc >= five_years_ago,
+                distance_formula <= radius_km,
+            )
+            .order_by(EventDetails.ts_event_utc.desc())
+            .all()
+        )
+        # Exclude the current event (most recent)
+        if similar_quakes and len(similar_quakes) > 1:
+            stats["similar_or_larger_count"] = len(similar_quakes) - 1
+            stats["last_similar_date"] = similar_quakes[1].ts_event_utc
+            stats["last_similar_mag"] = similar_quakes[1].mag
+
+        _logger.info(f"Retrieved earthquake statistics for region: {stats}")
+        return stats
+
+    except Exception as e:
+        _logger.error(f"Error getting earthquake statistics: {e}")
+        return stats
+
+
+def get_recent_context_posts(conn, limit: int = 5) -> list:
+    """
+    Get recent context posts from database to help LLM avoid repetition.
+
+    :param conn: Database session connection
+    :param limit: Number of recent posts to retrieve
+    :return: List of recent context post texts
+    """
+    from nearquake.app.db import Post
+
+    try:
+        recent_posts = (
+            conn.session.query(Post.post)
+            .filter(Post.post_type == "context")
+            .order_by(Post.ts_upload_utc.desc())
+            .limit(limit)
+            .all()
+        )
+        return [p.post for p in recent_posts if p.post]
+    except Exception as e:
+        _logger.error(f"Error fetching recent context posts: {e}")
+        return []
+
+
 def generate_earthquake_context(
     magnitude: float,
     location: str,
@@ -483,45 +648,90 @@ def generate_earthquake_context(
     :param latitude: Latitude of the earthquake (optional, for querying nearby events)
     :param longitude: Longitude of the earthquake (optional, for querying nearby events)
     :param conn: Database connection (optional, for querying historical data)
-    :return: Context text suitable for a tweet (280 chars or less)
+    :return: Context text suitable for a tweet (265 chars or less, accounting for prefix)
     """
     from nearquake.open_ai_client import generate_response
 
-    historical_data_str = ""
+    # Character limit: Twitter max 280 - "📊 Context: " prefix (12 chars) = 268
+    # Use 265 for safety margin
+    MAX_CHARS = 265
 
-    # Query historical earthquakes within 5-mile radius if coordinates provided
+    stats_str = ""
+    recent_posts_str = ""
+
     if latitude is not None and longitude is not None and conn is not None:
         try:
-            nearby_quakes = get_earthquakes_within_radius(
-                conn, latitude, longitude, radius_miles=5.0
-            )
+            # Get comprehensive regional statistics
+            stats = get_earthquake_statistics(conn, latitude, longitude, magnitude)
 
-            if nearby_quakes:
-                # Format historical data for LLM
-                historical_data_str = "\n\nHistorical earthquake data within 5 miles:\n"
-                for quake in nearby_quakes[:10]:  # Limit to 10 most recent
-                    historical_data_str += f"- M{quake.mag:.1f} on {quake.ts_event_utc.strftime('%Y-%m-%d')} at {quake.place}\n"
+            stats_str = f"""
+REGIONAL EARTHQUAKE DATA (within 150 miles):
+- Total M4.5+ earthquakes in last 5 years: {stats['total_5yr']}
+- Average per year: {stats['avg_per_year']}
+- Total in last 12 months: {stats['total_1yr']}
+- Recent activity (last 30 days): {stats['recent_30d_count']} earthquakes"""
+
+            if stats["largest_mag"]:
+                stats_str += f"""
+- Largest recorded in region: M{stats['largest_mag']:.1f} on {stats['largest_date'].strftime('%Y-%m-%d') if stats['largest_date'] else 'unknown'}"""
+
+            if stats["similar_or_larger_count"] > 0:
+                stats_str += f"""
+- Similar magnitude (M{magnitude - 0.5:.1f}+) in last 5 years: {stats['similar_or_larger_count']} events"""
+                if stats["last_similar_date"]:
+                    stats_str += f"""
+- Most recent similar: M{stats['last_similar_mag']:.1f} on {stats['last_similar_date'].strftime('%Y-%m-%d')}"""
+
+            # Get recent context posts to avoid repetition
+            recent_posts = get_recent_context_posts(conn, limit=3)
+            if recent_posts:
+                recent_posts_str = (
+                    "\n\nRECENT CONTEXT TWEETS (avoid similar phrasing):\n"
+                )
+                for post in recent_posts:
+                    recent_posts_str += f'- "{post[:100]}..."\n'
+
         except Exception as e:
-            _logger.error(f"Failed to fetch nearby earthquakes: {e}")
+            _logger.error(f"Failed to fetch earthquake statistics: {e}")
 
-    prompt = f"""Generate a brief historical context tweet (max 250 characters) about a M{magnitude} earthquake near {location}.
-{historical_data_str}
-Include ONE of the following if relevant:
-- Comparison to recent earthquakes in this region (use the historical data provided above if available)
-- Historical earthquake activity in this area
-- What this magnitude typically means for ground shaking
+    prompt = f"""You are writing the second tweet in a thread about a M{magnitude} earthquake near {location}.
 
-Keep it factual, informative, and concise. Do NOT include quotes, hashtags, or emojis. This will be tweet 2 in a thread."""
+{stats_str}
+{recent_posts_str}
+
+Write a single tweet (max {MAX_CHARS} characters) that gives readers useful context about this earthquake. Choose the most interesting angle based on the data:
+
+- Is this region unusually active or quiet? Compare to the average.
+- Is this earthquake rare or common for this area? Reference similar events.
+- How does this compare to the largest recorded in the region?
+- Is there a recent trend (surge or lull in activity)?
+- What does this magnitude typically feel like or cause?
+
+REQUIREMENTS:
+- Must be under {MAX_CHARS} characters (this is critical)
+- Be specific with numbers when relevant (e.g., "This is the 5th M5+ quake this year")
+- Do NOT repeat information from the original tweet (magnitude and location are already known)
+- Do NOT use quotes, hashtags, or emojis
+- Do NOT start with "This earthquake" or similar - vary your opening
+- Be factual and informative, helping readers understand the significance"""
 
     try:
         response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
-        # Truncate if needed
-        if len(response) > 250:
-            response = response[:247] + "..."
+        # Clean up response
+        response = response.strip().strip('"').strip("'")
+        # Truncate if needed (should rarely happen with good prompt)
+        if len(response) > MAX_CHARS:
+            # Try to truncate at sentence boundary
+            truncated = response[:MAX_CHARS]
+            last_period = truncated.rfind(".")
+            if last_period > MAX_CHARS - 50:
+                response = truncated[: last_period + 1]
+            else:
+                response = truncated[: MAX_CHARS - 3] + "..."
         return response
     except Exception as e:
         _logger.error(f"Failed to generate earthquake context: {e}")
-        return f"This M{magnitude} earthquake is significant for the {location} region. Historical data suggests events of this size can cause damage to structures."
+        return f"The {location} region has seen varying seismic activity. M{magnitude} earthquakes can cause noticeable shaking and potential damage near the epicenter."
 
 
 def generate_preparedness_tip() -> str:
