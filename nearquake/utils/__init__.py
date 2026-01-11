@@ -52,23 +52,52 @@ def extract_coordinates(data):
 
 def get_earthquake_image_url(event_data):
     """
-    Extract the shakemap image URL from earthquake event data.
+    Extract an image URL from earthquake event data, trying multiple sources.
+
+    Tries to find an image in this priority order:
+    1. Shakemap PGA (Peak Ground Acceleration) image
+    2. Shakemap intensity image
+    3. DYFI (Did You Feel It) intensity map
+    4. DYFI response map
 
     Example:
         # From event data dict
         get_earthquake_image_url({"properties": {"products": {"shakemap": [...]}}})
 
     :param event_data: Dictionary containing earthquake event data from USGS API
-    :return: String containing the URL to the shakemap image, or None if no image could be found.
+    :return: String containing the URL to an image, or None if no image could be found.
     """
     try:
-        image_url = event_data["properties"]["products"]["shakemap"][0]["contents"][
-            "download/pga.jpg"
-        ]["url"]
-        return image_url
-    except (KeyError, TypeError, IndexError) as e:
-        _logger.error(f"Could not find shakemap image URL in event data: {e}")
+        products = event_data["properties"]["products"]
+    except (KeyError, TypeError) as e:
+        _logger.error(f"Could not find products in event data: {e}")
         return None
+
+    # Define image sources to try in priority order
+    # Each entry: (product_name, list of possible content keys)
+    image_sources = [
+        (
+            "shakemap",
+            ["download/pga.jpg", "download/intensity.jpg", "download/pga.png"],
+        ),
+        ("dyfi", ["dyfi_geo_10km.png", "dyfi_geo_1km.png", "dyfi_plot_atten.png"]),
+    ]
+
+    for product_name, content_keys in image_sources:
+        if product_name in products:
+            try:
+                product_contents = products[product_name][0]["contents"]
+                for content_key in content_keys:
+                    if content_key in product_contents:
+                        image_url = product_contents[content_key]["url"]
+                        _logger.info(f"Found image from {product_name}/{content_key}")
+                        return image_url
+            except (KeyError, TypeError, IndexError) as e:
+                _logger.debug(f"Could not extract image from {product_name}: {e}")
+                continue
+
+    _logger.warning("No image found in any USGS product for this event")
+    return None
 
 
 def extract_url_content(url: str) -> bytes:
