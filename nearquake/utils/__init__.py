@@ -723,17 +723,21 @@ REGIONAL EARTHQUAKE DATA (within 150 miles):
         except Exception as e:
             _logger.error(f"Failed to fetch earthquake statistics: {e}")
 
-    prompt = f"""Write ONE short sentence ({MAX_CHARS} chars max) giving context for a M{magnitude} earthquake near {location}.
+    prompt = f"""Write a compelling 1-2 sentence context tweet ({MAX_CHARS} chars MAX) about a M{magnitude} quake near {location}.
 {stats_str}
 {recent_posts_str}
-Pick ONE angle: regional activity level, how common this magnitude is, or comparison to largest recorded.
+Choose the MOST SURPRISING or NEWSWORTHY angle from the data:
+- "First M5+ here since [date]" or "3rd major quake this month" (rarity/frequency)
+- "Region averages X quakes/year, already had Y this year" (trend)
+- "Largest here was M6.8 in 2019 - today's is the biggest since" (historical comparison)
+- "This fault line has been unusually quiet/active lately" (pattern)
 
 STRICT RULES:
-- MAXIMUM {MAX_CHARS} characters - count carefully, this is CRITICAL
-- One or two sentences only
-- No hashtags, no emojis, no quotes
-- Be specific with numbers
-- Don't mention the magnitude or location (already in main tweet)"""
+- MAXIMUM {MAX_CHARS} characters (count carefully!)
+- Lead with the most interesting fact
+- Use specific numbers from the data
+- No hashtags, emojis, or quotes
+- Sound like an informed seismologist, not a textbook"""
 
     try:
         response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
@@ -751,7 +755,7 @@ STRICT RULES:
         return response
     except Exception as e:
         _logger.error(f"Failed to generate earthquake context: {e}")
-        return "This region experiences regular seismic activity. Stay informed and prepared."
+        return f"The area within 150 miles sees an average of several M4.5+ quakes yearly. Seismic activity here is worth monitoring."
 
 
 def generate_preparedness_tip() -> str:
