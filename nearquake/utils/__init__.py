@@ -677,13 +677,13 @@ def generate_earthquake_context(
     :param latitude: Latitude of the earthquake (optional, for querying nearby events)
     :param longitude: Longitude of the earthquake (optional, for querying nearby events)
     :param conn: Database connection (optional, for querying historical data)
-    :return: Context text suitable for a tweet (265 chars or less, accounting for prefix)
+    :return: Context text suitable for a tweet (220 chars or less, accounting for prefix)
     """
     from nearquake.open_ai_client import generate_response
 
-    # Character limit: Twitter max 280 - "📊 Context: " prefix (12 chars) = 268
-    # Use 265 for safety margin
-    MAX_CHARS = 265
+    # Character limit: Twitter max 280 - "📊 Context: " prefix (13 chars) = 267
+    # Use 220 for safety margin since LLMs often overshoot
+    MAX_CHARS = 220
 
     stats_str = ""
     recent_posts_str = ""
@@ -723,26 +723,17 @@ REGIONAL EARTHQUAKE DATA (within 150 miles):
         except Exception as e:
             _logger.error(f"Failed to fetch earthquake statistics: {e}")
 
-    prompt = f"""You are writing the second tweet in a thread about a M{magnitude} earthquake near {location}.
-
+    prompt = f"""Write ONE short sentence ({MAX_CHARS} chars max) giving context for a M{magnitude} earthquake near {location}.
 {stats_str}
 {recent_posts_str}
+Pick ONE angle: regional activity level, how common this magnitude is, or comparison to largest recorded.
 
-Write a single tweet (max {MAX_CHARS} characters) that gives readers useful context about this earthquake. Choose the most interesting angle based on the data:
-
-- Is this region unusually active or quiet? Compare to the average.
-- Is this earthquake rare or common for this area? Reference similar events.
-- How does this compare to the largest recorded in the region?
-- Is there a recent trend (surge or lull in activity)?
-- What does this magnitude typically feel like or cause?
-
-REQUIREMENTS:
-- Must be under {MAX_CHARS} characters (this is critical)
-- Be specific with numbers when relevant (e.g., "This is the 5th M5+ quake this year")
-- Do NOT repeat information from the original tweet (magnitude and location are already known)
-- Do NOT use quotes, hashtags, or emojis
-- Do NOT start with "This earthquake" or similar - vary your opening
-- Be factual and informative, helping readers understand the significance"""
+STRICT RULES:
+- MAXIMUM {MAX_CHARS} characters - count carefully, this is CRITICAL
+- One or two sentences only
+- No hashtags, no emojis, no quotes
+- Be specific with numbers
+- Don't mention the magnitude or location (already in main tweet)"""
 
     try:
         response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
@@ -760,7 +751,7 @@ REQUIREMENTS:
         return response
     except Exception as e:
         _logger.error(f"Failed to generate earthquake context: {e}")
-        return f"The {location} region has seen varying seismic activity. M{magnitude} earthquakes can cause noticeable shaking and potential damage near the epicenter."
+        return "This region experiences regular seismic activity. Stay informed and prepared."
 
 
 def generate_preparedness_tip() -> str:
