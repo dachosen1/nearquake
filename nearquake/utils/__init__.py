@@ -677,13 +677,13 @@ def generate_earthquake_context(
     :param latitude: Latitude of the earthquake (optional, for querying nearby events)
     :param longitude: Longitude of the earthquake (optional, for querying nearby events)
     :param conn: Database connection (optional, for querying historical data)
-    :return: Context text suitable for a tweet (265 chars or less, accounting for prefix)
+    :return: Context text suitable for a tweet (220 chars or less, accounting for prefix)
     """
     from nearquake.open_ai_client import generate_response
 
-    # Character limit: Twitter max 280 - "📊 Context: " prefix (12 chars) = 268
-    # Use 265 for safety margin
-    MAX_CHARS = 265
+    # Character limit: Twitter max 280 - "📊 Context: " prefix (13 chars) = 267
+    # Use 220 for safety margin since LLMs often overshoot
+    MAX_CHARS = 220
 
     stats_str = ""
     recent_posts_str = ""
@@ -723,26 +723,21 @@ REGIONAL EARTHQUAKE DATA (within 150 miles):
         except Exception as e:
             _logger.error(f"Failed to fetch earthquake statistics: {e}")
 
-    prompt = f"""You are writing the second tweet in a thread about a M{magnitude} earthquake near {location}.
-
+    prompt = f"""Write a compelling 1-2 sentence context tweet ({MAX_CHARS} chars MAX) about a M{magnitude} quake near {location}.
 {stats_str}
 {recent_posts_str}
+Choose the MOST SURPRISING or NEWSWORTHY angle from the data:
+- "First M5+ here since [date]" or "3rd major quake this month" (rarity/frequency)
+- "Region averages X quakes/year, already had Y this year" (trend)
+- "Largest here was M6.8 in 2019 - today's is the biggest since" (historical comparison)
+- "This fault line has been unusually quiet/active lately" (pattern)
 
-Write a single tweet (max {MAX_CHARS} characters) that gives readers useful context about this earthquake. Choose the most interesting angle based on the data:
-
-- Is this region unusually active or quiet? Compare to the average.
-- Is this earthquake rare or common for this area? Reference similar events.
-- How does this compare to the largest recorded in the region?
-- Is there a recent trend (surge or lull in activity)?
-- What does this magnitude typically feel like or cause?
-
-REQUIREMENTS:
-- Must be under {MAX_CHARS} characters (this is critical)
-- Be specific with numbers when relevant (e.g., "This is the 5th M5+ quake this year")
-- Do NOT repeat information from the original tweet (magnitude and location are already known)
-- Do NOT use quotes, hashtags, or emojis
-- Do NOT start with "This earthquake" or similar - vary your opening
-- Be factual and informative, helping readers understand the significance"""
+STRICT RULES:
+- MAXIMUM {MAX_CHARS} characters (count carefully!)
+- Lead with the most interesting fact
+- Use specific numbers from the data
+- No hashtags, emojis, or quotes
+- Sound like an informed seismologist, not a textbook"""
 
     try:
         response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
@@ -760,7 +755,7 @@ REQUIREMENTS:
         return response
     except Exception as e:
         _logger.error(f"Failed to generate earthquake context: {e}")
-        return f"The {location} region has seen varying seismic activity. M{magnitude} earthquakes can cause noticeable shaking and potential damage near the epicenter."
+        return f"The area within 150 miles sees an average of several M4.5+ quakes yearly. Seismic activity here is worth monitoring."
 
 
 def generate_preparedness_tip() -> str:
