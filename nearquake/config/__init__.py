@@ -99,6 +99,16 @@ TWEET_CONCLUSION = [
     "How do you prepare? Share tips and stay safe! #earthquakePrep. Data provided by #usgs",
     "Were you near the epicenter? Share your experience. #earthquake. Data provided by #usgs",
     "In an #earthquake, use stairs, not elevators! 🚶‍♂️🚶‍♀ #safetyfirst. Data provided by #usgs",
+    "Remember: Drop, Cover, Hold On! Practice makes perfect. #earthquakeSafety. Data provided by #usgs",
+    "Keep an emergency kit ready with water, food & first aid. #BePrepared. Data provided by #usgs",
+    "Check your home for hazards: secure tall furniture & water heaters. #earthquakeReady. Data provided by #usgs",
+    "Know your local evacuation routes and meeting points. #DisasterPrep. Data provided by #usgs",
+    "After shaking stops, check for injuries & damage before moving. #earthquakeTips. Data provided by #usgs",
+    "Stay informed with earthquake alerts on your phone. #EarlyWarning. Data provided by #usgs",
+    "Practice earthquake drills with your family regularly. #SafetyFirst. Data provided by #usgs",
+    "Identify safe spots in every room: under sturdy tables, away from windows. #earthquakeSafety. Data provided by #usgs",
+    "Have a family communication plan ready for emergencies. #EmergencyPlan. Data provided by #usgs",
+    "Learn basic first aid skills - they could save lives. #DisasterResponse. Data provided by #usgs",
 ]
 
 
@@ -134,6 +144,16 @@ CHAT_PROMPT = [
     "Do you know what to do if you're in a elevator during earthquake? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
     "How do you ensure the safety of children and infants during earthquakes? Share your child safety tips!",
     "How do you stay informed about earthquake risks and updates in your area? Share your favorite resources for earthquake information!",
+    "What causes aftershocks and how long can they continue after a major earthquake? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "Explain how earthquake early warning systems work and their limitations. Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "What is liquefaction and why is it dangerous during earthquakes? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "How do animals sometimes behave differently before an earthquake? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "What is the Ring of Fire and why do most earthquakes occur there? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "How can you secure heavy furniture and appliances to prevent injuries during earthquakes? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "What role do seismologists play in earthquake research and prediction? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "How do tsunamis relate to underwater earthquakes and what warning signs should you look for? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "What building codes and construction techniques make structures more earthquake resistant? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
+    "How do you create a family emergency communication plan for earthquakes? Convert the response to be appropriate for a Twitter post, and include some hashtags. Do not include quotes",
 ]
 
 
