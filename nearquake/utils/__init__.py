@@ -740,7 +740,7 @@ STRICT RULES:
 - Sound like an informed seismologist, not a textbook"""
 
     try:
-        response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
+        response = generate_response(prompt=prompt, role="user", model="gpt-5.0")
         # Clean up response
         response = response.strip().strip('"').strip("'")
         # Truncate if needed (should rarely happen with good prompt)
@@ -777,7 +777,7 @@ Focus on ONE actionable tip such as:
 Keep it concise and actionable. Do NOT include quotes or excessive hashtags. Include 1-2 relevant emojis. This will be the final tweet in a 3-tweet thread."""
 
     try:
-        response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
+        response = generate_response(prompt=prompt, role="user", model="gpt-5.0")
         # Truncate if needed
         if len(response) > 250:
             response = response[:247] + "..."
