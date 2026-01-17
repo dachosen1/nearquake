@@ -16,7 +16,7 @@ def test_generate_response_success(mock_create):
     mock_create.return_value = mock_response
 
     # Call the function
-    result = generate_response("Test prompt", "user", "gpt-5.0")
+    result = generate_response("Test prompt", "user", "gpt-4o-mini")
 
     # Verify the result
     assert result == "Test response"
@@ -24,7 +24,7 @@ def test_generate_response_success(mock_create):
     # Verify the function was called with the correct parameters
     mock_create.assert_called_once()
     call_args = mock_create.call_args[1]
-    assert call_args["model"] == "gpt-5.0"
+    assert call_args["model"] == "gpt-4o-mini"
     assert call_args["messages"][0]["role"] == "user"
     assert call_args["messages"][0]["content"] == "Test prompt"
 
@@ -38,7 +38,7 @@ def test_generate_response_with_system_role(mock_create):
     mock_create.return_value = mock_response
 
     # Call the function with role="system"
-    result = generate_response("System prompt", "system", "gpt-5.0")
+    result = generate_response("System prompt", "system", "gpt-4o-mini")
 
     # Verify the result
     assert result == "System response"
@@ -59,7 +59,7 @@ def test_generate_response_with_assistant_role(mock_create):
     mock_create.return_value = mock_response
 
     # Call the function with role="assistant"
-    result = generate_response("Assistant prompt", "assistant", "gpt-5.0")
+    result = generate_response("Assistant prompt", "assistant", "gpt-4o-mini")
 
     # Verify the result
     assert result == "Assistant response"
@@ -110,5 +110,5 @@ def test_generate_response_default_parameters(mock_create):
     # Verify the function was called with the default parameters
     mock_create.assert_called_once()
     call_args = mock_create.call_args[1]
-    assert call_args["model"] == "gpt-5.0"  # Default model
+    assert call_args["model"] == "gpt-4o-mini"  # Default model
     assert call_args["messages"][0]["role"] == "user"  # Default role
