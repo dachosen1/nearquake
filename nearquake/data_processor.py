@@ -511,7 +511,7 @@ class TweetEarthquakeEvents(BaseDataUploader):
                             )
 
                             context_tweet = {
-                                "post": f"📊 Context: {context_text}",
+                                "post": f"📊 {context_text}",
                                 "ts_upload_utc": tweet_text["ts_upload_utc"],
                                 "id_event": quake.id_event,
                                 "post_type": "context",
