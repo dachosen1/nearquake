@@ -681,7 +681,7 @@ def generate_earthquake_context(
     """
     from nearquake.open_ai_client import generate_response
 
-    # Character limit: Twitter max 280 - "📊 Context: " prefix (13 chars) = 267
+    # Character limit: Twitter max 280 - "📊 " prefix (4 chars) = 276
     # Use 220 for safety margin since LLMs often overshoot
     MAX_CHARS = 220
 
