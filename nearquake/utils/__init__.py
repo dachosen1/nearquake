@@ -652,9 +652,9 @@ def generate_earthquake_context(
     """
     from nearquake.open_ai_client import generate_response
 
-    # Character limit: Twitter max 280 - "📊 Context: " prefix (12 chars) = 268
-    # Use 265 for safety margin
-    MAX_CHARS = 265
+    # Character limit: Twitter max 280 - "📊 " prefix (3 chars) = 277
+    # Use 275 for safety margin
+    MAX_CHARS = 275
 
     stats_str = ""
     recent_posts_str = ""
@@ -712,13 +712,16 @@ REQUIREMENTS:
 - Be specific with numbers when relevant (e.g., "This is the 5th M5+ quake this year")
 - Do NOT repeat information from the original tweet (magnitude and location are already known)
 - Do NOT use quotes, hashtags, or emojis
-- Do NOT start with "This earthquake" or similar - vary your opening
+- Do NOT start with "Context:", "This earthquake", or similar - just start with the insight
 - Be factual and informative, helping readers understand the significance"""
 
     try:
         response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
         # Clean up response
         response = response.strip().strip('"').strip("'")
+        # Remove "Context:" prefix if LLM added it (prefix is added by caller)
+        if response.lower().startswith("context:"):
+            response = response[8:].strip()
         # Truncate if needed (should rarely happen with good prompt)
         if len(response) > MAX_CHARS:
             # Try to truncate at sentence boundary
