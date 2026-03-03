@@ -267,7 +267,6 @@ class TestFunFactCommandHandler(unittest.TestCase):
             "Formatted tweet text", self.mock_db_session
         )
 
-
     @patch("nearquake.cli.command_handlers.random.choice")
     @patch("nearquake.cli.command_handlers.generate_response")
     @patch("nearquake.cli.command_handlers.post_and_save_tweet")
