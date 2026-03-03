@@ -88,8 +88,8 @@ def test_generate_response_api_error(mock_create):
     # Test error handling
     result = generate_response("Test prompt")
 
-    # Verify the error is handled and returned as a string
-    assert "Error API error" in result
+    # Verify the error is handled and returns None
+    assert result is None
     mock_create.assert_called_once()
 
 
