@@ -19,7 +19,7 @@ client = OpenAI(api_key=_nearquake_secrets.get("OPENAI_API_KEY"))
 
 def generate_response(
     prompt: str, role: str = "user", model: str = "gpt-4o-mini"
-) -> str:
+) -> str | None:
     """
     Generates a response from the open ai model based on the given role and prompt.
 
@@ -73,4 +73,4 @@ def generate_response(
 
     except Exception as e:
         log_error(_logger, "Unexpected error occurred during OpenAI API call", exc=e)
-        return f"Error {e}"
+        return None

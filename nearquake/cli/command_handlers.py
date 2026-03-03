@@ -157,6 +157,9 @@ class FunFactCommandHandler(CommandHandler):
         prompt = random.choice(CHAT_PROMPT)
         message = generate_response(prompt=prompt)
 
+        if message is None:
+            return
+
         tweet_text = format_earthquake_alert(post_type="fact", message=message)
         post_and_save_tweet(tweet_text, db_session)
 

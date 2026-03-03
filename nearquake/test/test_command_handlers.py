@@ -267,6 +267,21 @@ class TestFunFactCommandHandler(unittest.TestCase):
             "Formatted tweet text", self.mock_db_session
         )
 
+    @patch("nearquake.cli.command_handlers.random.choice")
+    @patch("nearquake.cli.command_handlers.generate_response")
+    @patch("nearquake.cli.command_handlers.post_and_save_tweet")
+    def test_execute_skips_post_on_error(
+        self, mock_post_tweet, mock_generate_response, mock_choice
+    ):
+        """Test that execute skips posting when generate_response returns None."""
+        mock_choice.return_value = "Test prompt"
+        mock_generate_response.return_value = None
+
+        self.handler.execute(self.mock_db_session)
+
+        mock_generate_response.assert_called_once_with(prompt="Test prompt")
+        mock_post_tweet.assert_not_called()
+
 
 class TestInitializeCommandHandler(unittest.TestCase):
     """Test the InitializeCommandHandler class."""
