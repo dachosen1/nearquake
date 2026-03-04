@@ -214,4 +214,4 @@ GitHub Actions workflows (.github/workflows/):
 ### Secrets Management
 Required secrets in AWS Secrets Manager:
 - **postgres-nearquake**: Database credentials (username, password, host, port, dbname, engine)
-- **nearquake-secrets**: API keys (CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET, BEARER_TOKEN, BLUESKY_USER_NAME, BLUESKY_PASSWORD, GEO_API_KEY, GEO_REVERSE_LOOKUP_BASE_URL)
+- **nearquake-secrets**: API keys (CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET, BEARER_TOKEN, BLUESKY_USER_NAME, BLUESKY_PASSWORD, GEO_API_KEY, GEO_REVERSE_LOOKUP_BASE_URL, GEMINI_API_KEY)

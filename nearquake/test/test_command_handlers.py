@@ -1,28 +1,26 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Add these patches at the module level to mock OpenAI before it's imported
-openai_patcher = patch("openai.OpenAI")
-openai_patcher.start()
+# Add these patches at the module level to mock Gemini before it's imported
+gemini_patcher = patch("google.genai.Client")
+gemini_patcher.start()
 
 from datetime import datetime, timedelta
 
-from nearquake.cli.command_handlers import (
-    BackfillCommandHandler,
-    CommandHandlerFactory,
-    DailyCommandHandler,
-    FunFactCommandHandler,
-    InitializeCommandHandler,
-    LiveCommandHandler,
-    MonthlyCommandHandler,
-    SummaryCommandHandler,
-    WeeklyCommandHandler,
-)
+from nearquake.cli.command_handlers import (BackfillCommandHandler,
+                                            CommandHandlerFactory,
+                                            DailyCommandHandler,
+                                            FunFactCommandHandler,
+                                            InitializeCommandHandler,
+                                            LiveCommandHandler,
+                                            MonthlyCommandHandler,
+                                            SummaryCommandHandler,
+                                            WeeklyCommandHandler)
 
 
 # Stop the patcher when the module is unloaded
 def tearDownModule():
-    openai_patcher.stop()
+    gemini_patcher.stop()
 
 
 class TestCommandHandlerFactory(unittest.TestCase):

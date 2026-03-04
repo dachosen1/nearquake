@@ -9,7 +9,8 @@ from io import BytesIO
 import requests
 from PIL import Image
 
-from nearquake.config import EVENT_DETAIL_URL, TIMESTAMP_NOW, tweet_conclusion_text
+from nearquake.config import (EVENT_DETAIL_URL, TIMESTAMP_NOW,
+                              tweet_conclusion_text)
 
 _logger = logging.getLogger(__name__)
 
@@ -669,7 +670,7 @@ def generate_earthquake_context(
     conn=None,
 ) -> str:
     """
-    Generate historical context for a significant earthquake using OpenAI.
+    Generate historical context for a significant earthquake using Gemini.
 
     :param magnitude: Earthquake magnitude
     :param location: Location description
@@ -678,7 +679,7 @@ def generate_earthquake_context(
     :param conn: Database connection (optional, for querying historical data)
     :return: Context text suitable for a tweet (220 chars or less, accounting for prefix)
     """
-    from nearquake.open_ai_client import generate_response
+    from nearquake.gemini_client import generate_response
 
     # Character limit: Twitter max 280 - "📊 Context: " prefix (13 chars) = 267
     # Use 220 for safety margin since LLMs often overshoot
@@ -740,7 +741,9 @@ STRICT RULES:
 
     fallback = "The area within 150 miles sees an average of several M4.5+ quakes yearly. Seismic activity here is worth monitoring."
     try:
-        response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
+        response = generate_response(
+            prompt=prompt, role="user", model="gemini-2.0-flash"
+        )
         if response is None:
             return fallback
         # Clean up response
@@ -762,11 +765,11 @@ STRICT RULES:
 
 def generate_preparedness_tip() -> str:
     """
-    Generate a preparedness tip using OpenAI.
+    Generate a preparedness tip using Gemini.
 
     :return: Preparedness tip text suitable for a tweet (280 chars or less)
     """
-    from nearquake.open_ai_client import generate_response
+    from nearquake.gemini_client import generate_response
 
     prompt = """Generate a brief earthquake preparedness tip (max 250 characters).
 
@@ -780,7 +783,9 @@ Keep it concise and actionable. Do NOT include quotes or excessive hashtags. Inc
 
     fallback = "🏠 Secure heavy items to walls and practice Drop, Cover, and Hold On with your family. Being prepared saves lives! #EarthquakePrep"
     try:
-        response = generate_response(prompt=prompt, role="user", model="gpt-4o-mini")
+        response = generate_response(
+            prompt=prompt, role="user", model="gemini-2.0-flash"
+        )
         if response is None:
             return fallback
         # Truncate if needed
