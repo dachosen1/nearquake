@@ -17,7 +17,7 @@ from nearquake.data_processor import (
     UploadEarthQuakeLocation,
     get_date_range_summary,
 )
-from nearquake.open_ai_client import generate_response
+from nearquake.gemini_client import generate_response
 from nearquake.post_manager import post_and_save_tweet
 from nearquake.utils import format_earthquake_alert
 
