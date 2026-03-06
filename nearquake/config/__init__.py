@@ -158,7 +158,7 @@ CHAT_PROMPT = [
 
 
 COORDINATE_LOOKUP_BASE_URL = (
-    "{BASE_URL}latitude={latitude}&longitude={longitude}&localityLanguage=en"
+    "{BASE_URL}latitude={latitude}&longitude={longitude}"
 )
 
 
