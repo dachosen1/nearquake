@@ -193,7 +193,8 @@ def post_to_all_platforms(
             results["twitter"] = tweet_id
         else:
             # Bluesky doesn't support threading yet
-            platform.post(text, media_data)
+            bluesky_success = platform.post(text, media_data)
+            results["bluesky"] = bluesky_success
     return results
 
 
@@ -214,5 +215,15 @@ def post_and_save_tweet(
         media_data=media_data,
         in_reply_to_tweet_id=in_reply_to_tweet_id,
     )
-    save_tweet_to_db(text, conn)
+    # Only persist to DB if at least one platform succeeded, so failed posts can be retried
+    any_succeeded = any(
+        (v is not None and v is not False) for v in results.values()
+    )
+    if any_succeeded:
+        save_tweet_to_db(text, conn)
+    else:
+        log_error(
+            _logger,
+            f"All platforms failed — skipping DB save so post can be retried: {text.get('post', '')[:100]}",
+        )
     return results
