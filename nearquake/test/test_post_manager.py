@@ -40,9 +40,11 @@ class TestTwitterPost:
         twitter_post = TwitterPost()
         result = twitter_post.post("Test tweet")
 
-        # Verify the post was successful
-        assert result is True
-        mock_client_instance.create_tweet.assert_called_once_with(text="Test tweet")
+        # Returns a tweet ID (string) on success, not True
+        assert result is not None
+        mock_client_instance.create_tweet.assert_called_once_with(
+            text="Test tweet", media_ids=None, in_reply_to_tweet_id=None
+        )
 
     @patch("tweepy.Client")
     def test_post_failure(self, mock_client):
@@ -56,8 +58,10 @@ class TestTwitterPost:
         result = twitter_post.post("Test tweet")
 
         # Verify the post failed but didn't raise an exception
-        assert result is False
-        mock_client_instance.create_tweet.assert_called_once_with(text="Test tweet")
+        assert result is None
+        mock_client_instance.create_tweet.assert_called_once_with(
+            text="Test tweet", media_ids=None, in_reply_to_tweet_id=None
+        )
 
 
 class TestBlueSkyPost:
@@ -140,29 +144,43 @@ def test_save_tweet_to_db_failure():
 
 @patch("nearquake.post_manager._PLATFORM")
 def test_post_to_all_platforms(mock_platform):
-    # Setup mock platforms
-    mock_platform1 = MagicMock()
-    mock_platform2 = MagicMock()
-    mock_platform.__iter__.return_value = [mock_platform1, mock_platform2]
+    mock_twitter = MagicMock(spec=TwitterPost)
+    mock_bluesky = MagicMock(spec=BlueSkyPost)
+    mock_platform.__iter__.return_value = [mock_twitter, mock_bluesky]
 
-    # Test posting to all platforms
     post_to_all_platforms("Test message")
 
-    # Verify that post was called on each platform
-    mock_platform1.post.assert_called_once_with("Test message")
-    mock_platform2.post.assert_called_once_with("Test message")
+    mock_twitter.post.assert_called_once_with("Test message", None, None)
+    mock_bluesky.post.assert_called_once_with("Test message", None)
 
 
 @patch("nearquake.post_manager.post_to_all_platforms")
 @patch("nearquake.post_manager.save_tweet_to_db")
 def test_post_and_save_tweet(mock_save_tweet, mock_post_to_all_platforms):
-    # Create mock database connection
     mock_conn = MagicMock()
+    mock_post_to_all_platforms.return_value = {"twitter": "tweet_id_123"}
 
-    # Test posting and saving a tweet
     tweet_text = {"post": "Test tweet", "id_event": "test123", "post_type": "event"}
     post_and_save_tweet(tweet_text, mock_conn)
 
-    # Verify that both functions were called with the correct parameters
-    mock_post_to_all_platforms.assert_called_once_with(text="Test tweet")
+    mock_post_to_all_platforms.assert_called_once_with(
+        text="Test tweet", media_data=None, in_reply_to_tweet_id=None
+    )
     mock_save_tweet.assert_called_once_with(tweet_text, mock_conn)
+
+
+@patch("nearquake.post_manager.post_to_all_platforms")
+@patch("nearquake.post_manager.save_tweet_to_db")
+def test_post_and_save_tweet_skips_db_when_all_platforms_fail(
+    mock_save_tweet, mock_post_to_all_platforms
+):
+    mock_conn = MagicMock()
+    mock_post_to_all_platforms.return_value = {"twitter": None, "bluesky": False}
+
+    tweet_text = {"post": "Test tweet", "id_event": "test123", "post_type": "event"}
+    post_and_save_tweet(tweet_text, mock_conn)
+
+    mock_post_to_all_platforms.assert_called_once_with(
+        text="Test tweet", media_data=None, in_reply_to_tweet_id=None
+    )
+    mock_save_tweet.assert_not_called()
