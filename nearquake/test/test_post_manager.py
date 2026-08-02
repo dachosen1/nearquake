@@ -3,14 +3,21 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from nearquake.app.db import Post
-from nearquake.post_manager import (
-    BlueSkyPost,
-    PlatformPoster,
-    TwitterPost,
-    post_and_save_tweet,
-    post_to_all_platforms,
-    save_tweet_to_db,
-)
+from nearquake.post_manager import (BlueSkyPost, PlatformPoster, TwitterPost,
+                                    build_bluesky_facets, post_and_save_tweet,
+                                    post_to_all_platforms, save_tweet_to_db)
+
+
+def _facet_kind(feature):
+    """Return the link URI or '#'-prefixed tag for a facet feature."""
+    return getattr(feature, "uri", None) or f"#{feature.tag}"
+
+
+def _decode(text, facet):
+    """Return the substring of ``text`` covered by a facet's byte range."""
+    return text.encode("utf-8")[facet.index.byte_start : facet.index.byte_end].decode(
+        "utf-8"
+    )
 
 
 class TestPlatformPoster:
@@ -91,9 +98,28 @@ class TestBlueSkyPost:
             bluesky_post = BlueSkyPost()
             result = bluesky_post.post("Test post")
 
-            # Verify the post was successful
+            # Verify the post was successful. Plain text with no links -> facets=None
             assert result is True
-            mock_client_instance.send_post.assert_called_once_with(text="Test post")
+            mock_client_instance.send_post.assert_called_once_with(
+                text="Test post", facets=None
+            )
+
+    def test_post_attaches_facets_for_links(self):
+        # A post containing a URL and a hashtag should be sent with facets so
+        # BlueSky renders them as tappable links.
+        with patch("nearquake.post_manager.Client") as mock_client:
+            mock_client_instance = MagicMock()
+            mock_client.return_value = mock_client_instance
+
+            bluesky_post = BlueSkyPost()
+            text = "See https://earthquake.usgs.gov/events/abc #Earthquake"
+            result = bluesky_post.post(text)
+
+            assert result is True
+            _, kwargs = mock_client_instance.send_post.call_args
+            assert kwargs["text"] == text
+            facets = kwargs["facets"]
+            assert facets is not None and len(facets) == 2
 
     def test_post_failure(self):
         # Get the global mock from conftest.py
@@ -109,7 +135,9 @@ class TestBlueSkyPost:
 
             # Verify the post failed but didn't raise an exception
             assert result is False
-            mock_client_instance.send_post.assert_called_once_with(text="Test post")
+            mock_client_instance.send_post.assert_called_once_with(
+                text="Test post", facets=None
+            )
 
 
 def test_save_tweet_to_db_success():
@@ -152,6 +180,90 @@ def test_post_to_all_platforms(mock_platform):
 
     mock_twitter.post.assert_called_once_with("Test message", None, None)
     mock_bluesky.post.assert_called_once_with("Test message", None)
+
+
+class TestBuildBlueSkyFacets:
+    def test_no_links_returns_empty(self):
+        assert build_bluesky_facets("Just some plain text, nothing to link.") == []
+
+    def test_full_url_facet(self):
+        text = "🔗 Full details: https://earthquake.usgs.gov/earthquakes/eventpage/us6000thkg/executive"
+        facets = build_bluesky_facets(text)
+
+        assert len(facets) == 1
+        facet = facets[0]
+        # Byte range must map back to exactly the URL (emoji is multi-byte).
+        assert (
+            _decode(text, facet)
+            == "https://earthquake.usgs.gov/earthquakes/eventpage/us6000thkg/executive"
+        )
+        assert (
+            _facet_kind(facet.features[0])
+            == "https://earthquake.usgs.gov/earthquakes/eventpage/us6000thkg/executive"
+        )
+
+    def test_url_trailing_punctuation_excluded(self):
+        text = "Read more at https://example.com/page."
+        facets = build_bluesky_facets(text)
+
+        assert len(facets) == 1
+        # The trailing period is not part of the link.
+        assert _decode(text, facets[0]) == "https://example.com/page"
+        assert _facet_kind(facets[0].features[0]) == "https://example.com/page"
+
+    def test_bare_domain_links_to_https(self):
+        text = "#Earthquake #SeismicActivity\nData: earthquake.usgs.gov"
+        facets = build_bluesky_facets(text)
+
+        domain_facets = [
+            f
+            for f in facets
+            if _facet_kind(f.features[0]) == "https://earthquake.usgs.gov"
+        ]
+        assert len(domain_facets) == 1
+        # Display text stays short; only the link target gains the scheme.
+        assert _decode(text, domain_facets[0]) == "earthquake.usgs.gov"
+
+    def test_hashtag_facets(self):
+        text = "Big news #RecentEarthquake and #USGS today"
+        facets = build_bluesky_facets(text)
+
+        tags = {f.features[0].tag for f in facets}
+        assert tags == {"RecentEarthquake", "USGS"}
+        for f in facets:
+            # Displayed range still includes the leading '#'.
+            assert _decode(text, f).startswith("#")
+
+    def test_domain_inside_url_not_double_linked(self):
+        # The bare-domain matcher must not re-link the host of a full URL.
+        text = "Details: https://earthquake.usgs.gov/events/abc"
+        facets = build_bluesky_facets(text)
+
+        assert len(facets) == 1
+        assert _facet_kind(facets[0].features[0]) == (
+            "https://earthquake.usgs.gov/events/abc"
+        )
+
+    def test_event_post_all_facets(self):
+        text = (
+            "🌎 #RecentEarthquake: A magnitude 4.8 earthquake occurred "
+            "77 km SE of Atka, Alaska at 05:18:40 UTC (22 min ago).\n\n"
+            "🔗 Full details: https://earthquake.usgs.gov/earthquakes/eventpage/us6000thkg/executive\n"
+            "Remember: Drop, Cover, Hold On! #EarthquakeSafety. Data provided by #USGS"
+        )
+        facets = build_bluesky_facets(text)
+
+        kinds = [_facet_kind(f.features[0]) for f in facets]
+        assert (
+            "https://earthquake.usgs.gov/earthquakes/eventpage/us6000thkg/executive"
+            in kinds
+        )
+        assert "#RecentEarthquake" in kinds
+        assert "#EarthquakeSafety" in kinds
+        assert "#USGS" in kinds
+        # Every facet's byte range must decode cleanly (validates UTF-8 offsets).
+        for f in facets:
+            assert _decode(text, f)
 
 
 @patch("nearquake.post_manager.post_to_all_platforms")

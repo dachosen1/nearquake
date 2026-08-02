@@ -1,20 +1,108 @@
 import logging
+import re
 from abc import ABC, abstractmethod
 from io import BytesIO
 
 import tweepy
-from atproto import Client
+from atproto import Client, models
 
 from nearquake.app.db import Post
-from nearquake.config import BLUESKY_PASSWORD, BLUESKY_USER_NAME, TWITTER_AUTHENTICATION
-from nearquake.utils.logging_utils import (
-    get_logger,
-    log_db_operation,
-    log_error,
-    log_info,
-)
+from nearquake.config import (BLUESKY_PASSWORD, BLUESKY_USER_NAME,
+                              TWITTER_AUTHENTICATION)
+from nearquake.utils.logging_utils import (get_logger, log_db_operation,
+                                           log_error, log_info)
 
 _logger = get_logger(__name__)
+
+# Full http(s) URLs. Kept permissive so query strings / fragments are captured;
+# trailing punctuation is stripped separately below.
+_URL_RE = re.compile(rb"https?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+")
+
+# Hashtags preceded by start-of-string or whitespace. The captured group excludes
+# the leading boundary so byte offsets point at the "#...".
+_HASHTAG_RE = re.compile(rb"(?:^|\s)(#[A-Za-z0-9_]+)")
+
+# Bare domains such as "earthquake.usgs.gov" that appear without a scheme. The
+# negative lookbehind avoids matching inside a full URL, email, or handle.
+_BARE_DOMAIN_RE = re.compile(
+    rb"(?<![/@.\w])((?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+"
+    rb"(?:gov|com|org|net|edu|io))\b",
+    re.IGNORECASE,
+)
+
+# Punctuation that commonly trails a URL in prose but is not part of the link.
+_TRAILING_PUNCTUATION = b".,;:!?)]}'\""
+
+
+def _strip_trailing_punctuation(start: int, end: int, text_bytes: bytes) -> int:
+    """Trim trailing sentence punctuation from a matched byte range."""
+    while end > start and text_bytes[end - 1] in _TRAILING_PUNCTUATION:
+        end -= 1
+    return end
+
+
+def build_bluesky_facets(text: str) -> list:
+    """
+    Build BlueSky richtext facets so URLs, bare domains, and hashtags render as
+    tappable links instead of plain text.
+
+    BlueSky/AT Protocol does not auto-detect links the way Twitter does. Each
+    link must be described by a facet: a byte range (UTF-8 offsets into the post
+    text) paired with a feature (a link URI or a tag). Byte offsets are used
+    rather than character offsets, which matters because the posts contain
+    multi-byte emoji (e.g. 🌎, 🔗).
+
+    :param text: The post text to scan for links and hashtags.
+    :return: A list of ``models.AppBskyRichtextFacet.Main`` facets. Empty if
+        nothing linkable is found.
+    """
+    text_bytes = text.encode("utf-8")
+    facets = []
+    matched_ranges = []
+
+    def _add_facet(start: int, end: int, feature) -> None:
+        facets.append(
+            models.AppBskyRichtextFacet.Main(
+                index=models.AppBskyRichtextFacet.ByteSlice(
+                    byte_start=start, byte_end=end
+                ),
+                features=[feature],
+            )
+        )
+        matched_ranges.append((start, end))
+
+    def _overlaps(start: int, end: int) -> bool:
+        return any(start < r_end and end > r_start for r_start, r_end in matched_ranges)
+
+    # Full URLs first so bare-domain detection can skip anything already linked.
+    for match in _URL_RE.finditer(text_bytes):
+        start = match.start()
+        end = _strip_trailing_punctuation(start, match.end(), text_bytes)
+        uri = text_bytes[start:end].decode("utf-8")
+        _add_facet(start, end, models.AppBskyRichtextFacet.Link(uri=uri))
+
+    # Bare domains (e.g. "earthquake.usgs.gov"): keep the short display text but
+    # point the link at the https:// version.
+    for match in _BARE_DOMAIN_RE.finditer(text_bytes):
+        start, end = match.start(1), match.end(1)
+        if _overlaps(start, end):
+            continue
+        domain = text_bytes[start:end].decode("utf-8")
+        _add_facet(
+            start,
+            end,
+            models.AppBskyRichtextFacet.Link(uri=f"https://{domain}"),
+        )
+
+    # Hashtags -> tag facets (tag value excludes the leading '#').
+    for match in _HASHTAG_RE.finditer(text_bytes):
+        start, end = match.start(1), match.end(1)
+        if _overlaps(start, end):
+            continue
+        tag = text_bytes[start + 1 : end].decode("utf-8")
+        _add_facet(start, end, models.AppBskyRichtextFacet.Tag(tag=tag))
+
+    return facets
 
 
 class PlatformPoster(ABC):
@@ -143,7 +231,10 @@ class BlueSkyPost(PlatformPoster):
 
     def post(self, post_text: str, media_data: bytes = None) -> bool:
         try:
-            self.client.send_post(text=post_text)
+            # BlueSky does not auto-link URLs or hashtags; attach richtext facets
+            # so they render as tappable links.
+            facets = build_bluesky_facets(post_text)
+            self.client.send_post(text=post_text, facets=facets or None)
             log_info(_logger, f"Successfully posted to BlueSky: {post_text}")
             return True
         except Exception as e:
@@ -216,9 +307,7 @@ def post_and_save_tweet(
         in_reply_to_tweet_id=in_reply_to_tweet_id,
     )
     # Only persist to DB if at least one platform succeeded, so failed posts can be retried
-    any_succeeded = any(
-        (v is not None and v is not False) for v in results.values()
-    )
+    any_succeeded = any((v is not None and v is not False) for v in results.values())
     if any_succeeded:
         save_tweet_to_db(text, conn)
     else:
