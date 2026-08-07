@@ -28,12 +28,31 @@ from . import config
 
 # Columns per the OpenFlights schema (files have no header row).
 _ROUTES_COLS = [
-    "airline", "airline_id", "src", "src_id", "dst", "dst_id",
-    "codeshare", "stops", "equipment",
+    "airline",
+    "airline_id",
+    "src",
+    "src_id",
+    "dst",
+    "dst_id",
+    "codeshare",
+    "stops",
+    "equipment",
 ]
 _AIRPORTS_COLS = [
-    "airport_id", "name", "city", "country", "iata", "icao",
-    "lat", "lon", "alt", "timezone", "dst", "tz", "type", "source",
+    "airport_id",
+    "name",
+    "city",
+    "country",
+    "iata",
+    "icao",
+    "lat",
+    "lon",
+    "alt",
+    "timezone",
+    "dst",
+    "tz",
+    "type",
+    "source",
 ]
 
 # Continent-code -> human-readable region used throughout the analysis.
@@ -80,7 +99,9 @@ def download_openflights(force: bool = False) -> None:
         if os.path.exists(path) and not force:
             continue
         print(f"[data] downloading {name} <- {url}")
-        req = urllib.request.Request(url, headers={"User-Agent": "aircraft-age-analysis/1.0"})
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "aircraft-age-analysis/1.0"}
+        )
         with urllib.request.urlopen(req, timeout=60) as resp:
             data = resp.read()
         with open(path, "wb") as fh:
@@ -89,14 +110,20 @@ def download_openflights(force: bool = False) -> None:
 
 def load_routes() -> pd.DataFrame:
     df = pd.read_csv(
-        _cache_path("routes"), names=_ROUTES_COLS, na_values=["\\N"], keep_default_na=True,
+        _cache_path("routes"),
+        names=_ROUTES_COLS,
+        na_values=["\\N"],
+        keep_default_na=True,
     )
     return df
 
 
 def load_airports() -> pd.DataFrame:
     df = pd.read_csv(
-        _cache_path("airports"), names=_AIRPORTS_COLS, na_values=["\\N"], keep_default_na=True,
+        _cache_path("airports"),
+        names=_AIRPORTS_COLS,
+        na_values=["\\N"],
+        keep_default_na=True,
     )
     return df
 
@@ -120,5 +147,8 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     r = 6371.0
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
-    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    a = (
+        sin(dlat / 2) ** 2
+        + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    )
     return 2 * r * asin(sqrt(a))

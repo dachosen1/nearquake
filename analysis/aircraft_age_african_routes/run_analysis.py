@@ -68,7 +68,8 @@ def run_demo_tails() -> None:
         "Numbers below are produced by a calibrated generator, not observed\n"
         "flights. They demonstrate that the pipeline detects a true airframe-age\n"
         "gap once real tail<->route data is supplied. See synthetic_fleet.py.\n"
-        + "=" * 70 + "\n"
+        + "=" * 70
+        + "\n"
     )
     report = header + analyze.format_report(
         desc_region, analyze.descriptive_by_carrier_region(df), tt, model
@@ -82,8 +83,11 @@ def run_demo_tails() -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--demo-tails", action="store_true",
-                    help="also run the illustrative tail-number-level design")
+    ap.add_argument(
+        "--demo-tails",
+        action="store_true",
+        help="also run the illustrative tail-number-level design",
+    )
     args = ap.parse_args()
     run_real()
     if args.demo_tails:

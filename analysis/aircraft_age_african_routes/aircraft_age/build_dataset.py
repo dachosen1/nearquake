@@ -76,8 +76,10 @@ def build() -> tuple[pd.DataFrame, dict]:
         obs = obs.join(
             ap_by_iata[["lat", "lon", "region", "country"]].rename(
                 columns={
-                    "lat": f"{side}_lat", "lon": f"{side}_lon",
-                    "region": f"{side}_region", "country": f"{side}_country",
+                    "lat": f"{side}_lat",
+                    "lon": f"{side}_lon",
+                    "region": f"{side}_region",
+                    "country": f"{side}_country",
                 }
             ),
             on=side,
@@ -107,9 +109,21 @@ def build() -> tuple[pd.DataFrame, dict]:
     obs["is_africa"] = (obs["region"] == config.REGION_AFRICA).astype(int)
 
     cols = [
-        "airline", "carrier_name", "src", "dst", "dst_country", "region",
-        "equipment", "aircraft_name", "eis_year", "type_vintage_age",
-        "body", "is_widebody", "seats", "distance_km", "dest_connectivity",
+        "airline",
+        "carrier_name",
+        "src",
+        "dst",
+        "dst_country",
+        "region",
+        "equipment",
+        "aircraft_name",
+        "eis_year",
+        "type_vintage_age",
+        "body",
+        "is_widebody",
+        "seats",
+        "distance_km",
+        "dest_connectivity",
         "is_africa",
     ]
     obs = obs[cols].reset_index(drop=True)

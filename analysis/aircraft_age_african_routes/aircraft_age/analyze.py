@@ -24,12 +24,14 @@ from . import config
 
 def descriptive_by_region(df: pd.DataFrame) -> pd.DataFrame:
     g = df.groupby("region")["type_vintage_age"]
-    out = pd.DataFrame({
-        "n": g.size(),
-        "mean_age": g.mean(),
-        "median_age": g.median(),
-        "std_age": g.std(),
-    })
+    out = pd.DataFrame(
+        {
+            "n": g.size(),
+            "mean_age": g.mean(),
+            "median_age": g.median(),
+            "std_age": g.std(),
+        }
+    )
     # Companion: mean route distance and widebody share, to expose confounding.
     out["mean_distance_km"] = df.groupby("region")["distance_km"].mean()
     out["widebody_share"] = df.groupby("region")["is_widebody"].mean()
@@ -38,8 +40,10 @@ def descriptive_by_region(df: pd.DataFrame) -> pd.DataFrame:
 
 def descriptive_by_carrier_region(df: pd.DataFrame) -> pd.DataFrame:
     tab = df.pivot_table(
-        index="carrier_name", columns="region",
-        values="type_vintage_age", aggfunc="mean",
+        index="carrier_name",
+        columns="region",
+        values="type_vintage_age",
+        aggfunc="mean",
     )
     ordered = [config.REGION_AFRICA] + config.COMPARISON_REGIONS
     cols = [c for c in ordered if c in tab.columns]
@@ -52,9 +56,10 @@ def _two_sample(africa: np.ndarray, other: np.ndarray) -> dict:
     t_stat, t_p = stats.ttest_ind(africa, other, equal_var=False)  # Welch
     u_stat, u_p = stats.mannwhitneyu(africa, other, alternative="two-sided")
     # Cohen's d (pooled sd).
-    pooled_sd = np.sqrt(((len(africa) - 1) * africa.var(ddof=1)
-                         + (len(other) - 1) * other.var(ddof=1))
-                        / (len(africa) + len(other) - 2))
+    pooled_sd = np.sqrt(
+        ((len(africa) - 1) * africa.var(ddof=1) + (len(other) - 1) * other.var(ddof=1))
+        / (len(africa) + len(other) - 2)
+    )
     cohens_d = (africa.mean() - other.mean()) / pooled_sd if pooled_sd else np.nan
     return {
         "n_africa": len(africa),
@@ -120,10 +125,22 @@ def format_report(desc_region, desc_cr, tt, model) -> str:
     lines.append(desc_cr.round(2).to_string())
     lines.append("")
     lines.append("AFRICA vs (EUROPE/ASIA/NORTH AMERICA) -- two-sample tests")
-    show = tt[["n_africa", "n_other", "mean_africa", "mean_other",
-               "mean_diff", "welch_p", "mannwhitney_p", "cohens_d"]]
+    show = tt[
+        [
+            "n_africa",
+            "n_other",
+            "mean_africa",
+            "mean_other",
+            "mean_diff",
+            "welch_p",
+            "mannwhitney_p",
+            "cohens_d",
+        ]
+    ]
     lines.append(show.round(4).to_string())
     lines.append("")
-    lines.append("OLS REGRESSION (HC3 robust SE): type_vintage_age ~ is_africa + controls")
+    lines.append(
+        "OLS REGRESSION (HC3 robust SE): type_vintage_age ~ is_africa + controls"
+    )
     lines.append(str(model.summary()))
     return "\n".join(lines)

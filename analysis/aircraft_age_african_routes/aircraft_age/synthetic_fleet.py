@@ -48,21 +48,30 @@ TAIL_FLIGHTS_SCHEMA = {
 # Assumed real-world fleet ages by carrier (mean airframe age, years) used only
 # to calibrate the demo simulation. Rough, illustrative figures.
 _DEMO_FLEET_MEAN_AGE = {
-    "AF": 12.5, "KL": 11.5, "BA": 13.0, "EK": 7.0, "TK": 8.5, "ET": 6.5,
+    "AF": 12.5,
+    "KL": 11.5,
+    "BA": 13.0,
+    "EK": 7.0,
+    "TK": 8.5,
+    "ET": 6.5,
 }
 # Assumed extra age (years) an airframe carries when assigned to an African
 # sector, holding the carrier fixed -- the effect the design is built to detect.
 _DEMO_AFRICA_AGE_PREMIUM = 2.5
 
 
-def generate_demo_tail_data(n_per_carrier: int = 400, seed: int = 12345) -> pd.DataFrame:
+def generate_demo_tail_data(
+    n_per_carrier: int = 400, seed: int = 12345
+) -> pd.DataFrame:
     """Return SIMULATED tail-level flight observations (illustrative only)."""
     rng = np.random.default_rng(seed)
     regions = [config.REGION_AFRICA] + config.COMPARISON_REGIONS
     # Region base sector distances (km) -- Africa mixes medium/long haul.
     region_dist = {
-        config.REGION_AFRICA: 5200, config.REGION_EUROPE: 1200,
-        config.REGION_ASIA: 6500, config.REGION_NORTH_AMERICA: 6800,
+        config.REGION_AFRICA: 5200,
+        config.REGION_EUROPE: 1200,
+        config.REGION_ASIA: 6500,
+        config.REGION_NORTH_AMERICA: 6800,
     }
     rows = []
     for code in config.CARRIERS:
@@ -71,19 +80,23 @@ def generate_demo_tail_data(n_per_carrier: int = 400, seed: int = 12345) -> pd.D
             region = rng.choice(regions, p=[0.25, 0.4, 0.2, 0.15])
             dist = max(300, rng.normal(region_dist[region], region_dist[region] * 0.25))
             is_wb = 1 if dist > 4000 else int(rng.random() < 0.1)
-            africa_premium = _DEMO_AFRICA_AGE_PREMIUM if region == config.REGION_AFRICA else 0.0
+            africa_premium = (
+                _DEMO_AFRICA_AGE_PREMIUM if region == config.REGION_AFRICA else 0.0
+            )
             age = max(0.5, rng.normal(base_age + africa_premium, 4.0))
             build_year = int(round(config.ANALYSIS_YEAR - age))
-            rows.append({
-                "airline": code,
-                "tail_number": f"{code}-{rng.integers(1000, 9999)}",
-                "build_year": build_year,
-                "region": region,
-                "distance_km": round(dist, 1),
-                "is_widebody": is_wb,
-                "dest_connectivity": int(max(20, rng.normal(400, 200))),
-                "flight_date": "2024-01-01",
-            })
+            rows.append(
+                {
+                    "airline": code,
+                    "tail_number": f"{code}-{rng.integers(1000, 9999)}",
+                    "build_year": build_year,
+                    "region": region,
+                    "distance_km": round(dist, 1),
+                    "is_widebody": is_wb,
+                    "dest_connectivity": int(max(20, rng.normal(400, 200))),
+                    "flight_date": "2024-01-01",
+                }
+            )
     df = pd.DataFrame(rows)
     df["carrier_name"] = df["airline"].map(config.CARRIERS)
     # True airframe age -- the real target variable, named to match analyze.py.

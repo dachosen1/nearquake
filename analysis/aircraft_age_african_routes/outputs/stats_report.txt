@@ -36,7 +36,7 @@ Dep. Variable:       type_vintage_age   R-squared:                       0.115
 Model:                            OLS   Adj. R-squared:                  0.113
 Method:                 Least Squares   F-statistic:                     156.5
 Date:                Fri, 07 Aug 2026   Prob (F-statistic):          2.65e-266
-Time:                        09:01:36   Log-Likelihood:                -18799.
+Time:                        09:07:17   Log-Likelihood:                -18799.
 No. Observations:                5890   AIC:                         3.762e+04
 Df Residuals:                    5880   BIC:                         3.768e+04
 Df Model:                           9                                         

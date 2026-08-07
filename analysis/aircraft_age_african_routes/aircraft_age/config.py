@@ -56,9 +56,7 @@ os.makedirs(DATA_CACHE_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # OpenFlights open data (route + airport reference), mirrored on GitHub.
-OPENFLIGHTS_BASE = (
-    "https://raw.githubusercontent.com/jpatokal/openflights/master/data"
-)
+OPENFLIGHTS_BASE = "https://raw.githubusercontent.com/jpatokal/openflights/master/data"
 OPENFLIGHTS_FILES = {
     "routes": f"{OPENFLIGHTS_BASE}/routes.dat",
     "airports": f"{OPENFLIGHTS_BASE}/airports.dat",
