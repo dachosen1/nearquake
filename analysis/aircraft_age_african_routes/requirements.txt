@@ -1,0 +1,8 @@
+# Analysis-only dependencies (kept separate from the nearquake app's pyproject).
+# Install into a dedicated venv:  python -m venv .venv && .venv/bin/pip install -r requirements.txt
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+statsmodels>=0.14
+matplotlib>=3.9
+pycountry-convert>=0.7

@@ -1,0 +1,59 @@
+{
+  "carrier_route_records": 3734,
+  "equipment_assignments": 6046,
+  "unknown_equipment_codes": [
+    [
+      "ARJ",
+      4
+    ],
+    [
+      "33X",
+      3
+    ],
+    [
+      "74Y",
+      2
+    ],
+    [
+      "32B",
+      2
+    ],
+    [
+      "73C",
+      2
+    ],
+    [
+      "D38",
+      2
+    ],
+    [
+      "CRA",
+      2
+    ],
+    [
+      "ERD",
+      1
+    ],
+    [
+      "74N",
+      1
+    ],
+    [
+      "342",
+      1
+    ],
+    [
+      "ATR",
+      1
+    ]
+  ],
+  "final_observations": 6006,
+  "observations_by_region": {
+    "Europe": 2274,
+    "North America": 1547,
+    "Asia": 1461,
+    "Africa": 608,
+    "South America": 60,
+    "Oceania": 56
+  }
+}

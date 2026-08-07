@@ -1,0 +1,68 @@
+TAIL-LEVEL DEMO -- SIMULATED DATA, ILLUSTRATIVE ONLY.
+Numbers below are produced by a calibrated generator, not observed
+flights. They demonstrate that the pipeline detects a true airframe-age
+gap once real tail<->route data is supplied. See synthetic_fleet.py.
+======================================================================
+MEAN TYPE-VINTAGE AGE BY DESTINATION REGION (years, all carriers)
+                 n  mean_age  median_age  std_age  mean_distance_km  widebody_share
+region                                                                             
+Africa         640     12.51        13.0     4.69           5200.26            0.85
+Europe         926     10.15        10.0     4.73           1208.88            0.10
+Asia           498     10.09        10.0     4.59           6410.36            0.94
+North America  336      9.32         9.0     4.57           6740.17            0.93
+
+MEAN TYPE-VINTAGE AGE BY CARRIER x REGION (years)
+region              Africa  Europe   Asia  North America
+carrier_name                                            
+Air France           15.77   12.84  12.01          12.12
+British Airways      15.37   12.91  12.41          13.12
+Emirates              9.95    7.37   7.52           6.89
+Ethiopian Airlines    9.21    6.58   7.06           6.12
+KLM                  14.22   12.22  11.80          11.47
+Turkish Airlines     11.38    8.34   9.09           7.75
+
+AFRICA vs (EUROPE/ASIA/NORTH AMERICA) -- two-sample tests
+                    n_africa  n_other  mean_africa  mean_other  mean_diff  welch_p  mannwhitney_p  cohens_d
+carrier                                                                                                    
+ALL CARRIERS             640     1760      12.5125      9.9761     2.5364      0.0            0.0    0.5424
+Air France                97      303      15.7732     12.4818     3.2913      0.0            0.0    0.8873
+KLM                      110      290      14.2182     11.9759     2.2423      0.0            0.0    0.5355
+British Airways           99      301      15.3737     12.7973     2.5764      0.0            0.0    0.6511
+Emirates                 111      289       9.9459      7.3253     2.6207      0.0            0.0    0.6452
+Turkish Airlines         108      292      11.3796      8.4041     2.9755      0.0            0.0    0.7523
+Ethiopian Airlines       115      285       9.2087      6.5965     2.6122      0.0            0.0    0.7219
+
+OLS REGRESSION (HC3 robust SE): type_vintage_age ~ is_africa + controls
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:       type_vintage_age   R-squared:                       0.339
+Model:                            OLS   Adj. R-squared:                  0.336
+Method:                 Least Squares   F-statistic:                     138.7
+Date:                Fri, 07 Aug 2026   Prob (F-statistic):          9.11e-211
+Time:                        09:01:37   Log-Likelihood:                -6677.8
+No. Observations:                2400   AIC:                         1.338e+04
+Df Residuals:                    2390   BIC:                         1.343e+04
+Df Model:                           9                                         
+Covariance Type:                  HC3                                         
+====================================================================================
+                       coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept           12.7300      0.284     44.863      0.000      12.174      13.286
+C(airline)[T.BA]     0.1353      0.272      0.498      0.618      -0.397       0.668
+C(airline)[T.EK]    -5.3192      0.276    -19.291      0.000      -5.860      -4.779
+C(airline)[T.ET]    -6.0408      0.260    -23.242      0.000      -6.550      -5.531
+C(airline)[T.KL]    -0.7721      0.281     -2.751      0.006      -1.322      -0.222
+C(airline)[T.TK]    -4.1348      0.272    -15.184      0.000      -4.668      -3.601
+is_africa            2.8254      0.192     14.725      0.000       2.449       3.201
+distance_1000km     -0.0041      0.050     -0.082      0.935      -0.102       0.094
+is_widebody         -0.3020      0.279     -1.084      0.278      -0.848       0.244
+connectivity_100     0.0131      0.041      0.319      0.750      -0.067       0.094
+==============================================================================
+Omnibus:                        0.402   Durbin-Watson:                   2.009
+Prob(Omnibus):                  0.818   Jarque-Bera (JB):                0.462
+Skew:                           0.018   Prob(JB):                        0.794
+Kurtosis:                       2.942   Cond. No.                         41.2
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)
