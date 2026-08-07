@@ -1,0 +1,5 @@
+# Raw open-data downloads are reproducible via run_analysis.py; don't commit them.
+data_cache/
+.venv/
+__pycache__/
+*.pyc
