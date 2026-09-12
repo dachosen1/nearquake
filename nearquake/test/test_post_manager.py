@@ -3,9 +3,16 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from nearquake.app.db import Post
-from nearquake.post_manager import (BlueSkyPost, PlatformPoster, TwitterPost,
-                                    build_bluesky_facets, post_and_save_tweet,
-                                    post_to_all_platforms, save_tweet_to_db)
+from nearquake.post_manager import (
+    BlueSkyPost,
+    PlatformPoster,
+    TwitterPost,
+    build_bluesky_facets,
+    build_bluesky_link_card,
+    post_and_save_tweet,
+    post_to_all_platforms,
+    save_tweet_to_db,
+)
 
 
 def _facet_kind(feature):
@@ -98,10 +105,11 @@ class TestBlueSkyPost:
             bluesky_post = BlueSkyPost()
             result = bluesky_post.post("Test post")
 
-            # Verify the post was successful. Plain text with no links -> facets=None
+            # Verify the post was successful. Plain text with no links ->
+            # facets=None and no link card embed.
             assert result is True
             mock_client_instance.send_post.assert_called_once_with(
-                text="Test post", facets=None
+                text="Test post", facets=None, embed=None
             )
 
     def test_post_attaches_facets_for_links(self):
@@ -121,6 +129,23 @@ class TestBlueSkyPost:
             facets = kwargs["facets"]
             assert facets is not None and len(facets) == 2
 
+    def test_post_attaches_link_card_for_url(self):
+        # A post containing a URL should also get an external embed card, so
+        # BlueSky unfurls it into a preview instead of a bare link.
+        with patch("nearquake.post_manager.Client") as mock_client:
+            mock_client_instance = MagicMock()
+            mock_client.return_value = mock_client_instance
+
+            bluesky_post = BlueSkyPost()
+            text = "See https://earthquake.usgs.gov/events/abc #Earthquake"
+            bluesky_post.post(text)
+
+            _, kwargs = mock_client_instance.send_post.call_args
+            embed = kwargs["embed"]
+            assert embed is not None
+            assert embed.external.uri == "https://earthquake.usgs.gov/events/abc"
+            mock_client_instance.upload_blob.assert_not_called()
+
     def test_post_failure(self):
         # Get the global mock from conftest.py
         with patch("nearquake.post_manager.Client") as mock_client:
@@ -136,7 +161,7 @@ class TestBlueSkyPost:
             # Verify the post failed but didn't raise an exception
             assert result is False
             mock_client_instance.send_post.assert_called_once_with(
-                text="Test post", facets=None
+                text="Test post", facets=None, embed=None
             )
 
 
@@ -264,6 +289,63 @@ class TestBuildBlueSkyFacets:
         # Every facet's byte range must decode cleanly (validates UTF-8 offsets).
         for f in facets:
             assert _decode(text, f)
+
+
+class TestBuildBlueSkyLinkCard:
+    def test_no_url_returns_none(self):
+        client = MagicMock()
+        assert build_bluesky_link_card(client, "Just some plain text.") is None
+        client.upload_blob.assert_not_called()
+
+    def test_event_headline_parsed_into_title_and_description(self):
+        client = MagicMock()
+        text = (
+            "🌎 #RecentEarthquake: A magnitude 4.8 earthquake occurred "
+            "77 km SE of Atka, Alaska at 05:18:40 UTC (22 min ago).\n\n"
+            "🔗 Full details: https://earthquake.usgs.gov/earthquakes/eventpage/us6000thkg/executive\n"
+            "Remember: Drop, Cover, Hold On! #EarthquakeSafety. Data provided by #USGS"
+        )
+
+        embed = build_bluesky_link_card(client, text)
+
+        assert embed.external.uri == (
+            "https://earthquake.usgs.gov/earthquakes/eventpage/us6000thkg/executive"
+        )
+        assert "4.8" in embed.external.title
+        assert "77 km SE of Atka, Alaska" in embed.external.title
+        assert "05:18:40" in embed.external.description
+        client.upload_blob.assert_not_called()
+
+    def test_non_event_text_falls_back_to_generic_title(self):
+        client = MagicMock()
+        text = "Check this out: https://earthquake.usgs.gov"
+
+        embed = build_bluesky_link_card(client, text)
+
+        assert embed.external.title == "USGS Earthquake Report"
+
+    def test_media_data_uploaded_as_thumbnail(self):
+        from atproto_client.models.blob_ref import BlobRef
+
+        client = MagicMock()
+        fake_blob = MagicMock(spec=BlobRef)
+        client.upload_blob.return_value.blob = fake_blob
+        text = "See https://earthquake.usgs.gov/events/abc"
+
+        embed = build_bluesky_link_card(client, text, media_data=b"fake-image-bytes")
+
+        client.upload_blob.assert_called_once_with(b"fake-image-bytes")
+        assert embed.external.thumb is fake_blob
+
+    def test_thumbnail_upload_failure_still_returns_card(self):
+        client = MagicMock()
+        client.upload_blob.side_effect = Exception("upload failed")
+        text = "See https://earthquake.usgs.gov/events/abc"
+
+        embed = build_bluesky_link_card(client, text, media_data=b"fake-image-bytes")
+
+        assert embed is not None
+        assert embed.external.thumb is None
 
 
 @patch("nearquake.post_manager.post_to_all_platforms")
