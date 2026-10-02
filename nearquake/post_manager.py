@@ -7,10 +7,13 @@ import tweepy
 from atproto import Client, models
 
 from nearquake.app.db import Post
-from nearquake.config import (BLUESKY_PASSWORD, BLUESKY_USER_NAME,
-                              TWITTER_AUTHENTICATION)
-from nearquake.utils.logging_utils import (get_logger, log_db_operation,
-                                           log_error, log_info)
+from nearquake.config import BLUESKY_PASSWORD, BLUESKY_USER_NAME, TWITTER_AUTHENTICATION
+from nearquake.utils.logging_utils import (
+    get_logger,
+    log_db_operation,
+    log_error,
+    log_info,
+)
 
 _logger = get_logger(__name__)
 
@@ -32,6 +35,13 @@ _BARE_DOMAIN_RE = re.compile(
 
 # Punctuation that commonly trails a URL in prose but is not part of the link.
 _TRAILING_PUNCTUATION = b".,;:!?)]}'\""
+
+# Matches the fixed headline format produced by format_earthquake_alert() for
+# "event" posts, e.g. "A magnitude 4.7 earthquake occurred 46 km NNE of
+# Port-Olry, Vanuatu at 15:56:09 UTC (19 min ago)."
+_EVENT_HEADLINE_RE = re.compile(
+    r"A magnitude ([\d.]+) earthquake occurred (.+?) at (\d{2}:\d{2}:\d{2}) UTC \(([^)]+)\)\."
+)
 
 
 def _strip_trailing_punctuation(start: int, end: int, text_bytes: bytes) -> int:
@@ -103,6 +113,56 @@ def build_bluesky_facets(text: str) -> list:
         _add_facet(start, end, models.AppBskyRichtextFacet.Tag(tag=tag))
 
     return facets
+
+
+def build_bluesky_link_card(client: Client, post_text: str, media_data: bytes = None):
+    """
+    Build a BlueSky external embed (link preview card) for the post's USGS URL,
+    so it renders with a title/description/thumbnail the way Twitter/X unfurls
+    a link into a card, instead of just a bare inline link.
+
+    :param client: Authenticated atproto client, used to upload the thumbnail.
+    :param post_text: The post text to scan for a linkable URL and headline.
+    :param media_data: Optional image bytes (e.g. a shakemap) to use as the
+        card thumbnail.
+    :return: An ``models.AppBskyEmbedExternal.Main`` embed, or None if the post
+        has no URL to build a card for.
+    """
+    text_bytes = post_text.encode("utf-8")
+    url_match = _URL_RE.search(text_bytes)
+    if not url_match:
+        return None
+
+    end = _strip_trailing_punctuation(url_match.start(), url_match.end(), text_bytes)
+    uri = text_bytes[url_match.start() : end].decode("utf-8")
+
+    headline_match = _EVENT_HEADLINE_RE.search(post_text)
+    if headline_match:
+        magnitude, location, time_of_day, time_ago = headline_match.groups()
+        title = f"M{magnitude} Earthquake — {location}"
+        description = (
+            f"Occurred at {time_of_day} UTC ({time_ago}). Full report, shakemap, "
+            "and safety details from USGS."
+        )
+    else:
+        title = "USGS Earthquake Report"
+        description = "Full report, shakemap, and safety details from USGS."
+
+    thumb = None
+    if media_data:
+        try:
+            thumb = client.upload_blob(media_data).blob
+        except Exception as e:
+            log_error(_logger, "Failed to upload BlueSky card thumbnail", exc=e)
+
+    return models.AppBskyEmbedExternal.Main(
+        external=models.AppBskyEmbedExternal.External(
+            uri=uri,
+            title=title[:300],
+            description=description[:1000],
+            thumb=thumb,
+        )
+    )
 
 
 class PlatformPoster(ABC):
@@ -234,7 +294,10 @@ class BlueSkyPost(PlatformPoster):
             # BlueSky does not auto-link URLs or hashtags; attach richtext facets
             # so they render as tappable links.
             facets = build_bluesky_facets(post_text)
-            self.client.send_post(text=post_text, facets=facets or None)
+            # BlueSky also doesn't auto-unfurl links into a preview card the way
+            # Twitter/X does, so build one explicitly.
+            embed = build_bluesky_link_card(self.client, post_text, media_data)
+            self.client.send_post(text=post_text, facets=facets or None, embed=embed)
             log_info(_logger, f"Successfully posted to BlueSky: {post_text}")
             return True
         except Exception as e:
